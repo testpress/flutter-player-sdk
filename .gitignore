@@ -1,30 +1,49 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# macOS
 .DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
-/pubspec.lock
-**/doc/api/
-.dart_tool/
-.packages
+# Flutter/Dart specific
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter_gen/
 build/
+/.dart_tool/
+.pub-cache/
+.pub/
+.packages
+.idea/
+*.iml
+
+# Android specific
+/local.properties
+/build/
+/captures/
+
+# iOS specific
+/ios/Pods/
+/ios/Podfile.lock
+/ios/Flutter/Flutter.xcodeproj/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/AppFrameworkInfo.plist
+/ios/Flutter/Debug.xcconfig
+/ios/Flutter/Profile.xcconfig
+/ios/Flutter/Release.xcconfig
+/ios/Runner.xcodeproj/
+
+# Visual Studio Code specific
+.vscode/
+
+# Android Studio specific
+.idea/
+*.iml
+
+# Xcode specific
+*.xcuserdatad
+*.xccheckout
+.DS_Store
+
+# Miscellaneous
+*.lock
+*.log
+*.zip
+*.tar.gz
+*.swp
