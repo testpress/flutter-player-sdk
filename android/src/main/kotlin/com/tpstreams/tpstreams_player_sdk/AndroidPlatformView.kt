@@ -25,7 +25,5 @@ class PlayerNativeView internal constructor(
         textView.text = creationParams?.get("assetId") as String
     }
 
-    override fun dispose(){
-
-    }
+    override fun dispose(){}
 }
