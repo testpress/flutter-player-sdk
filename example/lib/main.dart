@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tpstreams_player_sdk/tpstreams_player.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,9 +15,10 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: const Center(
-          child: Text('Hello world'),
-        ),
+        body: const TPStreamPlayer(
+          assetId: "RrRJbTccCRa", 
+          accessToken: "RrRJbTccCRa"
+        )
       ),
     );
   }

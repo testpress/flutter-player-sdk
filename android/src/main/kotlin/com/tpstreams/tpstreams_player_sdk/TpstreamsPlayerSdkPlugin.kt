@@ -17,6 +17,8 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    flutterPluginBinding.platformViewRegistry.registerViewFactory(
+      "tpstreams_player_sdk/player_view", PlayerViewFactory(flutterPluginBinding.binaryMessenger))
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "tpstreams_player_sdk")
     channel.setMethodCallHandler(this)
   }
