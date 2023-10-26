@@ -1,21 +1,20 @@
 import Foundation
 import Flutter
-import UIKit
-import AVKit
+import TPStreamsSDK
 
 class NativePlayerView: NSObject, FlutterPlatformView {
-    private var textView  = UITextView()
+    var player: TPAVPlayer!
+    var playerViewController: TPStreamPlayerViewController?
 
     func view() -> UIView {
-        return textView
+        return playerViewController?.view ?? UIView()
     }
 
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
-        print(args)
-        if let args = args as? [String: String], let assetId = args["assetId"] as? String {
-            textView.text = assetId
-        } else {
-            textView.text = "Hello"
+        if let args = args as? [String: String], let assetId = args["assetId"] as? String, let accessToken = args["accessToken"] as? String {
+            player = TPAVPlayer(assetID: assetId, accessToken: accessToken)
+            playerViewController = TPStreamPlayerViewController()
+            playerViewController!.player = player
         }
         super.init()
     }

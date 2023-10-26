@@ -1,5 +1,9 @@
 library tpstreams_player_sdk;
 
+export 'tpstreams_player.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+
 enum PROVIDER {
   tpstreams,
   testpress,
@@ -17,6 +21,10 @@ class TPStreamsSDK {
 
     _orgCode = orgCode;
     _provider = provider;
+          
+    WidgetsFlutterBinding.ensureInitialized();
+    const methodChannel = MethodChannel("tpstreams_player_sdk");
+    methodChannel.invokeMethod('initializeNativeSDK', {"orgCode": _orgCode, "provider": _provider.toString().split('.').last});
   }
 
   static String get orgCode {
