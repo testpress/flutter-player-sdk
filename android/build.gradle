@@ -1,4 +1,4 @@
-group 'com.example.tpstreams_player_sdk'
+group 'com.tpstreams.tpstreams_player_sdk'
 version '1.0-SNAPSHOT'
 
 buildscript {

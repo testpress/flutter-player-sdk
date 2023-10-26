@@ -1,4 +1,4 @@
-package com.example.tpstreams_player_sdk
+package com.tpstreams.tpstreams_player_sdk
 
 import androidx.annotation.NonNull
 
