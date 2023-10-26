@@ -11,7 +11,7 @@ class PlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     }
 
     func create(withFrame frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?) -> FlutterPlatformView {
-        return PlayerNativeView(
+        return NativePlayerView(
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,

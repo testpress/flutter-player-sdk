@@ -11,6 +11,6 @@ class PlayerViewFactory(private val messenger: BinaryMessenger) :
     PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context, id: Int, args: Any?): PlatformView {
         val creationParams = args as Map<String, Any>
-        return PlayerNativeView(context, messenger, id, creationParams)
+        return NativePlayerView(context, messenger, id, creationParams)
     }
 }

@@ -7,7 +7,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
 
 
-class PlayerNativeView internal constructor(
+class NativePlayerView internal constructor(
     context: Context,
     messenger: BinaryMessenger,
     id: Int,

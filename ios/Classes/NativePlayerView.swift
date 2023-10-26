@@ -3,7 +3,7 @@ import Flutter
 import UIKit
 import AVKit
 
-class PlayerNativeView: NSObject, FlutterPlatformView {
+class NativePlayerView: NSObject, FlutterPlatformView {
     private var textView  = UITextView()
 
     func view() -> UIView {
