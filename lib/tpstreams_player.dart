@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -33,10 +35,24 @@ class TPStreamPlayer extends StatelessWidget {
     switch (defaultTargetPlatform) {
       
       case TargetPlatform.android:
-        return AndroidView(
+        return PlatformViewLink(
           viewType: 'tpstreams_player_sdk/player_view',
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
+          surfaceFactory: (BuildContext context, PlatformViewController controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (PlatformViewCreationParams params) {
+            return PlatformViewsService.initAndroidView(
+              id: params.id,
+              viewType: 'tpstreams_player_sdk/player_view',
+              layoutDirection: TextDirection.ltr,
+              creationParams: creationParams,
+              creationParamsCodec: const StandardMessageCodec(),
+            )..addOnPlatformViewCreatedListener(params.onPlatformViewCreated);
+          },
         );
       case TargetPlatform.iOS:
         return UiKitView(

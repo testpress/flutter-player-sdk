@@ -16,36 +16,53 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
 
 
-class NativePlayerView internal constructor(
-    context: Context,
+class NativePlayerView(
+    val context: Context,
     messenger: BinaryMessenger,
     id: Int,
     val creationParams: Map<String, Any>?,
     val activity: Activity
-
 ) : PlatformView, InitializationListener {
-    private var linearLayout: LinearLayout
+
+    private val linearLayout = LinearLayout(context)
+    private val playerFragment = TpStreamPlayerFragment()
     private lateinit var player: TpStreamPlayer
-    private lateinit var playerFragment: TpStreamPlayerFragment
-    var FRAME_LAYOUT_ID = 0x123456
+
+    companion object {
+        const val FRAME_LAYOUT_ID = 0x123456
+    }
 
     override fun getView(): View {
         return linearLayout
     }
 
     init {
-        linearLayout = LinearLayout(context)
-        linearLayout.isClickable = false
-        val vParams: ViewGroup.LayoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        val frameLayout = FrameLayout(context)
-        frameLayout.layoutParams = vParams
-        frameLayout.id = FRAME_LAYOUT_ID
-        frameLayout.isClickable = false
-        linearLayout.addView(frameLayout)
+        initializeLinearLayout()
+        addFrameLayout()
+        setAttachStateChangeListener()
+    }
 
+    private fun initializeLinearLayout() {
+        val vParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        linearLayout.orientation = LinearLayout.VERTICAL
+        linearLayout.layoutParams = vParams
+    }
+
+    private fun addFrameLayout() {
+        val frameLayout = FrameLayout(context)
+        frameLayout.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        frameLayout.id = FRAME_LAYOUT_ID
+        linearLayout.addView(frameLayout)
+    }
+
+    private fun setAttachStateChangeListener() {
+        val frameLayout = linearLayout.findViewById<FrameLayout>(FRAME_LAYOUT_ID)
         frameLayout.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) {
                 initializePlayerFragment()
@@ -57,7 +74,6 @@ class NativePlayerView internal constructor(
 
     private fun initializePlayerFragment() {
         if (activity is FragmentActivity) {
-            playerFragment = TpStreamPlayerFragment()
             playerFragment.setOnInitializationListener(this)
             val fm = activity.supportFragmentManager
             fm.beginTransaction().replace(
@@ -70,12 +86,14 @@ class NativePlayerView internal constructor(
 
     override fun onInitializationSuccess(player: TpStreamPlayer) {
         this.player = player
+        val assetId = creationParams?.get("assetId") as? String
+        val accessToken = creationParams?.get("accessToken") as? String
         val parameters = TpInitParams.Builder()
-            .setVideoId(creationParams?.get("assetId") as String)
-            .setAccessToken(creationParams.get("accessToken") as String)
+            .setVideoId(assetId!!)
+            .setAccessToken(accessToken!!)
             .build()
         this.player.load(parameters)
     }
 
-    override fun dispose(){}
+    override fun dispose() {}
 }
