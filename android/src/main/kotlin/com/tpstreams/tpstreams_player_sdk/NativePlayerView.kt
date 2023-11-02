@@ -93,5 +93,7 @@ class NativePlayerView(
         this.player.load(parameters)
     }
 
-    override fun dispose() {}
+    override fun dispose() {
+        this.player.release()
+    }
 }

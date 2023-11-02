@@ -14,7 +14,7 @@ buildscript {
     }
 }
 
-allprojects {
+rootProject.allprojects {
     repositories {
         google()
         mavenCentral()
@@ -49,8 +49,6 @@ android {
     }
 
     dependencies {
-        implementation "com.tpstreams.player:player:2.0.0b"
-
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'
     }
@@ -66,4 +64,8 @@ android {
             }
         }
     }
+}
+
+dependencies {
+    implementation "com.tpstreams.player:player:2.0.0b"
 }
