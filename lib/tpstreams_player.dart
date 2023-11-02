@@ -45,7 +45,7 @@ class TPStreamPlayer extends StatelessWidget {
             );
           },
           onCreatePlatformView: (PlatformViewCreationParams params) {
-            return PlatformViewsService.initAndroidView(
+            return PlatformViewsService.initExpensiveAndroidView(
               id: params.id,
               viewType: 'tpstreams_player_sdk/player_view',
               layoutDirection: TextDirection.ltr,

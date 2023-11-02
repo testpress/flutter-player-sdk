@@ -2,7 +2,6 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -15,6 +14,7 @@ import com.tpstream.player.ui.TpStreamPlayerFragment
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
 
+const val FRAME_LAYOUT_ID = 0x123456
 
 class NativePlayerView(
     val context: Context,
@@ -23,46 +23,42 @@ class NativePlayerView(
     val creationParams: Map<String, Any>?,
     val activity: Activity
 ) : PlatformView, InitializationListener {
-
-    private val linearLayout = LinearLayout(context)
+    private val linearLayout = createLinearLayout()
     private val playerFragment = TpStreamPlayerFragment()
     private lateinit var player: TpStreamPlayer
-
-    companion object {
-        const val FRAME_LAYOUT_ID = 0x123456
-    }
 
     override fun getView(): View {
         return linearLayout
     }
 
     init {
-        initializeLinearLayout()
-        addFrameLayout()
-        setAttachStateChangeListener()
+        val frameLayout = createFrameLayout()
+        linearLayout.addView(frameLayout)
+        setupPlayerFragmentOnAttach(frameLayout)
     }
 
-    private fun initializeLinearLayout() {
+    private fun createLinearLayout(): LinearLayout {
         val vParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        linearLayout.orientation = LinearLayout.VERTICAL
-        linearLayout.layoutParams = vParams
+        val layout = LinearLayout(context)
+        layout.orientation = LinearLayout.VERTICAL
+        layout.layoutParams = vParams
+        return layout
     }
 
-    private fun addFrameLayout() {
-        val frameLayout = FrameLayout(context)
-        frameLayout.layoutParams = FrameLayout.LayoutParams(
+    private fun createFrameLayout(): FrameLayout {
+        val layout = FrameLayout(context)
+        layout.layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
-        frameLayout.id = FRAME_LAYOUT_ID
-        linearLayout.addView(frameLayout)
+        layout.id = FRAME_LAYOUT_ID
+        return layout
     }
 
-    private fun setAttachStateChangeListener() {
-        val frameLayout = linearLayout.findViewById<FrameLayout>(FRAME_LAYOUT_ID)
+    private fun setupPlayerFragmentOnAttach(frameLayout: FrameLayout) {
         frameLayout.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) {
                 initializePlayerFragment()
@@ -75,12 +71,14 @@ class NativePlayerView(
     private fun initializePlayerFragment() {
         if (activity is FragmentActivity) {
             playerFragment.setOnInitializationListener(this)
-            val fm = activity.supportFragmentManager
-            fm.beginTransaction().replace(
+            val fragmentManager = activity.supportFragmentManager
+            val fragmentTransaction = fragmentManager.beginTransaction()
+            fragmentTransaction.replace(
                 FRAME_LAYOUT_ID,
                 playerFragment,
                 playerFragment::class.toString()
-            ).commitNow()
+            )
+            fragmentTransaction.commitNow()
         }
     }
 
@@ -89,8 +87,8 @@ class NativePlayerView(
         val assetId = creationParams?.get("assetId") as? String
         val accessToken = creationParams?.get("accessToken") as? String
         val parameters = TpInitParams.Builder()
-            .setVideoId(assetId!!)
-            .setAccessToken(accessToken!!)
+            .setVideoId(requireNotNull(assetId))
+            .setAccessToken(requireNotNull(accessToken))
             .build()
         this.player.load(parameters)
     }
