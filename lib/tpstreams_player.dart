@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/gestures.dart';
@@ -5,7 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class TPStreamPlayer extends StatelessWidget {
+class TPStreamPlayer extends StatefulWidget {
   final String assetId;
   final String accessToken;
   final double aspectRatio;
@@ -18,19 +20,26 @@ class TPStreamPlayer extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<TPStreamPlayer> createState() => _TPStreamPlayerState();
+}
+
+class _TPStreamPlayerState extends State<TPStreamPlayer> {
+  MethodChannel? methodChannel;
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Container(
           color: Colors.black,
           child: AspectRatio(
-            aspectRatio: aspectRatio, 
+            aspectRatio: widget.aspectRatio, 
             child: getPlayerNativeView()
           ),
     ));
   }
 
   Widget getPlayerNativeView() {
-    var creationParams = {"assetId": assetId, "accessToken": accessToken};
+    var creationParams = {"assetId": widget.assetId, "accessToken": widget.accessToken};
 
     switch (defaultTargetPlatform) {
       
@@ -59,10 +68,23 @@ class TPStreamPlayer extends StatelessWidget {
             viewType: 'tpstreams_player_sdk/player_view',
             creationParams: creationParams,
             creationParamsCodec: const StandardMessageCodec(),
+            onPlatformViewCreated: onIOSPlatformViewCreated,
           );
       default:
         return Text(
             '$defaultTargetPlatform is not yet supported by the web_view plugin');
+    }
+  }
+
+  onIOSPlatformViewCreated(int id) {
+    methodChannel = MethodChannel('tpstreams_player_sdk/player_view_$id');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (Platform.isIOS) {
+      methodChannel?.invokeMethod("dispose");
     }
   }
 }
