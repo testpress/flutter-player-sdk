@@ -1,3 +1,3 @@
-## 0.0.1
+## 2.0.0
 
-* TODO: Describe initial release.
+- Integrate our Native player SDKs for secure playback with support to play Non-DRM, DRM and AES encrypted videos.
