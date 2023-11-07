@@ -29,6 +29,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.13.0
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:' 
+          cache-path: '${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:'
+          architecture: x64
 
       - name: Install dependencies
         run: flutter pub get
