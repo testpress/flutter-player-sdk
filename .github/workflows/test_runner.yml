@@ -7,12 +7,14 @@ on:
     paths:
      - 'lib/**'
      - 'test/**'
+     - '.github/**'
   push:
     branches:
       - main
     paths:
      - 'lib/**'
      - 'test/**'
+     - '.github/**'
 
 jobs:
   build:
