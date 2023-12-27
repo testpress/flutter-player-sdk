@@ -11,18 +11,15 @@ public class TpstreamsPlayerSdkPlugin: NSObject, FlutterPlugin {
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "getPlatformVersion":
-      result("iOS " + UIDevice.current.systemVersion)
-    case "initializeNativeSDK":
-        guard let arguments = call.arguments as? [String: Any], let orgCode = arguments["orgCode"] as? String, let providerString = arguments["provider"] as? String else {
-            return
-        }
-
-        let provider = providerString == "testpress" ? Provider.testpress : Provider.tpstreams
-        TPStreamsSDK.initialize(for: provider, withOrgCode: orgCode)
-    default:
-      result(FlutterMethodNotImplemented)
-    }
+      if call.method == "initializeNativeSDK" {
+          if let arguments = call.arguments as? [String: Any],
+            let orgCode = arguments["orgCode"] as? String,
+            let providerString = arguments["provider"] as? String {
+              let provider = (providerString == "testpress") ? Provider.testpress : Provider.tpstreams
+              TPStreamsSDK.initialize(for: provider, withOrgCode: orgCode)
+          }
+      } else {
+          result(FlutterMethodNotImplemented)
+      }
   }
 }

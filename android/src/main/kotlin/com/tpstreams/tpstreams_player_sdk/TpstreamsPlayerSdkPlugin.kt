@@ -31,9 +31,7 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware 
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
-    if (call.method == "getPlatformVersion") {
-      result.success("Android ${android.os.Build.VERSION.RELEASE}")
-    }else if(call.method == "initializeNativeSDK"){
+    if(call.method == "initializeNativeSDK"){
       val arguments = call.arguments as? Map<String, Any>
       val orgCode = arguments?.get("orgCode") as? String
       val providerString = arguments?.get("provider") as? String
