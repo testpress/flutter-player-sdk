@@ -67,5 +67,5 @@ android {
 }
 
 dependencies {
-    implementation "com.tpstreams.player:player:2.0.0b"
+    implementation "com.tpstreams.player:player:3.0.11b"
 }
