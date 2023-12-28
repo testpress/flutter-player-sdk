@@ -30,26 +30,28 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Container(
-          color: Colors.black,
-          child: AspectRatio(
-            aspectRatio: widget.aspectRatio, 
-            child: getPlayerNativeView()
-          ),
+      color: Colors.black,
+      child: AspectRatio(
+          aspectRatio: widget.aspectRatio, child: getPlayerNativeView()),
     ));
   }
 
   Widget getPlayerNativeView() {
-    var creationParams = {"assetId": widget.assetId, "accessToken": widget.accessToken};
+    var creationParams = {
+      "assetId": widget.assetId,
+      "accessToken": widget.accessToken
+    };
 
     switch (defaultTargetPlatform) {
-      
       case TargetPlatform.android:
         return PlatformViewLink(
           viewType: 'tpstreams_player_sdk/player_view',
-          surfaceFactory: (BuildContext context, PlatformViewController controller) {
+          surfaceFactory:
+              (BuildContext context, PlatformViewController controller) {
             return AndroidViewSurface(
               controller: controller as AndroidViewController,
-              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+              gestureRecognizers: const <Factory<
+                  OneSequenceGestureRecognizer>>{},
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
@@ -65,11 +67,11 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
         );
       case TargetPlatform.iOS:
         return UiKitView(
-            viewType: 'tpstreams_player_sdk/player_view',
-            creationParams: creationParams,
-            creationParamsCodec: const StandardMessageCodec(),
-            onPlatformViewCreated: onIOSPlatformViewCreated,
-          );
+          viewType: 'tpstreams_player_sdk/player_view',
+          creationParams: creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+          onPlatformViewCreated: onIOSPlatformViewCreated,
+        );
       default:
         return Text(
             '$defaultTargetPlatform is not yet supported by the web_view plugin');
