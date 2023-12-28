@@ -20,15 +20,59 @@ class NativePlayerView: NSObject, FlutterPlatformView {
         methodChannel = FlutterMethodChannel(name: "tpstreams_player_sdk/player_view_\(viewId)", binaryMessenger: messenger)
         super.init()
         methodChannel.setMethodCallHandler(onMethodCall)
-        methodChannel.invokeMethod("onNativePlayerCreated", id);
+        methodChannel.invokeMethod("onNativePlayerCreated", arguments: viewId);
     }
     
     func onMethodCall(call: FlutterMethodCall, result: FlutterResult) {
-        switch(call.method){
-        case "dispose":
-            self.dispose()
+        guard let player = self.player else {
+            result(FlutterError(
+                code: "PLAYER_ERROR",
+                message: "Native Player was not initialized properly",
+                details: nil
+            ))
+            return
+        }
+
+        switch call.method {
+        case Methods.play:
+            executePlayerAction(player.play, result)
+        case Methods.pause:
+            executePlayerAction(player.pause, result)
+        case Methods.getDuration:
+            executePlayerAction({return player.currentItem?.duration.seconds.rounded(.up) ?? 0.0}, result)
+        case Methods.getCurrentTime:
+            executePlayerAction({return player.currentTime().seconds.rounded(.up)}, result)
+        case Methods.dispose:
+            executePlayerAction(self.dispose, result)
+        case Methods.seek:
+            if let position = call.arguments as? Int {
+                executePlayerAction({
+                    self.player?.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
+                    return
+                }, result)
+            }
+        case Methods.setPlaybackSpeed:
+            if let speed = call.arguments as? Double {
+                executePlayerAction({
+                    player.rate = Float(speed)
+                }, result)
+            }
         default:
             result(FlutterMethodNotImplemented)
+        }
+    }
+    
+    private func executePlayerAction(_ action: () throws -> Any, _ result: FlutterResult) {
+        do {
+            let actionResult = try action()
+            if let validResult = actionResult as? Any {
+                print("if")
+                result(validResult)
+            } else{
+                result(nil)
+            }        
+        } catch {
+            result(FlutterError(code: "PLAYER_ERROR", message: "Error: " + error.localizedDescription, details: nil))
         }
     }
     

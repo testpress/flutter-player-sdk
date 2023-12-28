@@ -30,6 +30,10 @@ class MyApp extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               controller?.pause();
+              controller?.getDuration().then((value) {
+                print(value);
+              });
+              controller?.seek(Duration(seconds: 120));
             },
             child: const Text('Pause'),
           ),
