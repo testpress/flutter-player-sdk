@@ -70,7 +70,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
           viewType: 'tpstreams_player_sdk/player_view',
           creationParams: creationParams,
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: onIOSPlatformViewCreated,
+          onPlatformViewCreated: _onIOSPlatformViewCreated,
         );
       default:
         return Text(
@@ -78,7 +78,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
     }
   }
 
-  onIOSPlatformViewCreated(int id) {
+  void _onIOSPlatformViewCreated(int id) {
     methodChannel = MethodChannel('tpstreams_player_sdk/player_view_$id');
   }
 
