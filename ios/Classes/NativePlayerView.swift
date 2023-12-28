@@ -20,7 +20,7 @@ class NativePlayerView: NSObject, FlutterPlatformView {
         methodChannel = FlutterMethodChannel(name: "tpstreams_player_sdk/player_view_\(viewId)", binaryMessenger: messenger)
         super.init()
         methodChannel.setMethodCallHandler(onMethodCall)
-        
+        methodChannel.invokeMethod("onNativePlayerCreated", id);
     }
     
     func onMethodCall(call: FlutterMethodCall, result: FlutterResult) {
