@@ -6,6 +6,13 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     var player: TPAVPlayer!
     var playerViewController: TPStreamPlayerViewController?
     var methodChannel: FlutterMethodChannel
+    private var eventChannel: FlutterEventChannel
+    private var eventSink: FlutterEventSink?
+    private var playbackState: PlaybackState = .unknown {
+        didSet{
+            sendPlayerEvent(eventName: Events.onPlaybackStateChanged, eventPayload: playbackState.rawValue)
+        }
+    }
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -18,9 +25,11 @@ class NativePlayerView: NSObject, FlutterPlatformView {
             playerViewController!.player = player
         }
         methodChannel = FlutterMethodChannel(name: "tpstreams_player_sdk/player_view_\(viewId)", binaryMessenger: messenger)
+        eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)
         super.init()
         methodChannel.setMethodCallHandler(onMethodCall)
-        methodChannel.invokeMethod("onNativePlayerCreated", arguments: viewId);
+        methodChannel.invokeMethod("onNativePlayerCreated", arguments: viewId)
+        eventChannel.setStreamHandler(self)
     }
     
     func onMethodCall(call: FlutterMethodCall, result: FlutterResult) {
@@ -91,4 +100,36 @@ class NativePlayerView: NSObject, FlutterPlatformView {
             player.rate = Float(speed)
         }
     }
+    
+    func sendPlayerEvent(eventName: String, eventPayload: Any) {
+        guard let eventSink = eventSink else {
+            return
+        }
+        let event: [String: Any] = [
+            "name": eventName,
+            "payload": eventPayload
+        ]
+
+        eventSink(event)
+    }
+}
+
+extension NativePlayerView: FlutterStreamHandler{
+    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        self.eventSink = events
+        return nil
+    }
+    
+    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        self.eventSink = nil
+        return nil
+    }
+}
+
+
+private enum PlaybackState : String{
+    case buffering = "buffering",
+         ready = "ready",
+         ended = "ended",
+         unknown = "unknown"
 }
