@@ -30,6 +30,8 @@ class MyApp extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               controller?.pause();
+              controller?.getDuration().then((value) => print("Duration $value"));
+
             },
             child: const Text('Pause'),
           ),
@@ -40,5 +42,9 @@ class MyApp extends StatelessWidget {
 
   void _onPlayerCreated(TPStreamsPlayerController controller) {
     this.controller = controller;
+    this.controller?.addListener(() {
+      print(
+          "${this.controller!.value.position}/${this.controller!.value.duration}");
+    });
   }
 }
