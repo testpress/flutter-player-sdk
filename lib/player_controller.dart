@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/methods.dart';
 
@@ -35,6 +37,8 @@ class TPStreamsPlayerController {
   }
 
   Future<void> dispose() async {
-    await _channel!.invokeMethod(Methods.dispose);
+    if (Platform.isIOS) {
+      await _channel?.invokeMethod(Methods.dispose);
+    }
   }
 }
