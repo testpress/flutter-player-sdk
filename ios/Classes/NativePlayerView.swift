@@ -38,25 +38,16 @@ class NativePlayerView: NSObject, FlutterPlatformView {
             executePlayerAction(player.play, result)
         case Methods.pause:
             executePlayerAction(player.pause, result)
-        case Methods.getDuration:
-            executePlayerAction({return player.currentItem?.duration.seconds.rounded(.up) ?? 0.0}, result)
-        case Methods.getCurrentTime:
-            executePlayerAction({return player.currentTime().seconds.rounded(.up)}, result)
         case Methods.dispose:
             executePlayerAction(self.dispose, result)
+        case Methods.getCurrentTime:
+            executePlayerAction({ return getCurrentTimeInMillis()}, result)
+        case Methods.getDuration:
+            executePlayerAction({return getDurationInMillis()}, result)
         case Methods.seek:
-            if let position = call.arguments as? Int {
-                executePlayerAction({
-                    self.player?.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
-                    return
-                }, result)
-            }
+            executePlayerAction({ seekToPosition(call.arguments as? Int) }, result)
         case Methods.setPlaybackSpeed:
-            if let speed = call.arguments as? Double {
-                executePlayerAction({
-                    player.rate = Float(speed)
-                }, result)
-            }
+            executePlayerAction({ setPlaybackSpeed(call.arguments as? Double) }, result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -65,9 +56,8 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     private func executePlayerAction(_ action: () throws -> Any, _ result: FlutterResult) {
         do {
             let actionResult = try action()
-            if let validResult = actionResult as? Any {
-                print("if")
-                result(validResult)
+            if type(of: actionResult) != Void.self {
+                result(actionResult)
             } else{
                 result(nil)
             }        
@@ -79,5 +69,26 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     func dispose(){
         self.player?.replaceCurrentItem(with: nil)
         self.player = nil
+    }
+    
+    private func getCurrentTimeInMillis() -> Int {
+        return Int(self.player.currentTime().seconds.rounded(.up) * 1000)
+    }
+
+    private func getDurationInMillis() -> Int {
+        let duration = self.player.currentItem?.duration.seconds.rounded(.up) ?? 0.0
+        return Int(duration) * 1000
+    }
+    
+    private func seekToPosition(_ position: Int?) {
+        if let position = position {
+            player.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
+        }
+    }
+
+    private func setPlaybackSpeed(_ speed: Double?) {
+        if let speed = speed {
+            player.rate = Float(speed)
+        }
     }
 }
