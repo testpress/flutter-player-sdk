@@ -6,17 +6,20 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tpstreams_player_sdk/player_controller.dart';
 
 class TPStreamPlayer extends StatefulWidget {
   final String assetId;
   final String accessToken;
   final double aspectRatio;
+  final Function(TPStreamsPlayerController controller)? onPlayerCreated;
 
   const TPStreamPlayer({
     Key? key,
     required this.assetId,
     required this.accessToken,
     this.aspectRatio = 16 / 9,
+    this.onPlayerCreated,
   }) : super(key: key);
 
   @override
@@ -25,6 +28,7 @@ class TPStreamPlayer extends StatefulWidget {
 
 class _TPStreamPlayerState extends State<TPStreamPlayer> {
   MethodChannel? methodChannel;
+  TPStreamsPlayerController? _controller;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +66,8 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
               layoutDirection: TextDirection.ltr,
               creationParams: creationParams,
               creationParamsCodec: const StandardMessageCodec(),
-            )..addOnPlatformViewCreatedListener(params.onPlatformViewCreated);
+            )..addOnPlatformViewCreatedListener(
+                _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
           },
         );
       case TargetPlatform.iOS:
@@ -70,7 +75,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
           viewType: 'tpstreams_player_sdk/player_view',
           creationParams: creationParams,
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: _onIOSPlatformViewCreated,
+          onPlatformViewCreated: _setupMethodChannel,
         );
       default:
         return Text(
@@ -78,15 +83,32 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
     }
   }
 
-  void _onIOSPlatformViewCreated(int id) {
+  void Function(int id) _onAndroidPlatformViewCreated(
+      Function platformViewCreatedCallback) {
+    return ((int id) {
+      _setupMethodChannel(id);
+      platformViewCreatedCallback(id);
+    });
+  }
+
+  void _setupMethodChannel(int id) {
     methodChannel = MethodChannel('tpstreams_player_sdk/player_view_$id');
+    methodChannel!
+        .setMethodCallHandler((call) => _handlePlatformMethodCall(call, id));
+  }
+
+  Future<dynamic> _handlePlatformMethodCall(MethodCall call, int id) async {
+    if (call.method == "onNativePlayerCreated") {
+      _controller = TPStreamsPlayerController(methodChannel!);
+      widget.onPlayerCreated?.call(_controller!);
+    } else {
+      throw MissingPluginException();
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
-    if (Platform.isIOS) {
-      methodChannel?.invokeMethod("dispose");
-    }
+    _controller?.dispose();
   }
 }
