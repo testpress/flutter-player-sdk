@@ -147,7 +147,6 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
       position: ended ? value.duration : value.position,
     );
     _updateDurationIfNeeded();
-    if (ready) startUpdatePositionTimer();
     if (ended) stopUpdatePositionTimer();
   }
 
