@@ -72,7 +72,7 @@ class NativePlayerView: NSObject, FlutterPlatformView {
          switch keyPath {
          case #keyPath(TPAVPlayer.timeControlStatus):
              if let player = object as? TPAVPlayer {
-                 handlePlaybackStatusChange(for: player)
+                 sendPlayerEvent(eventName: Events.onIsPlayingChanged, eventPayload: player.timeControlStatus == .playing)
              }
          case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
              if let playerItem = object as? AVPlayerItem {
@@ -87,14 +87,8 @@ class NativePlayerView: NSObject, FlutterPlatformView {
          }
      }
  
-     @objc private func playerDidFinishPlaying(){
-         playerState = .ended
-     }
-     
-     private func handlePlaybackStatusChange(for player: TPAVPlayer) {
-         sendPlayerEvent(eventName: Events.onIsPlayingChanged, eventPayload: player.timeControlStatus == .playing)
-     }
-     
+    @objc private func playerDidFinishPlaying() { playerState = .ended }
+
      private func handleBufferStatusChange(of playerItem: AVPlayerItem, keyPath: String) {
          switch keyPath {
          case #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
@@ -156,6 +150,7 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     func dispose(){
         self.player?.replaceCurrentItem(with: nil)
         self.player = nil
+        removeObservers()
     }
     
     private func getCurrentTimeInMillis() -> Int {
@@ -198,6 +193,10 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     }
     
     deinit {
+        removeObservers()
+    }
+    
+    func removeObservers() {
         currentItemChangeObservation?.invalidate()
         player.removeObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus))
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp))
