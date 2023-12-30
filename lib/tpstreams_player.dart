@@ -99,7 +99,10 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
 
   Future<dynamic> _handlePlatformMethodCall(MethodCall call, int id) async {
     if (call.method == "onNativePlayerCreated") {
-      _controller = TPStreamsPlayerController(methodChannel!);
+      _controller = TPStreamsPlayerController(
+        methodChannel!, 
+        EventChannel("tpstreams_player_sdk/player_view.events_$id")
+      );
       widget.onPlayerCreated?.call(_controller!);
     } else {
       throw MissingPluginException();

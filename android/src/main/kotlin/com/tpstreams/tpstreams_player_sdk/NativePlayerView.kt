@@ -3,16 +3,21 @@ package com.tpstreams.tpstreams_player_sdk
 import android.app.Activity
 import android.content.Context
 import android.src.main.kotlin.com.tpstreams.tpstreams_player_sdk.Methods
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.fragment.app.FragmentActivity
+import com.tpstream.player.TPStreamPlayerListener
 import com.tpstream.player.TpInitParams
 import com.tpstream.player.TpStreamPlayer
+import com.tpstream.player.enum.PlaybackError
 import com.tpstream.player.ui.InitializationListener
 import com.tpstream.player.ui.TpStreamPlayerFragment
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
@@ -25,11 +30,13 @@ class NativePlayerView(
     val id: Int,
     val creationParams: Map<String, Any>?,
     val activity: Activity
-) : PlatformView, InitializationListener, MethodChannel.MethodCallHandler {
+) : PlatformView, InitializationListener, MethodChannel.MethodCallHandler, TPStreamPlayerListener {
     private val linearLayout = createLinearLayout()
     private val playerFragment = TpStreamPlayerFragment()
     private var player: TpStreamPlayer? = null
     private val methodChannel: MethodChannel
+    private val eventChannel: EventChannel
+    private var playerEventSink: EventSink? = null
 
     override fun getView(): View {
         return linearLayout
@@ -41,6 +48,17 @@ class NativePlayerView(
         setupPlayerFragmentOnAttach(frameLayout)
         methodChannel = MethodChannel(messenger, "tpstreams_player_sdk/player_view_$id")
         methodChannel.setMethodCallHandler(this)
+        eventChannel = EventChannel(messenger, "tpstreams_player_sdk/player_view.events_$id")
+        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, eventSink: EventSink?) {
+                playerEventSink = eventSink
+            }
+
+            override fun onCancel(arguments: Any?) {
+                playerEventSink = null
+            }
+        })
+
     }
 
     private fun createLinearLayout(): LinearLayout {
@@ -97,6 +115,7 @@ class NativePlayerView(
             .setAccessToken(requireNotNull(accessToken))
             .build()
         this.player!!.load(parameters)
+        this.player!!.setListener(this)
         methodChannel.invokeMethod("onNativePlayerCreated", id);
     }
 
@@ -135,6 +154,40 @@ class NativePlayerView(
             result.success(actionResult.takeIf { it != Unit })
         } catch (e: Exception) {
             result.error("PLAYER_ERROR", e.localizedMessage, null)
+        }
+    }
+
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        super.onPlaybackStateChanged(playbackState)
+        sendPlayerEvent(Events.onPlaybackStateChanged, getPlaybackStateString(playbackState))
+    }
+
+    private fun getPlaybackStateString(playbackState: Int): String {
+        return when (playbackState) {
+            TpStreamPlayer.PLAYBACK_STATE.STATE_IDLE -> "idle"
+            TpStreamPlayer.PLAYBACK_STATE.STATE_BUFFERING -> "buffering"
+            TpStreamPlayer.PLAYBACK_STATE.STATE_READY -> "ready"
+            TpStreamPlayer.PLAYBACK_STATE.STATE_ENDED -> "ended"
+            else -> "unknown"
+        }
+    }
+
+    override fun onIsPlayingChanged(playing: Boolean) {
+        super.onIsPlayingChanged(playing)
+        sendPlayerEvent(Events.onIsPlayingChanged, playing)
+    }
+
+    override fun onPlayerError(playbackError: PlaybackError) {
+        super.onPlayerError(playbackError)
+        sendPlayerEvent(Events.onPlayerError, playbackError.toString())
+    }
+
+    private fun sendPlayerEvent(eventName: String, eventPayload: Any) {
+        if (playerEventSink != null) {
+            val event: MutableMap<String, Any> = HashMap()
+            event["name"] = eventName
+            event["payload"] = eventPayload
+            playerEventSink!!.success(event)
         }
     }
 }
