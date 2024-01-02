@@ -1,6 +1,7 @@
 library tpstreams_player_sdk;
 
 export 'tpstreams_player.dart';
+export 'player_controller.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
