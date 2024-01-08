@@ -148,9 +148,9 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     }
     
     func dispose(){
+        removeObservers()
         self.player?.replaceCurrentItem(with: nil)
         self.player = nil
-        removeObservers()
     }
     
     private func getCurrentTimeInMillis() -> Int {
