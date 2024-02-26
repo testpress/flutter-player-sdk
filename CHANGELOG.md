@@ -20,3 +20,8 @@
 ## 2.0.7
 
 - Bug fixes.
+
+## 2.0.9
+
+- Added live streaming support.
+- Bug fixes.
