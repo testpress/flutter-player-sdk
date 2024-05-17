@@ -25,3 +25,8 @@
 
 - Added live streaming support.
 - Bug fixes.
+
+## 2.1.0
+
+- Bug fixes.
+- Added privacy manifest file in iOS.
