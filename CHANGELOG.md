@@ -30,3 +30,8 @@
 
 - Bug fixes.
 - Added privacy manifest file in iOS.
+
+## 2.1.1
+
+- Bug fixes and code optimization.
+- Added live streaming support in iOS.
