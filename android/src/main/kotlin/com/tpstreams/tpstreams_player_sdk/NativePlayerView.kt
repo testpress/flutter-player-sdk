@@ -12,7 +12,7 @@ import androidx.fragment.app.FragmentActivity
 import com.tpstream.player.TPStreamPlayerListener
 import com.tpstream.player.TpInitParams
 import com.tpstream.player.TpStreamPlayer
-import com.tpstream.player.enum.PlaybackError
+import com.tpstream.player.constants.PlaybackError
 import com.tpstream.player.ui.InitializationListener
 import com.tpstream.player.ui.TpStreamPlayerFragment
 import io.flutter.plugin.common.BinaryMessenger
