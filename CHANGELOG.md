@@ -35,3 +35,6 @@
 
 - Bug fixes and code optimization.
 - Added live streaming support in iOS.
+
+## 2.1.3
+- Bug fixes and code optimization.
