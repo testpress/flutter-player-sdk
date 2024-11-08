@@ -38,3 +38,6 @@
 
 ## 2.1.3
 - Bug fixes and code optimization.
+
+## 2.1.4
+- Bug fixes and code optimization.
