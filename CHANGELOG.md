@@ -41,3 +41,6 @@
 
 ## 2.1.4
 - Bug fixes and code optimization.
+
+## 2.1.5
+- Bug fixes and code optimization.
