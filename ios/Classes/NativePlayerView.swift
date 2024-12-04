@@ -158,8 +158,12 @@ class NativePlayerView: NSObject, FlutterPlatformView {
     }
 
     private func getDurationInMillis() -> Int {
-        let duration = self.player.currentItem?.duration.seconds.rounded(.up) ?? 0.0
-        return Int(duration) * 1000
+        let duration = self.player.currentItem?.duration.seconds ?? 0.0
+        if duration.isFinite && !duration.isNaN {
+            return Int(duration.rounded(.up)) * 1000
+        } else {
+            return 0
+        }
     }
     
     private func seekToPosition(_ position: Int?) {
