@@ -94,7 +94,6 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
     });
   }
   void _setupPlayerChannels(int id) {
-    print("setupPlayerChannels $id");
     _eventChannel = EventChannel("tpstreams_player_sdk/player_view.events_$id");
     
     _eventChannel!.receiveBroadcastStream().listen((dynamic event) {
