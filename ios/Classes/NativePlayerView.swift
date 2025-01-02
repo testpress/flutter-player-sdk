@@ -3,8 +3,7 @@ import Flutter
 import TPStreamsSDK
 import AVKit
 
-class NativePlayerView: NSObject, FlutterPlatformView {
-    var viewId: Int64
+class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     var player: TPAVPlayer! {
         didSet {
             guard let player = player else { return }
@@ -12,7 +11,6 @@ class NativePlayerView: NSObject, FlutterPlatformView {
         }
     }
     var playerViewController: TPStreamPlayerViewController?
-    var methodChannel: FlutterMethodChannel
     private var eventChannel: FlutterEventChannel
     private var eventSink: FlutterEventSink?
     private var playerState: PlayerState = .unknown {
@@ -32,11 +30,11 @@ class NativePlayerView: NSObject, FlutterPlatformView {
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
         }
-        methodChannel = FlutterMethodChannel(name: "tpstreams_player_sdk/player_view_\(viewId)", binaryMessenger: messenger)
-        eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)
-        self.viewId = viewId
+        eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)      
         super.init()
-        methodChannel.setMethodCallHandler(onMethodCall)
+
+        NativePlayerApi.setUp(messenger, self, "\(viewId)")
+
         eventChannel.setStreamHandler(self)
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
@@ -105,79 +103,40 @@ class NativePlayerView: NSObject, FlutterPlatformView {
              break
          }
      }
-    
-    func onMethodCall(call: FlutterMethodCall, result: FlutterResult) {
-        guard let player = self.player else {
-            result(FlutterError(
-                code: "PLAYER_ERROR",
-                message: "Native Player was not initialized properly",
-                details: nil
-            ))
-            return
-        }
 
-        switch call.method {
-        case Methods.play:
-            executePlayerAction(player.play, result)
-        case Methods.pause:
-            executePlayerAction(player.pause, result)
-        case Methods.dispose:
-            executePlayerAction(self.dispose, result)
-        case Methods.getCurrentTime:
-            executePlayerAction({ return getCurrentTimeInMillis()}, result)
-        case Methods.getDuration:
-            executePlayerAction({return getDurationInMillis()}, result)
-        case Methods.seek:
-            executePlayerAction({ seekToPosition(call.arguments as? Int) }, result)
-        case Methods.setPlaybackSpeed:
-            executePlayerAction({ setPlaybackSpeed(call.arguments as? Double) }, result)
-        default:
-            result(FlutterMethodNotImplemented)
-        }
+        
+    func play() throws {
+        player.play()
     }
     
-    private func executePlayerAction(_ action: () throws -> Any, _ result: FlutterResult) {
-        do {
-            let actionResult = try action()
-            if type(of: actionResult) != Void.self {
-                result(actionResult)
-            } else{
-                result(nil)
-            }        
-        } catch {
-            result(FlutterError(code: "PLAYER_ERROR", message: "Error: " + error.localizedDescription, details: nil))
-        }
+    func pause() throws {
+        player.pause()
     }
     
-    func dispose(){
-        removeObservers()
-        self.player?.replaceCurrentItem(with: nil)
-        self.player = nil
+    func seek(position: Int64) throws {
+        player.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
     }
     
-    private func getCurrentTimeInMillis() -> Int {
-        return Int(self.player.currentTime().seconds.rounded(.up) * 1000)
+    func setPlaybackSpeed(_ speed: Double) throws {
+        player.rate = Float(speed)
     }
-
-    private func getDurationInMillis() -> Int {
-        let duration = self.player.currentItem?.duration.seconds ?? 0.0
+    
+    func getDuration() throws -> Int64 {
+        let duration = player.currentItem?.duration.seconds ?? 0.0
         if duration.isFinite && !duration.isNaN {
-            return Int(duration.rounded(.up)) * 1000
-        } else {
-            return 0
+            return Int64(duration * 1000)
         }
+        return 0
     }
     
-    private func seekToPosition(_ position: Int?) {
-        if let position = position {
-            player.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
-        }
+    func getCurrentTime() throws -> Int64 {
+        return Int64(player.currentTime().seconds * 1000)
     }
-
-    private func setPlaybackSpeed(_ speed: Double?) {
-        if let speed = speed {
-            player.rate = Float(speed)
-        }
+    
+    func dispose() throws {
+        removeObservers()
+        player.replaceCurrentItem(with: nil)
+        player = nil
     }
     
     func sendPlayerErrorEvent(_ error: Error){
