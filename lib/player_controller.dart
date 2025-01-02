@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/events.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
-import 'generated_pigeon.g.dart';
+import 'native_player_api.g.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {

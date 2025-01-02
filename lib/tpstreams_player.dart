@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
 
-import 'generated_pigeon.g.dart';
+import 'native_player_api.g.dart';
+
 
 class TPStreamPlayer extends StatefulWidget {
   final String assetId;

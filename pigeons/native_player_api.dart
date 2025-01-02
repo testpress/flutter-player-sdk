@@ -2,16 +2,15 @@ import 'package:pigeon/pigeon.dart';
 
 
 @ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/generated_pigeon.g.dart',
+  dartOut: 'lib/native_player_api.g.dart',
   dartOptions: DartOptions(),
   kotlinOut: 'android/src/main/kotlin/com/tpstreams/tpstreams_player_sdk/NativePlayerApi.g.kt',
   kotlinOptions: KotlinOptions(
     package: 'com.tpstreams.tpstreams_player_sdk',
+    includeErrorClass: false,
   ),
   swiftOut: 'ios/Classes/NativePlayerApi.g.swift',
-  swiftOptions: SwiftOptions(
-    package: 'com.tpstreams.tpstreams_player_sdk',
-  ),
+  swiftOptions: SwiftOptions(),
 ))
 
 @HostApi()
