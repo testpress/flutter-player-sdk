@@ -116,7 +116,7 @@ class NativePlayerView(
             .build()
         this.player!!.load(parameters)
         this.player!!.setListener(this)
-        methodChannel.invokeMethod("onNativePlayerCreated", id);
+        sendPlayerEvent("onNativePlayerCreated", id)
     }
 
     override fun dispose() {

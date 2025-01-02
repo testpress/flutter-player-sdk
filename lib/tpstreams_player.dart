@@ -28,6 +28,7 @@ class TPStreamPlayer extends StatefulWidget {
 
 class _TPStreamPlayerState extends State<TPStreamPlayer> {
   MethodChannel? methodChannel;
+  EventChannel? _eventChannel;
   TPStreamsPlayerController? _controller;
 
   @override
@@ -75,7 +76,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
           viewType: 'tpstreams_player_sdk/player_view',
           creationParams: creationParams,
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: _setupMethodChannel,
+          onPlatformViewCreated: _setupPlayerChannels,
         );
       default:
         return Text(
@@ -86,27 +87,23 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
   void Function(int id) _onAndroidPlatformViewCreated(
       Function platformViewCreatedCallback) {
     return ((int id) {
-      _setupMethodChannel(id);
+      _setupPlayerChannels(id);
       platformViewCreatedCallback(id);
     });
   }
-
-  void _setupMethodChannel(int id) {
+  void _setupPlayerChannels(int id) {
     methodChannel = MethodChannel('tpstreams_player_sdk/player_view_$id');
-    methodChannel!
-        .setMethodCallHandler((call) => _handlePlatformMethodCall(call, id));
-  }
-
-  Future<dynamic> _handlePlatformMethodCall(MethodCall call, int id) async {
-    if (call.method == "onNativePlayerCreated") {
-      _controller = TPStreamsPlayerController(
-        methodChannel!, 
-        EventChannel("tpstreams_player_sdk/player_view.events_$id")
-      );
-      widget.onPlayerCreated?.call(_controller!);
-    } else {
-      throw MissingPluginException();
-    }
+    _eventChannel = EventChannel("tpstreams_player_sdk/player_view.events_$id");
+    
+    _eventChannel!.receiveBroadcastStream().listen((dynamic event) {
+      if (event is Map && event['name'] == 'onNativePlayerCreated') {
+        _controller = TPStreamsPlayerController(
+          methodChannel!,
+          _eventChannel!
+        );
+        widget.onPlayerCreated?.call(_controller!);
+      }
+    });
   }
 
   @override

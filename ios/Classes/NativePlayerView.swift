@@ -4,6 +4,7 @@ import TPStreamsSDK
 import AVKit
 
 class NativePlayerView: NSObject, FlutterPlatformView {
+    var viewId: Int64
     var player: TPAVPlayer! {
         didSet {
             guard let player = player else { return }
@@ -33,9 +34,9 @@ class NativePlayerView: NSObject, FlutterPlatformView {
         }
         methodChannel = FlutterMethodChannel(name: "tpstreams_player_sdk/player_view_\(viewId)", binaryMessenger: messenger)
         eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)
+        self.viewId = viewId
         super.init()
         methodChannel.setMethodCallHandler(onMethodCall)
-        methodChannel.invokeMethod("onNativePlayerCreated", arguments: viewId)
         eventChannel.setStreamHandler(self)
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
@@ -49,6 +50,7 @@ class NativePlayerView: NSObject, FlutterPlatformView {
              guard let self = self else { return }
              self.observePlayerBufferingStatusChange()
              self.observeVideoEnd()
+             self.sendPlayerEvent(eventName: "onNativePlayerCreated", eventPayload: self.viewId)
          }
      }
      
