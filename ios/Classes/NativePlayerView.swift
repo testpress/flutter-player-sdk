@@ -14,7 +14,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     var playerViewController: TPStreamPlayerViewController?
     private var playerState: PlayerState = .unknown {
         didSet {
-            playerListener.onPlaybackStateChanged(playerState.rawValue, completion: handleFlutterCallResult)
+            playerListener.onPlaybackStateChanged(state:playerState.rawValue, completion: handleFlutterCallResult)
         }
     }
  
@@ -32,7 +32,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
         }
-
+        self.viewId = viewId
         initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         
@@ -52,7 +52,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
              guard let self = self else { return }
              self.observePlayerBufferingStatusChange()
              self.observeVideoEnd()
-             self.initializationListener.onNativePlayerCreated(self.viewId)
+             self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: handleFlutterCallResult)
          }
      }
      
@@ -77,7 +77,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         case #keyPath(TPAVPlayer.timeControlStatus):
             if let player = object as? TPAVPlayer {
                 playerListener.onIsPlayingChanged(
-                    player.timeControlStatus == .playing,
+                    isPlaying: player.timeControlStatus == .playing,
                     completion: handleFlutterCallResult
                 )
             }
@@ -148,7 +148,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
 
     func sendPlayerErrorEvent(_ error: Error) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
-            playerListener.onPlayerError(tpStreamPlayerError.message, completion: handleFlutterCallResult)
+            playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)
         }
     }
     
@@ -165,7 +165,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
     }
 
-    private func handleFlutterCallResult(_ result: Result<Void, Error>) {
+    private func handleFlutterCallResult(_ result: Result<Void, PigeonError>) {
         if case .failure(let error) = result {
             NSLog("Failed to call flutter from native: \(error.localizedDescription)")
         }
