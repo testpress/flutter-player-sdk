@@ -8,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
 
+import 'native_player_api.g.dart';
+
+
 class TPStreamPlayer extends StatefulWidget {
   final String assetId;
   final String accessToken;
@@ -27,7 +30,6 @@ class TPStreamPlayer extends StatefulWidget {
 }
 
 class _TPStreamPlayerState extends State<TPStreamPlayer> {
-  MethodChannel? methodChannel;
   EventChannel? _eventChannel;
   TPStreamsPlayerController? _controller;
 
@@ -92,13 +94,13 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
     });
   }
   void _setupPlayerChannels(int id) {
-    methodChannel = MethodChannel('tpstreams_player_sdk/player_view_$id');
     _eventChannel = EventChannel("tpstreams_player_sdk/player_view.events_$id");
     
     _eventChannel!.receiveBroadcastStream().listen((dynamic event) {
       if (event is Map && event['name'] == 'onNativePlayerCreated') {
+        var nativePlayerApi = NativePlayerApi(messageChannelSuffix: id.toString());
         _controller = TPStreamsPlayerController(
-          methodChannel!,
+          nativePlayerApi,
           _eventChannel!
         );
         widget.onPlayerCreated?.call(_controller!);

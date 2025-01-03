@@ -3,9 +3,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:tpstreams_player_sdk/methods.dart';
 import 'package:tpstreams_player_sdk/events.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
+
+import 'native_player_api.g.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {
@@ -62,48 +63,45 @@ class TPStreamsPlayerValue {
 }
 
 class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
-  final MethodChannel? _channel;
+  final NativePlayerApi _nativeApi;
   final EventChannel _eventChannel;
   Timer? _positionTimer;
 
-  TPStreamsPlayerController(this._channel, this._eventChannel)
+  TPStreamsPlayerController(this._nativeApi, this._eventChannel)
       : super(TPStreamsPlayerValue()) {
     _eventChannel.receiveBroadcastStream().listen(_onNativeEvent);
   }
 
   Future<void> play() async {
-    await _channel!.invokeMethod(Methods.play);
+    await _nativeApi.play();
   }
 
   Future<void> pause() async {
-    await _channel!.invokeMethod(Methods.pause);
+    await _nativeApi.pause();
   }
 
   Future<void> seek(Duration target) async {
-    await _channel!.invokeMethod(Methods.seek, target.inMilliseconds);
+    await _nativeApi.seek(target.inMilliseconds);
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
-    await _channel!.invokeMethod(Methods.setPlaybackSpeed, speed);
+    await _nativeApi.setPlaybackSpeed(speed);
   }
 
   Future<Duration> getDuration() async {
-    int durationInMilliseconds =
-        await (_channel!.invokeMethod(Methods.getDuration));
+    final durationInMilliseconds = await _nativeApi.getDuration();
     return Duration(milliseconds: durationInMilliseconds);
   }
 
   Future<Duration> getCurrentTime() async {
-    int currentTimeInMilliseconds =
-        await (_channel!.invokeMethod(Methods.getCurrentTime));
+    final currentTimeInMilliseconds = await _nativeApi.getCurrentTime();
     return Duration(milliseconds: currentTimeInMilliseconds);
   }
 
   Future<void> dispose() async {
-    if (Platform.isIOS) {
-      await _channel?.invokeMethod(Methods.dispose);
-    }
+    await _nativeApi.dispose();
     stopUpdatePositionTimer();
+    super.dispose();
   }
 
   void _onNativeEvent(dynamic nativeEventData) {

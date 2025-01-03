@@ -2,20 +2,19 @@ library tpstreams_player_sdk;
 
 export 'tpstreams_player.dart';
 export 'player_controller.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-
-enum PROVIDER {
-  tpstreams,
-  testpress,
-}
+import 'native_sdk_api.g.dart';
+export 'native_sdk_api.g.dart' show PROVIDER;
 
 class TPStreamsSDK {
   static String? _orgCode;
   static PROVIDER? _provider;
+  static final _nativeSdkApi = NativeSDKApi();
 
-  static void initialize(
-      {PROVIDER provider = PROVIDER.tpstreams, required String orgCode}) {
+  static void initialize({
+    PROVIDER provider = PROVIDER.tpstreams,
+    required String orgCode,
+  }) {
     if (orgCode.isEmpty) {
       throw Exception("Given OrgCode is empty, please pass a valid orgCode");
     }
@@ -24,11 +23,7 @@ class TPStreamsSDK {
     _provider = provider;
 
     WidgetsFlutterBinding.ensureInitialized();
-    const methodChannel = MethodChannel("tpstreams_player_sdk");
-    methodChannel.invokeMethod('initializeNativeSDK', {
-      "orgCode": _orgCode,
-      "provider": _provider.toString().split('.').last
-    });
+    _nativeSdkApi.initialize(provider, orgCode);
   }
 
   static String get orgCode {
