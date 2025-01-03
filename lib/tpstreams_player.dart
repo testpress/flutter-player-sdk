@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
 
 import 'native_player_api.g.dart';
+import 'native_player_listeners.g.dart';
 
 
 class TPStreamPlayer extends StatefulWidget {
@@ -29,8 +30,7 @@ class TPStreamPlayer extends StatefulWidget {
   State<TPStreamPlayer> createState() => _TPStreamPlayerState();
 }
 
-class _TPStreamPlayerState extends State<TPStreamPlayer> {
-  EventChannel? _eventChannel;
+class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
 
   @override
@@ -78,7 +78,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
           viewType: 'tpstreams_player_sdk/player_view',
           creationParams: creationParams,
           creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: _setupPlayerChannels,
+          onPlatformViewCreated: setUpNativePlayerInitializationListener,
         );
       default:
         return Text(
@@ -89,23 +89,19 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> {
   void Function(int id) _onAndroidPlatformViewCreated(
       Function platformViewCreatedCallback) {
     return ((int id) {
-      _setupPlayerChannels(id);
+      setUpNativePlayerInitializationListener(id);
       platformViewCreatedCallback(id);
     });
   }
-  void _setupPlayerChannels(int id) {
-    _eventChannel = EventChannel("tpstreams_player_sdk/player_view.events_$id");
-    
-    _eventChannel!.receiveBroadcastStream().listen((dynamic event) {
-      if (event is Map && event['name'] == 'onNativePlayerCreated') {
-        var nativePlayerApi = NativePlayerApi(messageChannelSuffix: id.toString());
-        _controller = TPStreamsPlayerController(
-          nativePlayerApi,
-          _eventChannel!
-        );
-        widget.onPlayerCreated?.call(_controller!);
-      }
-    });
+
+  void setUpNativePlayerInitializationListener(int id) {
+    NativePlayerInitializationListener.setUp(this, messageChannelSuffix: id.toString());
+  }
+
+  @override
+  void onNativePlayerCreated(int platformViewId) {
+    _controller = TPStreamsPlayerController(platformViewId);
+    widget.onPlayerCreated?.call(_controller!);
   }
 
   @override

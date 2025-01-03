@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
   void _onPlayerCreated(TPStreamsPlayerController controller) {
     this.controller = controller;
     this.controller?.addListener(() {
+      print("${this.controller!.value.isPlaying}");
       print(
           "${this.controller!.value.position}/${this.controller!.value.duration}");
     });
