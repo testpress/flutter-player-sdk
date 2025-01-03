@@ -4,6 +4,7 @@ import TPStreamsSDK
 import AVKit
 
 class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
+    var viewId: Int64
     var player: TPAVPlayer! {
         didSet {
             guard let player = player else { return }
@@ -31,9 +32,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             playerViewController!.player = player
         }
         eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)      
+        self.viewId = viewId
         super.init()
 
-        NativePlayerApi.setUp(messenger, self, "\(viewId)")
+        NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
 
         eventChannel.setStreamHandler(self)
         self.observePlayerStatusChange()
@@ -117,7 +119,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player.seek(to: CMTime(value: CMTimeValue(position), timescale: 1000))
     }
     
-    func setPlaybackSpeed(_ speed: Double) throws {
+    func setPlaybackSpeed(speed: Double) throws {
         player.rate = Float(speed)
     }
     
@@ -146,6 +148,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func sendPlayerEvent(eventName: String, eventPayload: Any) {
+        print("sendPlayerEvent: \(eventName) \(eventPayload)")
         guard let eventSink = eventSink else {
             return
         }

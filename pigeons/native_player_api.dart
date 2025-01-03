@@ -10,7 +10,9 @@ import 'package:pigeon/pigeon.dart';
     includeErrorClass: false,
   ),
   swiftOut: 'ios/Classes/NativePlayerApi.g.swift',
-  swiftOptions: SwiftOptions(),
+  swiftOptions: SwiftOptions(
+    includeErrorClass: false
+  ),
 ))
 
 @HostApi()

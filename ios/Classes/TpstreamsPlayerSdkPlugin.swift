@@ -6,11 +6,12 @@ public class TpstreamsPlayerSdkPlugin: NSObject, FlutterPlugin, NativeSDKApi {
   public static func register(with registrar: FlutterPluginRegistrar) {
     registrar.register(PlayerViewFactory(messenger: registrar.messenger()), withId: "tpstreams_player_sdk/player_view") 
     let instance = TpstreamsPlayerSdkPlugin()
-    NativeSDKApi.setUp(registrar.messenger(), instance)
+    NativeSDKApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
   }
 
-  func initialize(provider: Provider, orgCode: String) throws {
-    let sdkProvider: TPStreamsSDK.Provider = provider == .testpress ? .testpress : .tpstreams
+  func initialize(provider: PROVIDER, orgCode: String) throws {
+
+    let sdkProvider = provider == .testpress ? Provider.testpress : Provider.tpstreams
     TPStreamsSDK.initialize(for: sdkProvider, withOrgCode: orgCode)
   }
 }
