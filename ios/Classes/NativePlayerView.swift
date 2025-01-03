@@ -14,7 +14,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     var playerViewController: TPStreamPlayerViewController?
     private var playerState: PlayerState = .unknown {
         didSet {
-            playerListener.onPlaybackStateChanged(playerState.rawValue)
+            playerListener.onPlaybackStateChanged(playerState.rawValue, completion: handleFlutterCallResult)
         }
     }
  
@@ -76,7 +76,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         switch keyPath {
         case #keyPath(TPAVPlayer.timeControlStatus):
             if let player = object as? TPAVPlayer {
-                playerListener.onIsPlayingChanged(player.timeControlStatus == .playing)
+                playerListener.onIsPlayingChanged(
+                    player.timeControlStatus == .playing,
+                    completion: handleFlutterCallResult
+                )
             }
         case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
             if let playerItem = object as? AVPlayerItem {
@@ -145,7 +148,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
 
     func sendPlayerErrorEvent(_ error: Error) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
-            playerListener.onPlayerError(tpStreamPlayerError.message)
+            playerListener.onPlayerError(tpStreamPlayerError.message, completion: handleFlutterCallResult)
         }
     }
     
@@ -160,6 +163,12 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty))
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
+    }
+
+    private func handleFlutterCallResult(_ result: Result<Void, Error>) {
+        if case .failure(let error) = result {
+            NSLog("Failed to call flutter from native: \(error.localizedDescription)")
+        }
     }
 }
 
