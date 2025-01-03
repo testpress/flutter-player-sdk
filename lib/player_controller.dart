@@ -3,10 +3,10 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:tpstreams_player_sdk/events.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
 import 'native_player_api.g.dart';
+import 'native_player_listeners.g.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {
@@ -62,14 +62,14 @@ class TPStreamsPlayerValue {
   }
 }
 
-class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
-  final NativePlayerApi _nativeApi;
-  final EventChannel _eventChannel;
+class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> implements NativePlayerListener {
+  final int platformViewId;
+  late NativePlayerApi _nativeApi;
   Timer? _positionTimer;
 
-  TPStreamsPlayerController(this._nativeApi, this._eventChannel)
-      : super(TPStreamsPlayerValue()) {
-    _eventChannel.receiveBroadcastStream().listen(_onNativeEvent);
+  TPStreamsPlayerController(this.platformViewId) : super(TPStreamsPlayerValue()) {
+    _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
+    NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
   }
 
   Future<void> play() async {
@@ -98,49 +98,14 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
     return Duration(milliseconds: currentTimeInMilliseconds);
   }
 
-  Future<void> dispose() async {
-    await _nativeApi.dispose();
-    stopUpdatePositionTimer();
-    super.dispose();
-  }
-
-  void _onNativeEvent(dynamic nativeEventData) {
-    final Map<dynamic, dynamic> event = nativeEventData;
-    final String eventName = event["name"];
-    final dynamic payload = event["payload"];
-
-    switch (eventName) {
-      case Events.onIsPlayingChanged:
-        _handleIsPlayingChanged(payload);
-        break;
-      case Events.onPlaybackStateChanged:
-        _handlePlaybackStateChanged(payload);
-        break;
-      case Events.onPlayerError:
-        _handlePlayerError(payload);
-        break;
-      default:
-    }
-  }
-
-  void _handleIsPlayingChanged(dynamic payload) {
-    value = value.copyWith(isPlaying: payload);
-
-    if (value.isPlaying) {
-      startUpdatePositionTimer();
-    } else {
-      stopUpdatePositionTimer();
-    }
-  }
-
-  void _handlePlaybackStateChanged(dynamic payload) {
-    final String? playbackState = payload;
-    final bool ended = playbackState == 'ended';
-    final bool ready = playbackState == 'ready';
+  @override
+  void onPlaybackStateChanged(String state) {
+    final bool ended = state == 'ended';
+    final bool ready = state == 'ready';
 
     value = value.copyWith(
       isLoading: value.isLoading && !ready,
-      isBuffering: playbackState == 'buffering',
+      isBuffering: state == 'buffering',
       isEnded: ended,
       position: ended ? value.duration : value.position,
     );
@@ -148,8 +113,19 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
     if (ended) stopUpdatePositionTimer();
   }
 
-  void _handlePlayerError(dynamic errorMessage) {
-    value = value.copyWith(error: TPStreamsError(null, errorMessage));
+  @override
+  void onIsPlayingChanged(bool isPlaying) {
+    value = value.copyWith(isPlaying: isPlaying);
+    if (isPlaying) {
+      startUpdatePositionTimer();
+    } else {
+      stopUpdatePositionTimer();
+    }
+  }
+
+  @override
+  void onPlayerError(String error) {
+    value = value.copyWith(error: TPStreamsError(null, error));
   }
 
   void _updateDurationIfNeeded() {
@@ -171,5 +147,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> {
 
   void stopUpdatePositionTimer() {
     _positionTimer?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _nativeApi.dispose();
+    stopUpdatePositionTimer();
+    super.dispose();
   }
 }

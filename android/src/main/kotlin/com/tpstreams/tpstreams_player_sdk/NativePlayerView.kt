@@ -14,9 +14,8 @@ import com.tpstream.player.constants.PlaybackError
 import com.tpstream.player.ui.InitializationListener
 import com.tpstream.player.ui.TpStreamPlayerFragment
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.EventChannel
-import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.platform.PlatformView
+import android.util.Log
 
 const val FRAME_LAYOUT_ID = 0x123456
 
@@ -30,8 +29,9 @@ class NativePlayerView(
     private val linearLayout = createLinearLayout()
     private val playerFragment = TpStreamPlayerFragment()
     private var player: TpStreamPlayer? = null
-    private val eventChannel: EventChannel
-    private var playerEventSink: EventSink? = null
+    
+    private val initializationListener = NativePlayerInitializationListener(messenger, messageChannelSuffix = id.toString())
+    private val playerListener = NativePlayerListener(messenger, messageChannelSuffix = id.toString())
 
     override fun getView(): View {
         return linearLayout
@@ -43,18 +43,6 @@ class NativePlayerView(
         setupPlayerFragmentOnAttach(frameLayout)
 
         NativePlayerApi.setUp(messenger, this, id.toString())
-
-        eventChannel = EventChannel(messenger, "tpstreams_player_sdk/player_view.events_$id")
-        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, eventSink: EventSink?) {
-                playerEventSink = eventSink
-            }
-
-            override fun onCancel(arguments: Any?) {
-                playerEventSink = null
-            }
-        })
-
     }
 
     private fun createLinearLayout(): LinearLayout {
@@ -112,7 +100,8 @@ class NativePlayerView(
             .build()
         this.player!!.load(parameters)
         this.player!!.setListener(this)
-        sendPlayerEvent("onNativePlayerCreated", id)
+
+        initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)
     }
 
     override fun play() {
@@ -146,7 +135,7 @@ class NativePlayerView(
 
     override fun onPlaybackStateChanged(playbackState: Int) {
         super.onPlaybackStateChanged(playbackState)
-        sendPlayerEvent(Events.onPlaybackStateChanged, getPlaybackStateString(playbackState))
+        playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), handleFlutterCallResult)
     }
 
     private fun getPlaybackStateString(playbackState: Int): String {
@@ -161,20 +150,17 @@ class NativePlayerView(
 
     override fun onIsPlayingChanged(playing: Boolean) {
         super.onIsPlayingChanged(playing)
-        sendPlayerEvent(Events.onIsPlayingChanged, playing)
+        playerListener.onIsPlayingChanged(playing, handleFlutterCallResult)
     }
 
     override fun onPlayerError(playbackError: PlaybackError) {
         super.onPlayerError(playbackError)
-        sendPlayerEvent(Events.onPlayerError, playbackError.toString())
+        playerListener.onPlayerError(playbackError.toString(), handleFlutterCallResult)
     }
 
-    private fun sendPlayerEvent(eventName: String, eventPayload: Any) {
-        if (playerEventSink != null) {
-            val event: MutableMap<String, Any> = HashMap()
-            event["name"] = eventName
-            event["payload"] = eventPayload
-            playerEventSink!!.success(event)
+    private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->
+        if (result.isFailure) {
+            Log.e("NativePlayerView", "Failed to call flutter from native: ${result.exceptionOrNull()?.message}")
         }
     }
 }

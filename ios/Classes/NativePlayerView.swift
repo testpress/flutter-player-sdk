@@ -12,13 +12,14 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         }
     }
     var playerViewController: TPStreamPlayerViewController?
-    private var eventChannel: FlutterEventChannel
-    private var eventSink: FlutterEventSink?
     private var playerState: PlayerState = .unknown {
-        didSet{
-            sendPlayerEvent(eventName: Events.onPlaybackStateChanged, eventPayload: playerState.rawValue)
+        didSet {
+            playerListener.onPlaybackStateChanged(state:playerState.rawValue, completion: handleFlutterCallResult)
         }
     }
+ 
+    private let initializationListener: NativePlayerInitializationListener
+    private let playerListener: NativePlayerListener
     private var currentItemChangeObservation: NSKeyValueObservation!
 
     func view() -> UIView {
@@ -31,13 +32,14 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
         }
-        eventChannel = FlutterEventChannel(name: "tpstreams_player_sdk/player_view.events_\(viewId)", binaryMessenger: messenger)      
         self.viewId = viewId
+        initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
+        playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
+        
         super.init()
 
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
-
-        eventChannel.setStreamHandler(self)
+        
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
     }
@@ -50,7 +52,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
              guard let self = self else { return }
              self.observePlayerBufferingStatusChange()
              self.observeVideoEnd()
-             self.sendPlayerEvent(eventName: "onNativePlayerCreated", eventPayload: self.viewId)
+             self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: handleFlutterCallResult)
          }
      }
      
@@ -68,26 +70,29 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
          NotificationCenter.default.addObserver(self, selector:#selector(self.playerDidFinishPlaying),name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
      }
  
-     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
-         guard let keyPath = keyPath else { return }
-         
-         switch keyPath {
-         case #keyPath(TPAVPlayer.timeControlStatus):
-             if let player = object as? TPAVPlayer {
-                 sendPlayerEvent(eventName: Events.onIsPlayingChanged, eventPayload: player.timeControlStatus == .playing)
-             }
-         case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
-             if let playerItem = object as? AVPlayerItem {
-                 handleBufferStatusChange(of: playerItem, keyPath: keyPath)
-             }
-         case #keyPath(AVPlayerItem.status):
-             if player.currentItem?.status == .readyToPlay {
-                 playerState = .ready
-             }
-         default:
-             break
-         }
-     }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        guard let keyPath = keyPath else { return }
+        
+        switch keyPath {
+        case #keyPath(TPAVPlayer.timeControlStatus):
+            if let player = object as? TPAVPlayer {
+                playerListener.onIsPlayingChanged(
+                    isPlaying: player.timeControlStatus == .playing,
+                    completion: handleFlutterCallResult
+                )
+            }
+        case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
+            if let playerItem = object as? AVPlayerItem {
+                handleBufferStatusChange(of: playerItem, keyPath: keyPath)
+            }
+        case #keyPath(AVPlayerItem.status):
+            if player.currentItem?.status == .readyToPlay {
+                playerState = .ready
+            }
+        default:
+            break
+        }
+    }
  
     @objc private func playerDidFinishPlaying() { playerState = .ended }
 
@@ -140,24 +145,11 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player.replaceCurrentItem(with: nil)
         player = nil
     }
-    
-    func sendPlayerErrorEvent(_ error: Error){
-        if let tpStreamPlayerError = error as? TPStreamPlayerError {
-            sendPlayerEvent(eventName: Events.onPlayerError, eventPayload: tpStreamPlayerError.message)
-        }
-    }
-    
-    func sendPlayerEvent(eventName: String, eventPayload: Any) {
-        print("sendPlayerEvent: \(eventName) \(eventPayload)")
-        guard let eventSink = eventSink else {
-            return
-        }
-        let event: [String: Any] = [
-            "name": eventName,
-            "payload": eventPayload
-        ]
 
-        eventSink(event)
+    func sendPlayerErrorEvent(_ error: Error) {
+        if let tpStreamPlayerError = error as? TPStreamPlayerError {
+            playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)
+        }
     }
     
     deinit {
@@ -172,20 +164,13 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
     }
-}
 
-extension NativePlayerView: FlutterStreamHandler {
-    func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        self.eventSink = events
-        return nil
-    }
-    
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        self.eventSink = nil
-        return nil
+    private func handleFlutterCallResult(_ result: Result<Void, PigeonError>) {
+        if case .failure(let error) = result {
+            NSLog("Failed to call flutter from native: \(error.localizedDescription)")
+        }
     }
 }
-
 
 private enum PlayerState : String{
     case buffering = "buffering",
