@@ -3,8 +3,8 @@ library tpstreams_player_sdk;
 export 'tpstreams_player.dart';
 export 'player_controller.dart';
 import 'package:flutter/widgets.dart';
-import 'native_sdk_api.g.dart';
-export 'native_sdk_api.g.dart' show PROVIDER;
+import 'generated/native_sdk_api.g.dart';
+export 'generated/native_sdk_api.g.dart' show PROVIDER;
 
 class TPStreamsSDK {
   static String? _orgCode;

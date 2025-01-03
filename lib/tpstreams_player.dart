@@ -8,8 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
 
-import 'native_player_api.g.dart';
-import 'native_player_listeners.g.dart';
+import 'generated/native_player_api.g.dart';
+import 'generated/native_player_listeners.g.dart';
 
 
 class TPStreamPlayer extends StatefulWidget {

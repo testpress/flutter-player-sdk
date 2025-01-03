@@ -1,13 +1,13 @@
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/native_player_listeners.g.dart',
-  kotlinOut: 'android/src/main/kotlin/com/tpstreams/tpstreams_player_sdk/NativePlayerListeners.g.kt',
+  dartOut: 'lib/generated/native_player_listeners.g.dart',
+  kotlinOut: 'android/src/main/kotlin/com/tpstreams/tpstreams_player_sdk/generated/NativePlayerListeners.g.kt',
   kotlinOptions: KotlinOptions(
     package: 'com.tpstreams.tpstreams_player_sdk',
     includeErrorClass: false,
   ),
-  swiftOut: 'ios/Classes/NativePlayerListeners.g.swift',
+  swiftOut: 'ios/Classes/generated/NativePlayerListeners.g.swift',
   swiftOptions: SwiftOptions(
     includeErrorClass: false,
   ),
