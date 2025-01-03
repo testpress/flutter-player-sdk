@@ -63,13 +63,13 @@ class TPStreamsPlayerValue {
 }
 
 class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> implements NativePlayerListener {
-  final int id;
+  final int platformViewId;
   late NativePlayerApi _nativeApi;
   Timer? _positionTimer;
 
-  TPStreamsPlayerController(this.id) : super(TPStreamsPlayerValue()) {
-    _nativeApi = NativePlayerApi(messageChannelSuffix: id.toString());
-    NativePlayerListener.setUp(this, messageChannelSuffix: id.toString());
+  TPStreamsPlayerController(this.platformViewId) : super(TPStreamsPlayerValue()) {
+    _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
+    NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
   }
 
   Future<void> play() async {
