@@ -1,12 +1,12 @@
 import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/native_sdk_api.g.dart',
-  kotlinOut: 'android/src/main/kotlin/com/tpstreams/tpstreams_player_sdk/NativeSDKApi.g.kt',
+  dartOut: 'lib/generated/native_sdk_api.g.dart',
+  kotlinOut: 'android/src/main/kotlin/com/tpstreams/tpstreams_player_sdk/generated/NativeSDKApi.g.kt',
   kotlinOptions: KotlinOptions(
     package: 'com.tpstreams.tpstreams_player_sdk',
   ),
-  swiftOut: 'ios/Classes/NativeSDKApi.g.swift',
+  swiftOut: 'ios/Classes/generated/NativeSDKApi.g.swift',
   swiftOptions: SwiftOptions(),
 ))
 

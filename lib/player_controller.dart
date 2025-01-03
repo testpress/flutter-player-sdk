@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
-import 'native_player_api.g.dart';
-import 'native_player_listeners.g.dart';
+import 'generated/native_player_api.g.dart';
+import 'generated/native_player_listeners.g.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {
