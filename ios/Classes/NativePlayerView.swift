@@ -30,6 +30,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         if let args = args as? [String: String], let assetId = args["assetId"] as? String, let accessToken = args["accessToken"] as? String {
             player = TPAVPlayer(assetID: assetId, accessToken: accessToken)
             playerViewController = TPStreamPlayerViewController()
+            configurePlayerViewController(args: args)
             playerViewController!.player = player
         }
         self.viewId = viewId
@@ -42,6 +43,16 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
+    }
+    
+    private func configurePlayerViewController(args: [String: String]) {
+        let showDownloadOption = (args["showDownloadOption"] as? Bool) ?? false
+        if showDownloadOption {
+            let config = TPStreamPlayerConfigurationBuilder()
+                .showDownloadOption()
+                .build()
+            playerViewController?.config = config
+        }
     }
  
      private func observeCurrentItemChanges(){
