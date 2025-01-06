@@ -146,7 +146,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player = nil
     }
 
-    func sendPlayerErrorEvent(_ error: Error) {
+    func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
             playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)
         }

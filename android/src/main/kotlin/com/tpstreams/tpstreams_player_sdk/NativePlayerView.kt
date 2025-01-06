@@ -158,6 +158,8 @@ class NativePlayerView(
         playerListener.onPlayerError(playbackError.toString(), handleFlutterCallResult)
     }
 
+    override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {}
+
     private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->
         if (result.isFailure) {
             Log.e("NativePlayerView", "Failed to call flutter from native: ${result.exceptionOrNull()?.message}")
