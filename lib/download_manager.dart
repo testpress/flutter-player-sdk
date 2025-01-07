@@ -9,11 +9,11 @@ class TPStreamsDownloadManager {
     return _downloadManagerApi.getAllDownloads();
   }
 
-  Stream<List<native_api.DownloadAsset>> getDownloadProgressChangeStream() {
+  Stream<List<native_api.DownloadAsset>> get downloadProgressStream {
     return native_api.getDownloadProgressChangeStream().map((event) => event.downloads);
   }
 
   dispose() {
     _downloadManagerApi.dispose();
   }
-} 
+}

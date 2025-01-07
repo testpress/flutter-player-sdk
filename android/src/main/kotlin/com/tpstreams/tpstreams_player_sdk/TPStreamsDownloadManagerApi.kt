@@ -70,4 +70,4 @@ class TPStreamsDownloadManagerApi(
         eventSink?.endOfStream()
         eventSink = null
     }
-} 
+}

@@ -27,7 +27,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   void _listenToDownloadProgress() {
-    _downloadManager.getDownloadProgressChangeStream().listen(
+    _downloadManager.downloadProgressStream.listen(
       (downloads) {
         setState(() {
           _downloads = downloads;
@@ -54,6 +54,21 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     }
   }
 
+  Color _getStateColor(DownloadState state) {
+    switch (state) {
+      case DownloadState.notDownloaded:
+        return Colors.grey;
+      case DownloadState.downloading:
+        return Colors.blue;
+      case DownloadState.paused:
+        return Colors.orange;
+      case DownloadState.completed:
+        return Colors.green;
+      case DownloadState.failed:
+        return Colors.red;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,32 +77,77 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       ),
       body: _downloads.isEmpty
           ? const Center(
-              child: Text('No downloads available'),
+              child: Text(
+                'No downloads available',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
             )
-          : ListView.builder(
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _downloads.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final asset = _downloads[index];
-                return ListTile(
-                  title: Text(asset.title ?? 'Untitled'),
-                  subtitle: Column(
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_getStateText(asset.state)),
-                      if (asset.state == DownloadState.downloading)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: LinearProgressIndicator(
-                            value: asset.progress / 100,
-                            backgroundColor: Colors.grey[300],
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              asset.title ?? 'Untitled',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getStateColor(asset.state).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _getStateText(asset.state),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _getStateColor(asset.state),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (asset.state == DownloadState.downloading) ...[
+                        const SizedBox(height: 12),
+                        LinearProgressIndicator(
+                          value: asset.progress / 100,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getStateColor(asset.state),
                           ),
                         ),
-                      if (asset.state == DownloadState.downloading)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text('${asset.progress.toStringAsFixed(1)}%'),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${(asset.progress).toStringAsFixed(1)}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
                         ),
+                      ],
                     ],
                   ),
                 );

@@ -39,6 +39,19 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final videos = [
+      (
+        title: 'Watch Video 1',
+        assetId: '8eaHZjXt6km',
+        accessToken: '16b608ba-9979-45a0-94fb-b27c1a86b3c1'
+      ),
+      (
+        title: 'Watch Video 2', 
+        assetId: '68PAFnYTjSU',
+        accessToken: '5f3ded52-ace8-487e-809c-10de895872d6'
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('TPStreams Player Example'),
@@ -47,44 +60,30 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VideoScreen(
-                      assetId: '8eaHZjXt6km',
-                      accessToken: '16b608ba-9979-45a0-94fb-b27c1a86b3c1',
-                      showDownloadOption: true,
+            ...videos.map((video) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VideoScreen(
+                        assetId: video.assetId,
+                        accessToken: video.accessToken,
+                        showDownloadOption: true,
+                      ),
                     ),
-                  ),
-                );
-              },
-              child: const Text('Watch Video 1'),
-            ),
-            const SizedBox(height: 20),
+                  );
+                },
+                child: Text(video.title),
+              ),
+            )),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const VideoScreen(
-                      assetId: '68PAFnYTjSU',
-                      accessToken: '5f3ded52-ace8-487e-809c-10de895872d6',
-                      showDownloadOption: true,
-                    ),
-                  ),
-                );
-              },
-              child: const Text('Watch Video 2'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DownloadsScreen(),
+                    builder: (context) => const DownloadsScreen(),
                   ),
                 );
               },
