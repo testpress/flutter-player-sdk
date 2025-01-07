@@ -21,6 +21,7 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   private lateinit var channel : MethodChannel
   private lateinit var activity: Activity
   private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
+  private var downloadManagerApi: TPStreamsDownloadManagerApi? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     this.flutterPluginBinding = flutterPluginBinding
@@ -36,13 +37,20 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-    
+    downloadManagerApi?.dispose()
+    downloadManagerApi = null
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     activity = binding.activity
     flutterPluginBinding.platformViewRegistry.registerViewFactory(
       "tpstreams_player_sdk/player_view", PlayerViewFactory(flutterPluginBinding.binaryMessenger, activity))
+
+    this.downloadManagerApi = TPStreamsDownloadManagerApi(
+      flutterPluginBinding.applicationContext,
+      flutterPluginBinding.binaryMessenger
+    )
+    NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, this.downloadManagerApi!!)
   }
 
   override fun onDetachedFromActivityForConfigChanges() {}

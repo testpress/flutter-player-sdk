@@ -1,50 +1,98 @@
 import 'package:flutter/material.dart';
-import 'package:tpstreams_player_sdk/player_controller.dart';
 import 'package:tpstreams_player_sdk/tpstreams_player_sdk.dart';
+import 'screens/downloads_screen.dart';
+import 'screens/video_screen.dart';
 
 void main() {
-  TPStreamsSDK.initialize(provider: PROVIDER.testpress, orgCode: "lmsdemo");
+  TPStreamsSDK.initialize(provider: PROVIDER.tpstreams, orgCode: "6eafqn");
 
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
-
-  late final TPStreamsPlayerController? controller;
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-      appBar: AppBar(
-        title: const Text('Plugin example app'),
+      title: 'TPStreams Player Example',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
-      body: Column(
-        children: [
-          TPStreamPlayer(
-            assetId: "z1TLpfuZzXh",
-            accessToken: "5c49285b-0557-4cef-b214-66034d0b77c3",
-            onPlayerCreated: _onPlayerCreated,
-            showDownloadOption: true,
-          ),
-          ElevatedButton(
-            onPressed: () {
-              controller?.pause();
-            },
-            child: const Text('Pause'),
-          ),
-        ],
-      ),
-    ));
+      home: const HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
   }
 
-  void _onPlayerCreated(TPStreamsPlayerController controller) {
-    this.controller = controller;
-    this.controller?.addListener(() {
-      print("${this.controller!.value.isPlaying}");
-      print(
-          "${this.controller!.value.position}/${this.controller!.value.duration}");
-    });
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('TPStreams Player Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VideoScreen(
+                      assetId: '8eaHZjXt6km',
+                      accessToken: '16b608ba-9979-45a0-94fb-b27c1a86b3c1',
+                      showDownloadOption: true,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Watch Video 1'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const VideoScreen(
+                      assetId: '68PAFnYTjSU',
+                      accessToken: '5f3ded52-ace8-487e-809c-10de895872d6',
+                      showDownloadOption: true,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Watch Video 2'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DownloadsScreen(),
+                  ),
+                );
+              },
+              child: const Text('Downloads'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
