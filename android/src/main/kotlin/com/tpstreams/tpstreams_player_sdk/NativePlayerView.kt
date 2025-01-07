@@ -96,17 +96,23 @@ class NativePlayerView(
         val accessToken = creationParams?.get("accessToken") as? String
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
-        
-        val parameters = TpInitParams.Builder()
-            .setVideoId(requireNotNull(assetId))
-            .setAccessToken(requireNotNull(accessToken))
-            .apply {
-                if (showDownloadOption) {
-                    enableDownloadSupport(true)
-                    setOfflineLicenseExpireTime(60 * 60 * 24 * offlineLicenseExpireDays)
+        val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
+
+        val parameters = if (isOfflinePlayback) {
+            TpInitParams.createOfflineParams(requireNotNull(assetId))
+        } else {
+            TpInitParams.Builder()
+                .setVideoId(requireNotNull(assetId))
+                .setAccessToken(requireNotNull(accessToken))
+                .apply {
+                    if (showDownloadOption) {
+                        enableDownloadSupport(true)
+                        setOfflineLicenseExpireTime(60 * 60 * 24 * offlineLicenseExpireDays)
+                    }
                 }
-            }
-            .build()
+                .build()
+        }
+        
         this.player!!.load(parameters)
         this.player!!.setListener(this)
 

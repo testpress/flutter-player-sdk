@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tpstreams_player_sdk/tpstreams_player_sdk.dart';
+import 'downloaded_video_screen.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
@@ -37,6 +38,17 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       onError: (error) {
         debugPrint('Download progress error: $error');
       },
+    );
+  }
+
+  void _playDownloadedVideo(DownloadAsset asset) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DownloadedVideoScreen(
+          downloadAsset: asset,
+        ),
+      ),
     );
   }
 
@@ -103,6 +115,16 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         ));
         break;
       case DownloadState.completed:
+        buttons.add(_buildIconButton(
+          icon: Icons.play_arrow,
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DownloadedVideoScreen(downloadAsset: asset),
+            ),
+          ),
+          tooltip: 'Play',
+        ));
         buttons.add(_buildIconButton(
           icon: Icons.delete,
           onPressed: () => _downloadManager.deleteDownload(asset),

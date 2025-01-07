@@ -14,21 +14,34 @@ import 'generated/native_player_listeners.g.dart';
 
 class TPStreamPlayer extends StatefulWidget {
   final String assetId;
-  final String accessToken;
+  final String? accessToken;
   final double aspectRatio;
   final Function(TPStreamsPlayerController controller)? onPlayerCreated;
-  final bool showDownloadOption;
+  final bool? showDownloadOption;
   final int? offlineLicenseExpireDays;
+  final bool _isOfflinePlayback;
 
   const TPStreamPlayer({
-    Key? key,
+    super.key,  
     required this.assetId,
     required this.accessToken,
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
     this.showDownloadOption = false,
     this.offlineLicenseExpireDays = 15,
-  }) : super(key: key);
+  }) : _isOfflinePlayback = false;
+
+  const TPStreamPlayer.offline({
+    super.key,
+    required String assetId,
+    this.aspectRatio = 16 / 9,
+    Function(TPStreamsPlayerController controller)? onPlayerCreated,
+  }) : assetId = assetId,
+       accessToken = null,
+       showDownloadOption = false,
+       offlineLicenseExpireDays = 15,
+       onPlayerCreated = onPlayerCreated,
+       _isOfflinePlayback = true;
 
   @override
   State<TPStreamPlayer> createState() => _TPStreamPlayerState();
@@ -51,6 +64,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     var creationParams = {
       "assetId": widget.assetId,
       "accessToken": widget.accessToken,
+      "isOfflinePlayback": widget._isOfflinePlayback,
       "showDownloadOption": widget.showDownloadOption,
       "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     };
