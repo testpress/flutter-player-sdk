@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
             assetId: "z1TLpfuZzXh",
             accessToken: "5c49285b-0557-4cef-b214-66034d0b77c3",
             onPlayerCreated: _onPlayerCreated,
+            showDownloadOption: true,
           ),
           ElevatedButton(
             onPressed: () {

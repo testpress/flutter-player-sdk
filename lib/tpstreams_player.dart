@@ -17,6 +17,8 @@ class TPStreamPlayer extends StatefulWidget {
   final String accessToken;
   final double aspectRatio;
   final Function(TPStreamsPlayerController controller)? onPlayerCreated;
+  final bool showDownloadOption;
+  final int? offlineLicenseExpireDays;
 
   const TPStreamPlayer({
     Key? key,
@@ -24,6 +26,8 @@ class TPStreamPlayer extends StatefulWidget {
     required this.accessToken,
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
+    this.showDownloadOption = false,
+    this.offlineLicenseExpireDays = 15,
   }) : super(key: key);
 
   @override
@@ -46,7 +50,9 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   Widget getPlayerNativeView() {
     var creationParams = {
       "assetId": widget.assetId,
-      "accessToken": widget.accessToken
+      "accessToken": widget.accessToken,
+      "showDownloadOption": widget.showDownloadOption,
+      "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     };
 
     switch (defaultTargetPlatform) {

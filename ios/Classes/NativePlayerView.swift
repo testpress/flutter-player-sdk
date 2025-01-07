@@ -27,7 +27,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
 
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
-        if let args = args as? [String: String], let assetId = args["assetId"] as? String, let accessToken = args["accessToken"] as? String {
+        if let args = args as? [String: Any], let assetId = args["assetId"] as? String, let accessToken = args["accessToken"] as? String {
             player = TPAVPlayer(assetID: assetId, accessToken: accessToken)
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
@@ -39,9 +39,22 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         super.init()
 
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
+        configurePlayerViewController(args: args)
         
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
+    }
+    
+    private func configurePlayerViewController(args: Any?) {
+        guard let args = args as? [String: Any] else { return }
+        
+        let showDownloadOption = (args["showDownloadOption"] as? Bool) ?? false
+        if showDownloadOption {
+            let config = TPStreamPlayerConfigurationBuilder()
+                .showDownloadOption()
+                .build()
+            playerViewController?.config = config
+        }
     }
  
      private func observeCurrentItemChanges(){
