@@ -20,6 +20,7 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   late TPStreamsPlayerController _controller;
   bool _isPlaying = false;
+  final _downloadManager = TPStreamsDownloadManager();
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +58,25 @@ class _VideoScreenState extends State<VideoScreen> {
                   }
                 },
               ),
+              if (widget.showDownloadOption) ...[
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _downloadManager.startDownload(
+                      widget.assetId,
+                      widget.accessToken,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Download started'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.download),
+                  label: const Text('Download'),
+                ),
+              ],
             ],
           ),
         ],

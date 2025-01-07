@@ -137,6 +137,12 @@ val NativeDownloadManagerApiPigeonMethodCodec = StandardMethodCodec(NativeDownlo
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface NativeDownloadManagerApi {
   fun getAllDownloads(): List<DownloadAsset>
+  fun startDownload(assetId: String, accessToken: String)
+  fun cancelDownload(asset: DownloadAsset)
+  fun resumeDownload(asset: DownloadAsset)
+  fun deleteDownload(asset: DownloadAsset)
+  fun pauseDownload(asset: DownloadAsset)
+  fun deleteAllDownloads()
   fun dispose()
 
   companion object {
@@ -154,6 +160,113 @@ interface NativeDownloadManagerApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               listOf(api.getAllDownloads())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val assetIdArg = args[0] as String
+            val accessTokenArg = args[1] as String
+            val wrapped: List<Any?> = try {
+              api.startDownload(assetIdArg, accessTokenArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.cancelDownload$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val assetArg = args[0] as DownloadAsset
+            val wrapped: List<Any?> = try {
+              api.cancelDownload(assetArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.resumeDownload$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val assetArg = args[0] as DownloadAsset
+            val wrapped: List<Any?> = try {
+              api.resumeDownload(assetArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteDownload$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val assetArg = args[0] as DownloadAsset
+            val wrapped: List<Any?> = try {
+              api.deleteDownload(assetArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.pauseDownload$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val assetArg = args[0] as DownloadAsset
+            val wrapped: List<Any?> = try {
+              api.pauseDownload(assetArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteAllDownloads$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.deleteAllDownloads()
+              listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)
             }

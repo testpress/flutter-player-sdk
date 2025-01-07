@@ -2,6 +2,7 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.app.Activity
 import androidx.annotation.NonNull
+import androidx.fragment.app.FragmentActivity
 import com.tpstream.player.TPStreamsSDK
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -46,6 +47,7 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
 
     this.downloadManager = NativeDownloadManager(
       flutterPluginBinding.applicationContext,
+      activity as FragmentActivity,
       flutterPluginBinding.binaryMessenger
     )
     NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, this.downloadManager!!)

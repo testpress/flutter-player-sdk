@@ -161,6 +161,12 @@ var nativeDownloadManagerApiPigeonMethodCodec = FlutterStandardMethodCodec(reade
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol NativeDownloadManagerApi {
   func getAllDownloads() throws -> [DownloadAsset]
+  func startDownload(assetId: String, accessToken: String) throws
+  func cancelDownload(asset: DownloadAsset) throws
+  func resumeDownload(asset: DownloadAsset) throws
+  func deleteDownload(asset: DownloadAsset) throws
+  func pauseDownload(asset: DownloadAsset) throws
+  func deleteAllDownloads() throws
   func dispose() throws
 }
 
@@ -182,6 +188,95 @@ class NativeDownloadManagerApiSetup {
       }
     } else {
       getAllDownloadsChannel.setMessageHandler(nil)
+    }
+    let startDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      startDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetIdArg = args[0] as! String
+        let accessTokenArg = args[1] as! String
+        do {
+          try api.startDownload(assetId: assetIdArg, accessToken: accessTokenArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      startDownloadChannel.setMessageHandler(nil)
+    }
+    let cancelDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.cancelDownload\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      cancelDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetArg = args[0] as! DownloadAsset
+        do {
+          try api.cancelDownload(asset: assetArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      cancelDownloadChannel.setMessageHandler(nil)
+    }
+    let resumeDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.resumeDownload\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      resumeDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetArg = args[0] as! DownloadAsset
+        do {
+          try api.resumeDownload(asset: assetArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      resumeDownloadChannel.setMessageHandler(nil)
+    }
+    let deleteDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteDownload\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetArg = args[0] as! DownloadAsset
+        do {
+          try api.deleteDownload(asset: assetArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      deleteDownloadChannel.setMessageHandler(nil)
+    }
+    let pauseDownloadChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.pauseDownload\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      pauseDownloadChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let assetArg = args[0] as! DownloadAsset
+        do {
+          try api.pauseDownload(asset: assetArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      pauseDownloadChannel.setMessageHandler(nil)
+    }
+    let deleteAllDownloadsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteAllDownloads\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      deleteAllDownloadsChannel.setMessageHandler { _, reply in
+        do {
+          try api.deleteAllDownloads()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      deleteAllDownloadsChannel.setMessageHandler(nil)
     }
     let disposeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.dispose\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

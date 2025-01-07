@@ -1,14 +1,17 @@
 package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
+import androidx.fragment.app.FragmentActivity
 import com.tpstream.player.data.source.local.DownloadStatus
 import com.tpstream.player.offline.TpStreamDownloadManager
 import androidx.lifecycle.Observer
+import com.tpstream.player.TpInitParams
 import com.tpstream.player.data.Asset
 import io.flutter.plugin.common.BinaryMessenger
 
 class NativeDownloadManager(
     context: Context,
+    private val activity: FragmentActivity,
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadProgressChangeStreamStreamHandler() {
     private val downloadManager = TpStreamDownloadManager(context)
@@ -28,6 +31,39 @@ class NativeDownloadManager(
         return downloads.value?.map { asset ->
             mapAssetToDownloadAsset(asset)
         } ?: emptyList()
+    }
+
+    override fun startDownload(assetId: String, accessToken: String) {
+        val parameters = TpInitParams.Builder()
+            .setVideoId(assetId)
+            .setAccessToken(accessToken)
+            .build()
+
+        downloadManager.startDownload(activity, parameters)
+    }
+
+    override fun cancelDownload(asset: DownloadAsset) {
+        findAsset(asset.assetId)?.let { downloadManager.cancelDownload(it) }
+    }
+
+    override fun resumeDownload(asset: DownloadAsset) {
+        findAsset(asset.assetId)?.let { downloadManager.resumeDownload(it) }
+    }
+
+    override fun deleteDownload(asset: DownloadAsset) {
+        findAsset(asset.assetId)?.let { downloadManager.deleteDownload(it) }
+    }
+
+    override fun pauseDownload(asset: DownloadAsset) {
+        findAsset(asset.assetId)?.let { downloadManager.pauseDownload(it) }
+    }
+
+    private fun findAsset(assetId: String): Asset? {
+        return downloads.value?.find { it.id == assetId }
+    }
+
+    override fun deleteAllDownloads() {
+        downloadManager.deleteAllDownloads()
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadProgressChangeEvent>) {
