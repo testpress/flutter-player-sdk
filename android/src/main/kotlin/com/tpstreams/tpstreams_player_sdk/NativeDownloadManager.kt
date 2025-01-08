@@ -7,7 +7,7 @@ import androidx.lifecycle.Observer
 import com.tpstream.player.data.Asset
 import io.flutter.plugin.common.BinaryMessenger
 
-class TPStreamsDownloadManagerApi(
+class NativeDownloadManager(
     context: Context,
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadProgressChangeStreamStreamHandler() {
@@ -24,34 +24,10 @@ class TPStreamsDownloadManagerApi(
         register(messenger, this)
     }
 
-    private fun notifyDownloadProgress(assets: List<Asset>) {
-        val downloadAssets = assets.map { asset ->
-            mapAssetToDownloadAsset(asset)
-        }
-        eventSink?.success(DownloadProgressChangeEvent(downloadAssets))
-    }
-
-    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState = when (nativeState) {
-        DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
-        DownloadStatus.PAUSE -> DownloadState.PAUSED
-        DownloadStatus.COMPLETE -> DownloadState.COMPLETED
-        DownloadStatus.FAILED -> DownloadState.FAILED
-        else -> DownloadState.NOT_DOWNLOADED
-    }
-
     override fun getAllDownloads(): List<DownloadAsset> {
         return downloads.value?.map { asset ->
             mapAssetToDownloadAsset(asset)
         } ?: emptyList()
-    }
-
-    private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {
-        return DownloadAsset(
-            assetId = asset.id,
-            title = asset.title,
-            state = mapDownloadState(asset.video.downloadState),
-            progress = asset.video.percentageDownloaded.toDouble()
-        )
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadProgressChangeEvent>) {
@@ -66,5 +42,29 @@ class TPStreamsDownloadManagerApi(
         downloads.removeObserver(downloadObserver)
         eventSink?.endOfStream()
         eventSink = null
+    }
+
+    private fun notifyDownloadProgress(assets: List<Asset>) {
+        val downloadAssets = assets.map { asset ->
+            mapAssetToDownloadAsset(asset)
+        }
+        eventSink?.success(DownloadProgressChangeEvent(downloadAssets))
+    }
+
+    private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {
+        return DownloadAsset(
+            assetId = asset.id,
+            title = asset.title,
+            state = mapDownloadState(asset.video.downloadState),
+            progress = asset.video.percentageDownloaded.toDouble()
+        )
+    }
+
+    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState = when (nativeState) {
+        DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
+        DownloadStatus.PAUSE -> DownloadState.PAUSED
+        DownloadStatus.COMPLETE -> DownloadState.COMPLETED
+        DownloadStatus.FAILED -> DownloadState.FAILED
+        else -> DownloadState.NOT_DOWNLOADED
     }
 }
