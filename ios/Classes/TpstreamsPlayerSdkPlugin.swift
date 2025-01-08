@@ -7,7 +7,8 @@ public class TpstreamsPlayerSdkPlugin: NSObject, FlutterPlugin, NativeSDKApi {
     registrar.register(PlayerViewFactory(messenger: registrar.messenger()), withId: "tpstreams_player_sdk/player_view") 
     let instance = TpstreamsPlayerSdkPlugin()
     NativeSDKApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
-    let downloadManager = NativeDownloadManager(messenger: registrar.messenger())
+    
+    let downloadManager = NativeDownloadManager()
     GetDownloadProgressChangeStreamStreamHandler.register(with: registrar.messenger(), streamHandler: downloadManager)
     NativeDownloadManagerApiSetup.setUp(binaryMessenger: registrar.messenger(), api: downloadManager)
   }

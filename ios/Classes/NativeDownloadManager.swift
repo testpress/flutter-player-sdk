@@ -6,7 +6,7 @@ class NativeDownloadManager: GetDownloadProgressChangeStreamStreamHandler, Nativ
     private let downloadManager = TPStreamsDownloadManager.shared
     private var eventSink: PigeonEventSink<DownloadProgressChangeEvent>?
     
-    init(messenger: FlutterBinaryMessenger) {
+    init() {
         super.init()
         downloadManager.setTPStreamsDownloadDelegate(tpStreamsDownloadDelegate: self)
     }
