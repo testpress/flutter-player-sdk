@@ -14,47 +14,44 @@ class TPStreamsDownloadManagerApi(
     private val downloadManager = TpStreamDownloadManager(context)
     private val downloads = downloadManager.getAllDownloads()
     private var eventSink: PigeonEventSink<DownloadProgressChangeEvent>? = null
+    
     private val downloadObserver = Observer<List<Asset>?> { assets ->
-        notifyDownloadProgress(assets)
+        assets?.let { notifyDownloadProgress(it) }
     }
 
     init {
         downloads.observeForever(downloadObserver)
-
         register(messenger, this)
     }
 
-    private fun notifyDownloadProgress(assets: List<Asset>?) {
-        val downloadAssets = assets?.map { asset ->
-            DownloadAsset(
-                assetId = asset.id,
-                title = asset.title,
-                state = mapDownloadState(asset.video.downloadState),
-                progress = asset.video.percentageDownloaded.toDouble()
-            )
-        } ?: emptyList()
+    private fun notifyDownloadProgress(assets: List<Asset>) {
+        val downloadAssets = assets.map { asset ->
+            mapAssetToDownloadAsset(asset)
+        }
         eventSink?.success(DownloadProgressChangeEvent(downloadAssets))
     }
 
-    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState {
-        return when (nativeState) {
-            DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
-            DownloadStatus.PAUSE -> DownloadState.PAUSED
-            DownloadStatus.COMPLETE -> DownloadState.COMPLETED
-            DownloadStatus.FAILED -> DownloadState.FAILED
-            else -> DownloadState.NOT_DOWNLOADED
-        }
+    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState = when (nativeState) {
+        DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
+        DownloadStatus.PAUSE -> DownloadState.PAUSED
+        DownloadStatus.COMPLETE -> DownloadState.COMPLETED
+        DownloadStatus.FAILED -> DownloadState.FAILED
+        else -> DownloadState.NOT_DOWNLOADED
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
         return downloads.value?.map { asset ->
-            DownloadAsset(
-                assetId = asset.id,
-                title = asset.title,
-                state = mapDownloadState(asset.video.downloadState),
-                progress = asset.video.percentageDownloaded.toDouble()
-            )
+            mapAssetToDownloadAsset(asset)
         } ?: emptyList()
+    }
+
+    private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {
+        return DownloadAsset(
+            assetId = asset.id,
+            title = asset.title,
+            state = mapDownloadState(asset.video.downloadState),
+            progress = asset.video.percentageDownloaded.toDouble()
+        )
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadProgressChangeEvent>) {
