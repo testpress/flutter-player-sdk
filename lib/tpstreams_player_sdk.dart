@@ -5,6 +5,8 @@ export 'player_controller.dart';
 import 'package:flutter/widgets.dart';
 import 'generated/native_sdk_api.g.dart';
 export 'generated/native_sdk_api.g.dart' show PROVIDER;
+export 'download_manager.dart';
+export 'generated/native_download_manager_api.g.dart' show DownloadAsset, DownloadState;
 
 class TPStreamsSDK {
   static String? _orgCode;
