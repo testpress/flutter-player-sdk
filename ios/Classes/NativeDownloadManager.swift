@@ -1,32 +1,31 @@
 import TPStreamsSDK
+import Foundation
+import Flutter
 
-class NativeDownloadManager: NativeDownloadManagerApi, TPStreamsDownloadDelegate, GetDownloadProgressChangeStreamStreamHandler {
+class NativeDownloadManager: GetDownloadProgressChangeStreamStreamHandler, NativeDownloadManagerApi, TPStreamsDownloadDelegate {
     private let downloadManager = TPStreamsDownloadManager.shared
-    private var eventSink: FlutterEventSink?
+    private var eventSink: PigeonEventSink<DownloadProgressChangeEvent>?
     
     init(messenger: FlutterBinaryMessenger) {
         super.init()
         downloadManager.setTPStreamsDownloadDelegate(tpStreamsDownloadDelegate: self)
-        GetDownloadProgressChangeStreamStreamHandler.register(messenger: messenger, streamHandler: self)
     }
 
-    // MARK: - NativeDownloadManagerApi Implementation
+
     func getAllDownloads() -> [DownloadAsset] {
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
-    // MARK: - Stream Handler Implementation
-    func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
+
+    override func onListen(withArguments arguments: Any?, sink eventSink: PigeonEventSink<DownloadProgressChangeEvent>) {
         self.eventSink = eventSink
-        return nil
     }
     
-    func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    override func onCancel(withArguments arguments: Any?){
         eventSink = nil
-        return nil
     }
     
-    // MARK: - TPStreamsDownloadDelegate Implementation
+
     func onProgressChange(assetId: String, percentage: Double) {
         notifyDownloadProgress()
     }
@@ -35,30 +34,36 @@ class NativeDownloadManager: NativeDownloadManagerApi, TPStreamsDownloadDelegate
         notifyDownloadProgress()
     }
     
-    // MARK: - Helper Methods
+    func onDelete(assetId: String) {
+        notifyDownloadProgress()
+    }
+    
+    func onStart(offlineAsset: OfflineAsset) {
+        notifyDownloadProgress()
+    }
+    
     private func notifyDownloadProgress() {
-        let assets = downloadManager.getAllOfflineAssets()
-        let downloadAssets = assets.map { mapOfflineAssetToDownloadAsset($0) }
+        let downloadAssets = getAllDownloads()
         let event = DownloadProgressChangeEvent(downloads: downloadAssets)
-        eventSink?(event)
+        eventSink?.success(event)
     }
     
     private func mapOfflineAssetToDownloadAsset(_ asset: OfflineAsset) -> DownloadAsset {
         return DownloadAsset(
             assetId: asset.assetId,
             title: asset.title,
-            state: mapDownloadState(asset.status),
-            progress: asset.downloadProgress
+            state: mapDownloadState(Status(rawValue: asset.status)!),
+            progress: asset.percentageCompleted
         )
     }
     
     private func mapDownloadState(_ status: Status) -> DownloadState {
         switch status {
-        case .downloading:
+        case .inProgress:
             return .downloading
         case .paused:
             return .paused
-        case .completed:
+        case .finished:
             return .completed
         case .failed:
             return .failed
@@ -66,13 +71,19 @@ class NativeDownloadManager: NativeDownloadManagerApi, TPStreamsDownloadDelegate
             return .notDownloaded
         }
     }
+    
+    func onComplete(offlineAsset: OfflineAsset) {}
+    
+    func onPause(offlineAsset: OfflineAsset) {}
+    
+    func onResume(offlineAsset: OfflineAsset) {}
+    
+    func onCanceled(assetId: String) {}
 
     func dispose() {
         eventSink?.endOfStream()
         eventSink = nil
     }
-
-    
 
     deinit {
         dispose()

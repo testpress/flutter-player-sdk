@@ -155,4 +155,10 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             ),
     );
   }
+
+  @override
+  void dispose() {
+    _downloadManager.dispose();
+    super.dispose();
+  }
 } 
