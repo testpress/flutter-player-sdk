@@ -98,7 +98,22 @@ class NativePlayerView(
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
 
-        val parameters = if (isOfflinePlayback) {
+        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback)
+        
+        this.player!!.load(parameters)
+        this.player!!.setListener(this)
+
+        initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)
+    }
+
+    private fun getTpInitParams(
+        assetId: String?, 
+        accessToken: String?,
+        showDownloadOption: Boolean,
+        offlineLicenseExpireDays: Int,
+        isOfflinePlayback: Boolean
+    ): TpInitParams {
+        return if (isOfflinePlayback) {
             TpInitParams.createOfflineParams(requireNotNull(assetId))
         } else {
             TpInitParams.Builder()
@@ -112,11 +127,6 @@ class NativePlayerView(
                 }
                 .build()
         }
-        
-        this.player!!.load(parameters)
-        this.player!!.setListener(this)
-
-        initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)
     }
 
     override fun play() {
