@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/gestures.dart';
@@ -8,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
 
-import 'generated/native_player_api.g.dart';
 import 'generated/native_player_listeners.g.dart';
 
 

@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
 import 'generated/native_player_api.g.dart';
