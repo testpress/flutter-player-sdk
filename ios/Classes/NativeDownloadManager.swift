@@ -100,7 +100,9 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     
     func onResume(offlineAsset: OfflineAsset) {}
     
-    func onCanceled(assetId: String) {}
+    func onCanceled(assetId: String) {
+        notifyDownloadsChange()
+    }
 
     func dispose() {
         eventSink?.endOfStream()
