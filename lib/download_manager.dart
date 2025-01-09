@@ -10,8 +10,8 @@ class TPStreamsDownloadManager {
     return _downloadManagerApi.getAllDownloads();
   }
 
-  Stream<List<native_api.DownloadAsset>> get downloadProgressStream {
-    return native_api.getDownloadProgressChangeStream().map((event) => event.downloads);
+  Stream<List<native_api.DownloadAsset>> get downloadsStream {
+    return native_api.getDownloadsStream().map((event) => event.downloads);
   }
 
   Future<void> startDownload(String assetId, String accessToken) {

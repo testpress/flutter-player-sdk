@@ -13,13 +13,13 @@ class NativeDownloadManager(
     context: Context,
     private val activity: FragmentActivity,
     messenger: BinaryMessenger
-) : NativeDownloadManagerApi, GetDownloadProgressChangeStreamStreamHandler() {
+) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
     private val downloadManager = TpStreamDownloadManager(context)
     private val downloads = downloadManager.getAllDownloads()
-    private var eventSink: PigeonEventSink<DownloadProgressChangeEvent>? = null
+    private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
     
     private val downloadObserver = Observer<List<Asset>?> { assets ->
-        assets?.let { notifyDownloadProgress(it) }
+        assets?.let { notifyDownloadsChange(it) }
     }
 
     init {
@@ -66,7 +66,7 @@ class NativeDownloadManager(
         downloadManager.deleteAllDownloads()
     }
 
-    override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadProgressChangeEvent>) {
+    override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
         eventSink = sink
     }
 
@@ -80,11 +80,11 @@ class NativeDownloadManager(
         eventSink = null
     }
 
-    private fun notifyDownloadProgress(assets: List<Asset>) {
+    private fun notifyDownloadsChange(assets: List<Asset>) {
         val downloadAssets = assets.map { asset ->
             mapAssetToDownloadAsset(asset)
         }
-        eventSink?.success(DownloadProgressChangeEvent(downloadAssets))
+        eventSink?.success(DownloadsUpdateEvent(downloadAssets))
     }
 
     private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {

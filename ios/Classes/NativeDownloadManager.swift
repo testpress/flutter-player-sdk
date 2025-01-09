@@ -2,9 +2,9 @@ import TPStreamsSDK
 import Foundation
 import Flutter
 
-class NativeDownloadManager: GetDownloadProgressChangeStreamStreamHandler, NativeDownloadManagerApi, TPStreamsDownloadDelegate {
+class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadManagerApi, TPStreamsDownloadDelegate {
     private let downloadManager = TPStreamsDownloadManager.shared
-    private var eventSink: PigeonEventSink<DownloadProgressChangeEvent>?
+    private var eventSink: PigeonEventSink<DownloadsUpdateEvent>?
     
     override init() {
         super.init()
@@ -49,24 +49,24 @@ class NativeDownloadManager: GetDownloadProgressChangeStreamStreamHandler, Nativ
     
 
     func onProgressChange(assetId: String, percentage: Double) {
-        notifyDownloadProgress()
+        notifyDownloadsChange()
     }
     
     func onStateChange(status: Status, offlineAsset: OfflineAsset) {
-        notifyDownloadProgress()
+        notifyDownloadsChange()
     }
     
     func onDelete(assetId: String) {
-        notifyDownloadProgress()
+        notifyDownloadsChange()
     }
     
     func onStart(offlineAsset: OfflineAsset) {
-        notifyDownloadProgress()
+        notifyDownloadsChange()
     }
     
-    private func notifyDownloadProgress() {
+    private func notifyDownloadsChange() {
         let downloadAssets = getAllDownloads()
-        let event = DownloadProgressChangeEvent(downloads: downloadAssets)
+        let event = DownloadsUpdateEvent(downloads: downloadAssets)
         eventSink?.success(event)
     }
     

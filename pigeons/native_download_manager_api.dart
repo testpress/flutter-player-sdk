@@ -36,10 +36,10 @@ class DownloadAsset {
   });
 }
 
-class DownloadProgressChangeEvent {
+class DownloadsUpdateEvent {
   final List<DownloadAsset> downloads;
 
-  DownloadProgressChangeEvent({
+  DownloadsUpdateEvent({
     required this.downloads,
   });
 }
@@ -57,6 +57,6 @@ abstract class NativeDownloadManagerApi {
 }
 
 @EventChannelApi()
-abstract class DownloadProgressApi {
-  DownloadProgressChangeEvent getDownloadProgressChangeStream();
+abstract class DownloadStreamApi {
+  DownloadsUpdateEvent getDownloadsStream();
 }

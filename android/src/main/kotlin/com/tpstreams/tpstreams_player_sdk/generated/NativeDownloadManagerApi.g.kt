@@ -76,14 +76,14 @@ data class DownloadAsset (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class DownloadProgressChangeEvent (
+data class DownloadsUpdateEvent (
   val downloads: List<DownloadAsset>
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): DownloadProgressChangeEvent {
+    fun fromList(pigeonVar_list: List<Any?>): DownloadsUpdateEvent {
       val downloads = pigeonVar_list[0] as List<DownloadAsset>
-      return DownloadProgressChangeEvent(downloads)
+      return DownloadsUpdateEvent(downloads)
     }
   }
   fun toList(): List<Any?> {
@@ -107,7 +107,7 @@ private open class NativeDownloadManagerApiPigeonCodec : StandardMessageCodec() 
       }
       131.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          DownloadProgressChangeEvent.fromList(it)
+          DownloadsUpdateEvent.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -123,7 +123,7 @@ private open class NativeDownloadManagerApiPigeonCodec : StandardMessageCodec() 
         stream.write(130)
         writeValue(stream, value.toList())
       }
-      is DownloadProgressChangeEvent -> {
+      is DownloadsUpdateEvent -> {
         stream.write(131)
         writeValue(stream, value.toList())
       }
@@ -332,14 +332,14 @@ class PigeonEventSink<T>(private val sink: EventChannel.EventSink) {
   }
 }
       
-abstract class GetDownloadProgressChangeStreamStreamHandler : PigeonEventChannelWrapper<DownloadProgressChangeEvent> {
+abstract class GetDownloadsStreamStreamHandler : PigeonEventChannelWrapper<DownloadsUpdateEvent> {
   companion object {
-    fun register(messenger: BinaryMessenger, streamHandler: GetDownloadProgressChangeStreamStreamHandler, instanceName: String = "") {
-      var channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.DownloadProgressApi.getDownloadProgressChangeStream"
+    fun register(messenger: BinaryMessenger, streamHandler: GetDownloadsStreamStreamHandler, instanceName: String = "") {
+      var channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.DownloadStreamApi.getDownloadsStream"
       if (instanceName.isNotEmpty()) {
         channelName += ".$instanceName"
       }
-      val internalStreamHandler = PigeonStreamHandler<DownloadProgressChangeEvent>(streamHandler)
+      val internalStreamHandler = PigeonStreamHandler<DownloadsUpdateEvent>(streamHandler)
       EventChannel(messenger, channelName, NativeDownloadManagerApiPigeonMethodCodec).setStreamHandler(internalStreamHandler)
     }
   }

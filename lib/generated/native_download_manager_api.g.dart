@@ -59,8 +59,8 @@ class DownloadAsset {
   }
 }
 
-class DownloadProgressChangeEvent {
-  DownloadProgressChangeEvent({
+class DownloadsUpdateEvent {
+  DownloadsUpdateEvent({
     required this.downloads,
   });
 
@@ -72,9 +72,9 @@ class DownloadProgressChangeEvent {
     ];
   }
 
-  static DownloadProgressChangeEvent decode(Object result) {
+  static DownloadsUpdateEvent decode(Object result) {
     result as List<Object?>;
-    return DownloadProgressChangeEvent(
+    return DownloadsUpdateEvent(
       downloads: (result[0] as List<Object?>?)!.cast<DownloadAsset>(),
     );
   }
@@ -94,7 +94,7 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is DownloadAsset) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is DownloadProgressChangeEvent) {
+    }    else if (value is DownloadsUpdateEvent) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else {
@@ -111,7 +111,7 @@ class _PigeonCodec extends StandardMessageCodec {
       case 130: 
         return DownloadAsset.decode(readValue(buffer)!);
       case 131: 
-        return DownloadProgressChangeEvent.decode(readValue(buffer)!);
+        return DownloadsUpdateEvent.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -315,14 +315,14 @@ class NativeDownloadManagerApi {
   }
 }
 
-Stream<DownloadProgressChangeEvent> getDownloadProgressChangeStream( {String instanceName = ''}) {
+Stream<DownloadsUpdateEvent> getDownloadsStream( {String instanceName = ''}) {
   if (instanceName.isNotEmpty) {
     instanceName = '.$instanceName';
   }
-  const EventChannel getDownloadProgressChangeStreamChannel =
-      EventChannel('dev.flutter.pigeon.tpstreams_player_sdk.DownloadProgressApi.getDownloadProgressChangeStream', pigeonMethodCodec);
-  return getDownloadProgressChangeStreamChannel.receiveBroadcastStream().map((dynamic event) {
-    return event as DownloadProgressChangeEvent;
+  const EventChannel getDownloadsStreamChannel =
+      EventChannel('dev.flutter.pigeon.tpstreams_player_sdk.DownloadStreamApi.getDownloadsStream', pigeonMethodCodec);
+  return getDownloadsStreamChannel.receiveBroadcastStream().map((dynamic event) {
+    return event as DownloadsUpdateEvent;
   });
 }
     

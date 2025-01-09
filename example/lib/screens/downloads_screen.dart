@@ -29,7 +29,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   void _listenToDownloadProgress() {
-    _downloadManager.downloadProgressStream.listen(
+    _downloadManager.downloadsStream.listen(
       (downloads) {
         setState(() {
           _downloads = downloads;
