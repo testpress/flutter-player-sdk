@@ -22,8 +22,8 @@ class TPStreamPlayer extends StatefulWidget {
   final bool _isOfflinePlayback;
 
   const TPStreamPlayer({
-    super.key,  
-    required this.assetId,
+    super.key,
+    required this.assetId, 
     required this.accessToken,
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
@@ -35,12 +35,11 @@ class TPStreamPlayer extends StatefulWidget {
     super.key,
     required String assetId,
     this.aspectRatio = 16 / 9,
-    Function(TPStreamsPlayerController controller)? onPlayerCreated,
+    this.onPlayerCreated,
   }) : assetId = assetId,
        accessToken = null,
        showDownloadOption = false,
        offlineLicenseExpireDays = 15,
-       onPlayerCreated = onPlayerCreated,
        _isOfflinePlayback = true;
 
   @override
@@ -50,68 +49,62 @@ class TPStreamPlayer extends StatefulWidget {
 class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-        child: Container(
-      color: Colors.black,
-      child: AspectRatio(
-          aspectRatio: widget.aspectRatio, child: getPlayerNativeView()),
-    ));
+  Map<String, dynamic> get _creationParams => {
+    "assetId": widget.assetId,
+    "accessToken": widget.accessToken,
+    "isOfflinePlayback": widget._isOfflinePlayback,
+    "showDownloadOption": widget.showDownloadOption,
+    "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
+  };
+
+  Widget _buildAndroidView() {
+    return PlatformViewLink(
+      viewType: 'tpstreams_player_sdk/player_view',
+      surfaceFactory: (context, controller) {
+        return AndroidViewSurface(
+          controller: controller as AndroidViewController,
+          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+        );
+      },
+      onCreatePlatformView: (params) {
+        return PlatformViewsService.initExpensiveAndroidView(
+          id: params.id,
+          viewType: 'tpstreams_player_sdk/player_view',
+          layoutDirection: TextDirection.ltr,
+          creationParams: _creationParams,
+          creationParamsCodec: const StandardMessageCodec(),
+        )..addOnPlatformViewCreatedListener(
+            _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
+      },
+    );
   }
 
-  Widget getPlayerNativeView() {
-    var creationParams = {
-      "assetId": widget.assetId,
-      "accessToken": widget.accessToken,
-      "isOfflinePlayback": widget._isOfflinePlayback,
-      "showDownloadOption": widget.showDownloadOption,
-      "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
-    };
+  Widget _buildIOSView() {
+    return UiKitView(
+      viewType: 'tpstreams_player_sdk/player_view',
+      creationParams: _creationParams,
+      creationParamsCodec: const StandardMessageCodec(),
+      onPlatformViewCreated: setUpNativePlayerInitializationListener,
+    );
+  }
 
+  Widget _buildPlatformView() {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return PlatformViewLink(
-          viewType: 'tpstreams_player_sdk/player_view',
-          surfaceFactory:
-              (BuildContext context, PlatformViewController controller) {
-            return AndroidViewSurface(
-              controller: controller as AndroidViewController,
-              gestureRecognizers: const <Factory<
-                  OneSequenceGestureRecognizer>>{},
-              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-            );
-          },
-          onCreatePlatformView: (PlatformViewCreationParams params) {
-            return PlatformViewsService.initExpensiveAndroidView(
-              id: params.id,
-              viewType: 'tpstreams_player_sdk/player_view',
-              layoutDirection: TextDirection.ltr,
-              creationParams: creationParams,
-              creationParamsCodec: const StandardMessageCodec(),
-            )..addOnPlatformViewCreatedListener(
-                _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
-          },
-        );
+        return _buildAndroidView();
       case TargetPlatform.iOS:
-        return UiKitView(
-          viewType: 'tpstreams_player_sdk/player_view',
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-          onPlatformViewCreated: setUpNativePlayerInitializationListener,
-        );
+        return _buildIOSView();
       default:
-        return Text(
-            '$defaultTargetPlatform is not yet supported by the web_view plugin');
+        return Text('$defaultTargetPlatform is not yet supported by the web_view plugin');
     }
   }
 
-  void Function(int id) _onAndroidPlatformViewCreated(
-      Function platformViewCreatedCallback) {
-    return ((int id) {
+  void Function(int id) _onAndroidPlatformViewCreated(Function platformViewCreatedCallback) {
+    return (id) {
       setUpNativePlayerInitializationListener(id);
       platformViewCreatedCallback(id);
-    });
+    };
   }
 
   void setUpNativePlayerInitializationListener(int id) {
@@ -125,8 +118,21 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   }
 
   @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        color: Colors.black,
+        child: AspectRatio(
+          aspectRatio: widget.aspectRatio,
+          child: _buildPlatformView(),
+        ),
+      ),
+    );
+  }
+
+  @override
   void dispose() {
-    super.dispose();
     _controller?.dispose();
+    super.dispose();
   }
 }
