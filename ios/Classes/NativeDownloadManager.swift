@@ -16,6 +16,28 @@ class NativeDownloadManager: GetDownloadProgressChangeStreamStreamHandler, Nativ
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
+    func startDownload(assetId: String, accessToken: String) throws {}
+    
+    func cancelDownload(asset: DownloadAsset) throws {
+        downloadManager.cancelDownload(asset.assetId)
+    }
+    
+    func resumeDownload(asset: DownloadAsset) throws {
+        downloadManager.resumeDownload(asset.assetId)
+    }
+    
+    func deleteDownload(asset: DownloadAsset) throws {
+        downloadManager.deleteDownload(asset.assetId)
+    }
+    
+    func pauseDownload(asset: DownloadAsset) throws {
+        downloadManager.pauseDownload(asset.assetId)
+    }
+    
+    func deleteAllDownloads() throws {
+        getAllDownloads().forEach { downloadManager.deleteDownload($0.assetId) }
+    }
+    
 
     override func onListen(withArguments arguments: Any?, sink eventSink: PigeonEventSink<DownloadProgressChangeEvent>) {
         self.eventSink = eventSink

@@ -47,6 +47,12 @@ class DownloadProgressChangeEvent {
 @HostApi()
 abstract class NativeDownloadManagerApi {
   List<DownloadAsset> getAllDownloads();
+  void startDownload(String assetId, String accessToken);
+  void cancelDownload(DownloadAsset asset);
+  void resumeDownload(DownloadAsset asset);
+  void deleteDownload(DownloadAsset asset);
+  void pauseDownload(DownloadAsset asset);
+  void deleteAllDownloads();
   void dispose();
 }
 
