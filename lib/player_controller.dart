@@ -28,71 +28,72 @@ class TPStreamsPlayerValue {
   /// Indicates whether the currently loaded video has played to the end.
   final bool isEnded;
 
+  /// Any error that occurred during playback
   final TPStreamsError? error;
 
-  /// Creates an instance of [TPStreamsPlayerValue].
-  ///
-  /// Use this class to represent the state of a streams player, including playback
-  /// information, buffering status, and available playback speed options.
-  TPStreamsPlayerValue(
-      {this.duration = Duration.zero,
-      this.position = Duration.zero,
-      this.isLoading = false,
-      this.isPlaying = false,
-      this.isBuffering = false,
-      this.isEnded = false,
-      this.error});
+  const TPStreamsPlayerValue({
+    this.isLoading = false,
+    this.duration = Duration.zero,
+    this.position = Duration.zero,
+    this.isPlaying = false,
+    this.isBuffering = false,
+    this.isEnded = false,
+    this.error,
+  });
 
-  TPStreamsPlayerValue copyWith(
-      {Duration? duration,
-      Duration? position,
-      bool? isLoading,
-      bool? isPlaying,
-      bool? isBuffering,
-      bool? isEnded,
-      TPStreamsError? error}) {
+  TPStreamsPlayerValue copyWith({
+    bool? isLoading,
+    Duration? duration,
+    Duration? position,
+    bool? isPlaying,
+    bool? isBuffering,
+    bool? isEnded,
+    TPStreamsError? error,
+  }) {
     return TPStreamsPlayerValue(
-        duration: duration ?? this.duration,
-        position: position ?? this.position,
-        isLoading: isLoading ?? this.isLoading,
-        isPlaying: isPlaying ?? this.isPlaying,
-        isBuffering: isBuffering ?? this.isBuffering,
-        isEnded: isEnded ?? this.isEnded,
-        error: error ?? this.error);
+      isLoading: isLoading ?? this.isLoading,
+      duration: duration ?? this.duration,
+      position: position ?? this.position,
+      isPlaying: isPlaying ?? this.isPlaying,
+      isBuffering: isBuffering ?? this.isBuffering,
+      isEnded: isEnded ?? this.isEnded,
+      error: error ?? this.error,
+    );
   }
 }
 
+/// Controller for managing video playback in TPStreams player
 class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> implements NativePlayerListener {
   final int platformViewId;
-  late NativePlayerApi _nativeApi;
+  late final NativePlayerApi _nativeApi;
   Timer? _positionTimer;
 
-  TPStreamsPlayerController(this.platformViewId) : super(TPStreamsPlayerValue()) {
+  static const _positionUpdateInterval = Duration(milliseconds: 500);
+
+  TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
   }
 
-  Future<void> play() async {
-    await _nativeApi.play();
-  }
+  /// Start playing the video
+  Future<void> play() => _nativeApi.play();
 
-  Future<void> pause() async {
-    await _nativeApi.pause();
-  }
+  /// Pause the video
+  Future<void> pause() => _nativeApi.pause();
 
-  Future<void> seek(Duration target) async {
-    await _nativeApi.seek(target.inMilliseconds);
-  }
+  /// Seek to a specific position in the video
+  Future<void> seek(Duration target) => _nativeApi.seek(target.inMilliseconds);
 
-  Future<void> setPlaybackSpeed(double speed) async {
-    await _nativeApi.setPlaybackSpeed(speed);
-  }
+  /// Set the playback speed of the video
+  Future<void> setPlaybackSpeed(double speed) => _nativeApi.setPlaybackSpeed(speed);
 
+  /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();
     return Duration(milliseconds: durationInMilliseconds);
   }
 
+  /// Get the current playback position
   Future<Duration> getCurrentTime() async {
     final currentTimeInMilliseconds = await _nativeApi.getCurrentTime();
     return Duration(milliseconds: currentTimeInMilliseconds);
@@ -100,27 +101,24 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlaybackStateChanged(String state) {
-    final bool ended = state == 'ended';
-    final bool ready = state == 'ready';
+    final bool isEnded = state == 'ended';
+    final bool isReady = state == 'ready';
 
     value = value.copyWith(
-      isLoading: value.isLoading && !ready,
+      isLoading: value.isLoading && !isReady,
       isBuffering: state == 'buffering',
-      isEnded: ended,
-      position: ended ? value.duration : value.position,
+      isEnded: isEnded,
+      position: isEnded ? value.duration : value.position,
     );
+    
     _updateDurationIfNeeded();
-    if (ended) stopUpdatePositionTimer();
+    if (isEnded) stopUpdatePositionTimer();
   }
 
   @override
   void onIsPlayingChanged(bool isPlaying) {
     value = value.copyWith(isPlaying: isPlaying);
-    if (isPlaying) {
-      startUpdatePositionTimer();
-    } else {
-      stopUpdatePositionTimer();
-    }
+    isPlaying ? startUpdatePositionTimer() : stopUpdatePositionTimer();
   }
 
   @override
@@ -131,22 +129,25 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   void _updateDurationIfNeeded() {
     if (!value.isLoading && value.duration == Duration.zero) {
       getDuration().then((duration) {
-        if (duration.inSeconds != 0) value = value.copyWith(duration: duration);
+        if (duration.inSeconds > 0) {
+          value = value.copyWith(duration: duration);
+        }
       });
     }
   }
 
   void startUpdatePositionTimer() {
     _positionTimer?.cancel();
-
-    _positionTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      getCurrentTime().then(
-          (currentTime) => {value = value.copyWith(position: currentTime)});
+    _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
+      getCurrentTime().then((currentTime) {
+        value = value.copyWith(position: currentTime);
+      });
     });
   }
 
   void stopUpdatePositionTimer() {
     _positionTimer?.cancel();
+    _positionTimer = null;
   }
 
   @override
