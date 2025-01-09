@@ -44,3 +44,7 @@
 
 ## 2.1.5
 - Bug fixes and code optimization.
+
+## 2.1.6
+- Added Offline Download support with APIs to start, pause, resume, cancel and delete downloads.
+- Bug fixes and code optimization.
