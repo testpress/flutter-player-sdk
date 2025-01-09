@@ -67,10 +67,12 @@ class NativeDownloadManager(
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
+        downloads.observeForever(downloadObserver)
         eventSink = sink
     }
 
     override fun onCancel(arguments: Any?) {
+        downloads.removeObserver(downloadObserver)
         eventSink = null
     }
 
