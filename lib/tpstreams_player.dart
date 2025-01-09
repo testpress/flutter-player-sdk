@@ -23,7 +23,7 @@ class TPStreamPlayer extends StatefulWidget {
 
   const TPStreamPlayer({
     super.key,
-    required this.assetId, 
+    required this.assetId,
     required this.accessToken,
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
@@ -49,13 +49,29 @@ class TPStreamPlayer extends StatefulWidget {
 class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
 
-  Map<String, dynamic> get _creationParams => {
-    "assetId": widget.assetId,
-    "accessToken": widget.accessToken,
-    "isOfflinePlayback": widget._isOfflinePlayback,
-    "showDownloadOption": widget.showDownloadOption,
-    "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
-  };
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        color: Colors.black,
+        child: AspectRatio(
+          aspectRatio: widget.aspectRatio,
+          child: _buildPlatformView(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlatformView() {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return _buildAndroidView();
+      case TargetPlatform.iOS:
+        return _buildIOSView();
+      default:
+        return Text('$defaultTargetPlatform is not yet supported by the web_view plugin');
+    }
+  }
 
   Widget _buildAndroidView() {
     return PlatformViewLink(
@@ -89,16 +105,13 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     );
   }
 
-  Widget _buildPlatformView() {
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return _buildAndroidView();
-      case TargetPlatform.iOS:
-        return _buildIOSView();
-      default:
-        return Text('$defaultTargetPlatform is not yet supported by the web_view plugin');
-    }
-  }
+  Map<String, dynamic> get _creationParams => {
+    "assetId": widget.assetId,
+    "accessToken": widget.accessToken,
+    "isOfflinePlayback": widget._isOfflinePlayback,
+    "showDownloadOption": widget.showDownloadOption,
+    "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
+  };
 
   void Function(int id) _onAndroidPlatformViewCreated(Function platformViewCreatedCallback) {
     return (id) {
@@ -115,19 +128,6 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   void onNativePlayerCreated(int platformViewId) {
     _controller = TPStreamsPlayerController(platformViewId);
     widget.onPlayerCreated?.call(_controller!);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: Colors.black,
-        child: AspectRatio(
-          aspectRatio: widget.aspectRatio,
-          child: _buildPlatformView(),
-        ),
-      ),
-    );
   }
 
   @override
