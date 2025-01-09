@@ -39,7 +39,7 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     }
     
 
-    override func onListen(withArguments arguments: Any?, sink eventSink: PigeonEventSink<DownloadProgressChangeEvent>) {
+    override func onListen(withArguments arguments: Any?, sink eventSink: PigeonEventSink<DownloadsUpdateEvent>) {
         self.eventSink = eventSink
     }
     
