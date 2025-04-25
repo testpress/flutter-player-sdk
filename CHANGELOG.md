@@ -54,3 +54,6 @@
 
 ## 2.1.8
 - Bug fixes and code optimization.
+
+## 2.1.9
+- Bug fixes and code optimization.
