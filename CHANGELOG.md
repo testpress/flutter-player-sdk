@@ -57,3 +57,6 @@
 
 ## 2.1.9
 - Bug fixes and code optimization.
+
+## 2.2.1
+- Bug fixes and code optimization.
