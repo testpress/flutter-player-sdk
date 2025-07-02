@@ -156,11 +156,13 @@ class NativePlayerView(
     override fun dispose() {
         player?.release()
         player = null
+        linearLayout.keepScreenOn = false
     }
 
     override fun onPlaybackStateChanged(playbackState: Int) {
         super.onPlaybackStateChanged(playbackState)
         playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), handleFlutterCallResult)
+        linearLayout.keepScreenOn = playbackState == TpStreamPlayer.PLAYBACK_STATE.STATE_BUFFERING
     }
 
     private fun getPlaybackStateString(playbackState: Int): String {
@@ -175,6 +177,7 @@ class NativePlayerView(
 
     override fun onIsPlayingChanged(playing: Boolean) {
         super.onIsPlayingChanged(playing)
+        linearLayout.keepScreenOn = playing
         playerListener.onIsPlayingChanged(playing, handleFlutterCallResult)
     }
 
