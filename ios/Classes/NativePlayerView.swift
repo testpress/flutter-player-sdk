@@ -193,7 +193,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi, TPStream
         }
     }
 
-    func onFullScreenChanged(isFullScreen: Bool) {
+    private func onFullScreenChanged(isFullScreen: Bool) {
         playerListener.onFullScreenChanged(isFullScreen: isFullScreen, completion: handleFlutterCallResult)
     }
     
