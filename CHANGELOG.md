@@ -60,6 +60,3 @@
 
 ## 2.2.1
 - Bug fixes and code optimization.
-
-## 2.2.2
-- Added support for listeners to monitor fullscreen state changes:
