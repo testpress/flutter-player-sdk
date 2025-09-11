@@ -26,6 +26,9 @@ class TPStreamsPlayerValue {
   /// Indicates whether the currently loaded video has played to the end.
   final bool isEnded;
 
+  /// Indicates whether the video is currently in fullscreen mode.
+  final bool isFullScreen;
+
   /// Any error that occurred during playback
   final TPStreamsError? error;
 
@@ -36,6 +39,7 @@ class TPStreamsPlayerValue {
     this.isPlaying = false,
     this.isBuffering = false,
     this.isEnded = false,
+    this.isFullScreen = false,
     this.error,
   });
 
@@ -46,6 +50,7 @@ class TPStreamsPlayerValue {
     bool? isPlaying,
     bool? isBuffering,
     bool? isEnded,
+    bool? isFullScreen,
     TPStreamsError? error,
   }) {
     return TPStreamsPlayerValue(
@@ -55,6 +60,7 @@ class TPStreamsPlayerValue {
       isPlaying: isPlaying ?? this.isPlaying,
       isBuffering: isBuffering ?? this.isBuffering,
       isEnded: isEnded ?? this.isEnded,
+      isFullScreen: isFullScreen ?? this.isFullScreen,
       error: error ?? this.error,
     );
   }
@@ -122,6 +128,11 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void onPlayerError(String error) {
     value = value.copyWith(error: TPStreamsError(null, error));
+  }
+
+  @override
+  void onFullScreenChanged(bool isFullScreen) {
+    value = value.copyWith(isFullScreen: isFullScreen);
   }
 
   void _updateDurationIfNeeded() {

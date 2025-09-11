@@ -63,6 +63,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                 .build()
             playerViewController?.config = config
         }
+        playerViewController?.delegate = self
     }
  
      private func observeCurrentItemChanges(){
@@ -191,6 +192,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             NSLog("Failed to call flutter from native: \(error.localizedDescription)")
         }
     }
+
+    private func onFullScreenChanged(isFullScreen: Bool) {
+        playerListener.onFullScreenChanged(isFullScreen: isFullScreen, completion: handleFlutterCallResult)
+    }
 }
 
 private enum PlayerState : String{
@@ -198,4 +203,23 @@ private enum PlayerState : String{
          ready = "ready",
          ended = "ended",
          unknown = "unknown"
+}
+
+
+extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
+    func didEnterFullScreenMode() {
+        onFullScreenChanged(isFullScreen: true)
+    }
+    
+    func didExitFullScreenMode() {
+        onFullScreenChanged(isFullScreen: false)
+    }
+
+    func willEnterFullScreenMode() {
+        // No-op: Required by TPStreamPlayerViewControllerDelegate
+    }
+
+    func willExitFullScreenMode() {
+        // No-op: Required by TPStreamPlayerViewControllerDelegate
+    }
 }

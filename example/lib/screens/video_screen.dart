@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tpstreams_player_sdk/tpstreams_player_sdk.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class VideoScreen extends StatefulWidget {
   final String assetId;
@@ -20,6 +21,7 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   late TPStreamsPlayerController _controller;
   bool _isPlaying = false;
+  bool _isFullScreen = false;
   final _downloadManager = TPStreamsDownloadManager();
 
   @override
@@ -86,10 +88,28 @@ class _VideoScreenState extends State<VideoScreen> {
 
   void _onPlayerValueChanged() {
     final newIsPlaying = _controller.value.isPlaying;
+    final newIsFullScreen = _controller.value.isFullScreen;
+    
     if (newIsPlaying != _isPlaying) {
       setState(() {
         _isPlaying = newIsPlaying;
       });
+    }
+    
+    if (newIsFullScreen != _isFullScreen) {
+      setState(() {
+        _isFullScreen = newIsFullScreen;
+      });
+      
+      if (newIsFullScreen) {
+        Fluttertoast.showToast(
+          msg: "Entering Fullscreen",
+        );
+      } else {
+        Fluttertoast.showToast(
+          msg: "Exiting Fullscreen",
+        );
+      }
     }
   }
 
