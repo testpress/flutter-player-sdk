@@ -186,6 +186,11 @@ class NativePlayerView(
         playerListener.onPlayerError(playbackError.toString(), handleFlutterCallResult)
     }
 
+    override fun onFullScreenChanged(fullScreen: Boolean) {
+        super.onFullScreenChanged(fullScreen)
+        playerListener.onFullScreenChanged(fullScreen, handleFlutterCallResult)
+    }
+
     override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {}
 
     private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->

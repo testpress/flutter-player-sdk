@@ -3,7 +3,7 @@ import Flutter
 import TPStreamsSDK
 import AVKit
 
-class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
+class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi, TPStreamPlayerViewControllerDelegate {
     var viewId: Int64
     var player: TPAVPlayer! {
         didSet {
@@ -63,6 +63,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                 .build()
             playerViewController?.config = config
         }
+        playerViewController?.delegate = self
     }
  
      private func observeCurrentItemChanges(){
@@ -190,6 +191,26 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         if case .failure(let error) = result {
             NSLog("Failed to call flutter from native: \(error.localizedDescription)")
         }
+    }
+
+    func onFullScreenChanged(isFullScreen: Bool) {
+        playerListener.onFullScreenChanged(isFullScreen: isFullScreen, completion: handleFlutterCallResult)
+    }
+    
+    func didEnterFullScreenMode() {
+        onFullScreenChanged(isFullScreen: true)
+    }
+    
+    func didExitFullScreenMode() {
+        onFullScreenChanged(isFullScreen: false)
+    }
+
+    func willEnterFullScreenMode() {
+        // No-op: Required by TPStreamPlayerViewControllerDelegate
+    }
+
+    func willExitFullScreenMode() {
+        // No-op: Required by TPStreamPlayerViewControllerDelegate
     }
 }
 

@@ -23,4 +23,5 @@ abstract class NativePlayerListener {
   void onPlaybackStateChanged(String state);
   void onIsPlayingChanged(bool isPlaying);
   void onPlayerError(String error);
+  void onFullScreenChanged(bool isFullScreen);
 } 
