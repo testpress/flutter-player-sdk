@@ -3,7 +3,7 @@ import Flutter
 import TPStreamsSDK
 import AVKit
 
-class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi, TPStreamPlayerViewControllerDelegate {
+class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     var viewId: Int64
     var player: TPAVPlayer! {
         didSet {
@@ -196,7 +196,17 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi, TPStream
     private func onFullScreenChanged(isFullScreen: Bool) {
         playerListener.onFullScreenChanged(isFullScreen: isFullScreen, completion: handleFlutterCallResult)
     }
-    
+}
+
+private enum PlayerState : String{
+    case buffering = "buffering",
+         ready = "ready",
+         ended = "ended",
+         unknown = "unknown"
+}
+
+
+extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
     func didEnterFullScreenMode() {
         onFullScreenChanged(isFullScreen: true)
     }
@@ -212,11 +222,4 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi, TPStream
     func willExitFullScreenMode() {
         // No-op: Required by TPStreamPlayerViewControllerDelegate
     }
-}
-
-private enum PlayerState : String{
-    case buffering = "buffering",
-         ready = "ready",
-         ended = "ended",
-         unknown = "unknown"
 }
