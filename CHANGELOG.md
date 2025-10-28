@@ -63,3 +63,9 @@
 
 ## 2.2.3
 - Added support for listeners to monitor fullscreen state changes.
+
+## 2.2.4
+- Integrated Android Player SDK **v3.1.8** for enhanced playback performance and stability.
+
+## 2.2.5
+- Updated `compileSdkVersion` to **34** for improved compatibility with newer Android Gradle Plugin versions.
