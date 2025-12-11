@@ -69,3 +69,7 @@
 
 ## 2.2.5
 - Updated `compileSdkVersion` to **34** for improved compatibility with newer Android Gradle Plugin versions.
+
+## 2.2.6
+- Added metadata support to download assets in android and iOS.
+
