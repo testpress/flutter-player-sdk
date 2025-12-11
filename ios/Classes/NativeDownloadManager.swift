@@ -71,11 +71,18 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     }
     
     private func mapOfflineAssetToDownloadAsset(_ asset: OfflineAsset) -> DownloadAsset {
+        // Convert metadata from [String: Any]? to [String: String]?
+        // Filter out non-string values and nil keys/values
+        let metadata: [String: String]? = asset.metadata?.compactMapValues { value in
+            return value as? String
+        }
+        
         return DownloadAsset(
             assetId: asset.assetId,
             title: asset.title,
             state: mapDownloadState(Status(rawValue: asset.status)!),
-            progress: asset.percentageCompleted
+            progress: asset.percentageCompleted,
+            metadata: metadata
         )
     }
     

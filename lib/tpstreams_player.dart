@@ -17,6 +17,7 @@ class TPStreamPlayer extends StatefulWidget {
   final bool? showDownloadOption;
   final int? offlineLicenseExpireDays;
   final bool _isOfflinePlayback;
+  final Map<String, String>? metadata;
 
   const TPStreamPlayer({
     super.key,
@@ -26,6 +27,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.onPlayerCreated,
     this.showDownloadOption = false,
     this.offlineLicenseExpireDays = 15,
+    this.metadata,
   }) : _isOfflinePlayback = false;
 
   const TPStreamPlayer.offline({
@@ -37,7 +39,8 @@ class TPStreamPlayer extends StatefulWidget {
        accessToken = null,
        showDownloadOption = false,
        offlineLicenseExpireDays = 15,
-       _isOfflinePlayback = true;
+       _isOfflinePlayback = true,
+       metadata = null;
 
   @override
   State<TPStreamPlayer> createState() => _TPStreamPlayerState();
@@ -108,6 +111,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "isOfflinePlayback": widget._isOfflinePlayback,
     "showDownloadOption": widget.showDownloadOption,
     "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
+    if (widget.metadata != null) "metadata": widget.metadata,
   };
 
   void Function(int id) _onAndroidPlatformViewCreated(Function platformViewCreatedCallback) {
