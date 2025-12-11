@@ -27,12 +27,14 @@ class DownloadAsset {
   final String? title;
   final DownloadState state;
   final double progress;
+  final Map<String, String>? metadata;
 
   DownloadAsset({
     required this.assetId,
     this.title,
     required this.state,
-    required this.progress
+    required this.progress,
+    this.metadata,
   });
 }
 

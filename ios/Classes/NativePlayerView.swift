@@ -57,11 +57,21 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         guard let args = args as? [String: Any] else { return }
         
         let showDownloadOption = (args["showDownloadOption"] as? Bool) ?? false
-        if showDownloadOption {
-            let config = TPStreamPlayerConfigurationBuilder()
-                .showDownloadOption()
-                .build()
-            playerViewController?.config = config
+        let metadata = args["metadata"] as? [String: String]
+        
+        if showDownloadOption || metadata != nil {
+            let configBuilder = TPStreamPlayerConfigurationBuilder()
+            
+            if showDownloadOption {
+                configBuilder.showDownloadOption()
+            }
+            
+            if let metadata = metadata {
+                let metadataAny = metadata as [String: Any]
+                configBuilder.setDownloadMetadata(metadataAny)
+            }
+            
+            playerViewController?.config = configBuilder.build()
         }
         playerViewController?.delegate = self
     }

@@ -97,10 +97,11 @@ class NativePlayerView(
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
+        val metadata = creationParams?.get("metadata") as? Map<String, String>
 
         val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback)
         
-        this.player!!.load(parameters)
+        this.player!!.load(parameters, metadata)
         this.player!!.setListener(this)
 
         initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)

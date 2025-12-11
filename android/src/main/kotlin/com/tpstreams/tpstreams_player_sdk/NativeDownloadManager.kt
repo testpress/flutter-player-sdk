@@ -94,7 +94,8 @@ class NativeDownloadManager(
             assetId = asset.id,
             title = asset.title,
             state = mapDownloadState(asset.video.downloadState),
-            progress = asset.video.percentageDownloaded.toDouble()
+            progress = asset.video.percentageDownloaded.toDouble(),
+            metadata = asset.metadata
         )
     }
 
