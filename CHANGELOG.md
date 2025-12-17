@@ -73,3 +73,7 @@
 ## 2.2.6
 - Added metadata support to download assets in android and iOS.
 
+## 2.2.7
+- Added meta data support on the startDownload API in android.
+
+
