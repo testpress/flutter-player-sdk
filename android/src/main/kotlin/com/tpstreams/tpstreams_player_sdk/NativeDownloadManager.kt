@@ -33,13 +33,13 @@ class NativeDownloadManager(
         } ?: emptyList()
     }
 
-    override fun startDownload(assetId: String, accessToken: String) {
+    override fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?) {
         val parameters = TpInitParams.Builder()
             .setVideoId(assetId)
             .setAccessToken(accessToken)
             .build()
 
-        downloadManager.startDownload(activity, parameters)
+        downloadManager.startDownload(activity, parameters, metadata)
     }
 
     override fun cancelDownload(asset: DownloadAsset) {

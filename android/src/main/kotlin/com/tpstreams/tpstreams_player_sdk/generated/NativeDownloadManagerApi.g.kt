@@ -140,7 +140,7 @@ val NativeDownloadManagerApiPigeonMethodCodec = StandardMethodCodec(NativeDownlo
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface NativeDownloadManagerApi {
   fun getAllDownloads(): List<DownloadAsset>
-  fun startDownload(assetId: String, accessToken: String)
+  fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?)
   fun cancelDownload(asset: DownloadAsset)
   fun resumeDownload(asset: DownloadAsset)
   fun deleteDownload(asset: DownloadAsset)
@@ -179,8 +179,9 @@ interface NativeDownloadManagerApi {
             val args = message as List<Any?>
             val assetIdArg = args[0] as String
             val accessTokenArg = args[1] as String
+            val metadataArg = args[2] as Map<String, String>?
             val wrapped: List<Any?> = try {
-              api.startDownload(assetIdArg, accessTokenArg)
+              api.startDownload(assetIdArg, accessTokenArg, metadataArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)
