@@ -95,6 +95,7 @@ class NativePlayerView(
         val assetId = creationParams?.get("assetId") as? String
         val accessToken = creationParams?.get("accessToken") as? String
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
+        val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
         val metadata = creationParams?.get("metadata") as? Map<String, String>
@@ -103,6 +104,10 @@ class NativePlayerView(
         
         this.player!!.load(parameters, metadata)
         this.player!!.setListener(this)
+        
+        if (startInFullscreen) {
+            playerFragment.showFullScreen()
+        }
 
         initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)
     }

@@ -57,13 +57,18 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         guard let args = args as? [String: Any] else { return }
         
         let showDownloadOption = (args["showDownloadOption"] as? Bool) ?? false
+        let startInFullscreen = (args["startInFullscreen"] as? Bool) ?? false
         let metadata = args["metadata"] as? [String: String]
         
-        if showDownloadOption || metadata != nil {
+        if showDownloadOption || metadata != nil || startInFullscreen {
             let configBuilder = TPStreamPlayerConfigurationBuilder()
             
             if showDownloadOption {
                 configBuilder.showDownloadOption()
+            }
+
+            if startInFullscreen {
+                configBuilder.setStartInFullscreen(true)
             }
             
             if let metadata = metadata {
