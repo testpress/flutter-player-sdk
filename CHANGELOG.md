@@ -76,4 +76,6 @@
 ## 2.2.7
 - Added meta data support on the startDownload API in android.
 
+## 2.2.8
+- Added support for launching player in fullscreen and (dependency)iOSPlayerSDK version update
 
