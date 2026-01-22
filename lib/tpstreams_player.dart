@@ -15,6 +15,7 @@ class TPStreamPlayer extends StatefulWidget {
   final double aspectRatio;
   final Function(TPStreamsPlayerController controller)? onPlayerCreated;
   final bool? showDownloadOption;
+  final bool? startInFullscreen;
   final int? offlineLicenseExpireDays;
   final bool _isOfflinePlayback;
   final Map<String, String>? metadata;
@@ -26,6 +27,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
     this.showDownloadOption = false,
+    this.startInFullscreen = false,
     this.offlineLicenseExpireDays = 15,
     this.metadata,
   }) : _isOfflinePlayback = false;
@@ -38,6 +40,7 @@ class TPStreamPlayer extends StatefulWidget {
   }) : assetId = assetId,
        accessToken = null,
        showDownloadOption = false,
+       startInFullscreen = false,
        offlineLicenseExpireDays = 15,
        _isOfflinePlayback = true,
        metadata = null;
@@ -110,6 +113,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "accessToken": widget.accessToken,
     "isOfflinePlayback": widget._isOfflinePlayback,
     "showDownloadOption": widget.showDownloadOption,
+    "startInFullscreen": widget.startInFullscreen,
     "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     if (widget.metadata != null) "metadata": widget.metadata,
   };
