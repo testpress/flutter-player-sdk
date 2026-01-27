@@ -231,10 +231,10 @@ extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
     }
 
     func willEnterFullScreenMode() {
-        // No-op: Required by TPStreamPlayerViewControllerDelegate
+        playerListener.onFullScreenWillEnter(completion: handleFlutterCallResult)
     }
 
     func willExitFullScreenMode() {
-        // No-op: Required by TPStreamPlayerViewControllerDelegate
+        playerListener.onFullScreenWillExit(completion: handleFlutterCallResult)
     }
 }
