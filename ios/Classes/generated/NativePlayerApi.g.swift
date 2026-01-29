@@ -75,6 +75,7 @@ protocol NativePlayerApi {
   func getDuration() throws -> Int64
   func getCurrentTime() throws -> Int64
   func dispose() throws
+  func resolveAccessToken(newAccessToken: String) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -177,6 +178,21 @@ class NativePlayerApiSetup {
       }
     } else {
       disposeChannel.setMessageHandler(nil)
+    }
+    let resolveAccessTokenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.resolveAccessToken\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      resolveAccessTokenChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let newAccessTokenArg = args[0] as! String
+        do {
+          try api.resolveAccessToken(newAccessToken: newAccessTokenArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      resolveAccessTokenChannel.setMessageHandler(nil)
     }
   }
 }

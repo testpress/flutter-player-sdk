@@ -26,4 +26,5 @@ abstract class NativePlayerListener {
   void onFullScreenChanged(bool isFullScreen);
   void beforeFullScreenEnter();
   void beforeFullScreenExit();
+  void handleAccessTokenExpiration(String videoId);
 }

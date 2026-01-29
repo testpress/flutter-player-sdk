@@ -85,6 +85,7 @@ protocol NativePlayerListenerProtocol {
   func onFullScreenChanged(isFullScreen isFullScreenArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func beforeFullScreenEnter(completion: @escaping (Result<Void, PigeonError>) -> Void)
   func beforeFullScreenExit(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func handleAccessTokenExpiration(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class NativePlayerListener: NativePlayerListenerProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -190,6 +191,24 @@ class NativePlayerListener: NativePlayerListenerProtocol {
     let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenExit\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage(nil) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(Void()))
+      }
+    }
+  }
+  func handleAccessTokenExpiration(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([videoIdArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

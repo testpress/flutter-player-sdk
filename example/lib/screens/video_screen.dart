@@ -47,6 +47,12 @@ class _VideoScreenState extends State<VideoScreen> {
                 _controller.onBeforeFullScreenExit = () {
                   print('Will exit fullscreen');
                 };
+
+                _controller.onAccessTokenExpired = (String videoId) async {
+                  String newToken = "Token"; //await getNewToken();
+                  return newToken;
+                };
+
                 // Listen to player value changes
                 _controller.addListener(_onPlayerValueChanged);
               },

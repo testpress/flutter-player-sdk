@@ -78,6 +78,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   VoidCallback? onBeforeFullScreenExit;
 
+  Future<String> Function(String videoId)? onAccessTokenExpired;
+
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
@@ -147,6 +149,14 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void beforeFullScreenExit() {
     onBeforeFullScreenExit?.call();
+  }
+
+  @override
+  void handleAccessTokenExpiration(String videoId) async {
+    if (onAccessTokenExpired != null) {
+      final newToken = await onAccessTokenExpired!(videoId);
+      _nativeApi.resolveAccessToken(newToken);
+    }
   }
 
   void _updateDurationIfNeeded() {

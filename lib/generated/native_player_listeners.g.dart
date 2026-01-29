@@ -90,6 +90,8 @@ abstract class NativePlayerListener {
 
   void beforeFullScreenExit();
 
+  void handleAccessTokenExpiration(String videoId);
+
   static void setUp(NativePlayerListener? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
@@ -221,6 +223,31 @@ abstract class NativePlayerListener {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
             api.beforeFullScreenExit();
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final String? arg_videoId = (args[0] as String?);
+          assert(arg_videoId != null,
+              'Argument for dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration was null, expected non-null String.');
+          try {
+            api.handleAccessTokenExpiration(arg_videoId!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
