@@ -183,7 +183,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player = nil
     }
     
-    func resolveAccessToken(newAccessToken: String) throws {
+    func resolveAccessToken(newAccessToken: String) {
         // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
     }
 
