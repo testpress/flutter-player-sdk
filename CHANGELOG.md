@@ -82,3 +82,6 @@
 ## 2.2.9
 - Added `onBeforeFullScreenEnter` and `onBeforeFullScreenExit` callbacks to allow apps to respond before fullscreen transitions occur
 - Updated Android SDK dependency version
+
+## 2.2.10
+- Added `onAccessTokenExpired` callback to support seamless token refreshing in Android.
