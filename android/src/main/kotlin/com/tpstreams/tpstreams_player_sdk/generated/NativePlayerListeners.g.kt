@@ -161,10 +161,10 @@ class NativePlayerListener(private val binaryMessenger: BinaryMessenger, private
       } 
     }
   }
-  fun accessTokenExpired(videoIdArg: String, callback: (Result<Unit>) -> Unit)
+  fun handleAccessTokenExpiration(videoIdArg: String, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.accessTokenExpired$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(videoIdArg)) {
       if (it is List<*>) {

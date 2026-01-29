@@ -85,7 +85,7 @@ protocol NativePlayerListenerProtocol {
   func onFullScreenChanged(isFullScreen isFullScreenArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func beforeFullScreenEnter(completion: @escaping (Result<Void, PigeonError>) -> Void)
   func beforeFullScreenExit(completion: @escaping (Result<Void, PigeonError>) -> Void)
-  func accessTokenExpired(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func handleAccessTokenExpiration(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class NativePlayerListener: NativePlayerListenerProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -205,8 +205,8 @@ class NativePlayerListener: NativePlayerListenerProtocol {
       }
     }
   }
-  func accessTokenExpired(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.accessTokenExpired\(messageChannelSuffix)"
+  func handleAccessTokenExpiration(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.handleAccessTokenExpiration\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([videoIdArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
