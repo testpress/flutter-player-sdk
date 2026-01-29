@@ -24,6 +24,6 @@ abstract class NativePlayerListener {
   void onIsPlayingChanged(bool isPlaying);
   void onPlayerError(String error);
   void onFullScreenChanged(bool isFullScreen);
-  void onFullScreenWillEnter();
-  void onFullScreenWillExit();
+  void beforeFullScreenEnter();
+  void beforeFullScreenExit();
 }

@@ -83,8 +83,8 @@ protocol NativePlayerListenerProtocol {
   func onIsPlayingChanged(isPlaying isPlayingArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func onPlayerError(error errorArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void)
   func onFullScreenChanged(isFullScreen isFullScreenArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  func onFullScreenWillEnter(completion: @escaping (Result<Void, PigeonError>) -> Void)
-  func onFullScreenWillExit(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func beforeFullScreenEnter(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func beforeFullScreenExit(completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class NativePlayerListener: NativePlayerListenerProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -168,8 +168,8 @@ class NativePlayerListener: NativePlayerListenerProtocol {
       }
     }
   }
-  func onFullScreenWillEnter(completion: @escaping (Result<Void, PigeonError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillEnter\(messageChannelSuffix)"
+  func beforeFullScreenEnter(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenEnter\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage(nil) { response in
       guard let listResponse = response as? [Any?] else {
@@ -186,8 +186,8 @@ class NativePlayerListener: NativePlayerListenerProtocol {
       }
     }
   }
-  func onFullScreenWillExit(completion: @escaping (Result<Void, PigeonError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillExit\(messageChannelSuffix)"
+  func beforeFullScreenExit(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenExit\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage(nil) { response in
       guard let listResponse = response as? [Any?] else {

@@ -86,9 +86,9 @@ abstract class NativePlayerListener {
 
   void onFullScreenChanged(bool isFullScreen);
 
-  void onFullScreenWillEnter();
+  void beforeFullScreenEnter();
 
-  void onFullScreenWillExit();
+  void beforeFullScreenExit();
 
   static void setUp(NativePlayerListener? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
@@ -194,14 +194,14 @@ abstract class NativePlayerListener {
     }
     {
       final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillEnter$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenEnter$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
-            api.onFullScreenWillEnter();
+            api.beforeFullScreenEnter();
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
@@ -213,14 +213,14 @@ abstract class NativePlayerListener {
     }
     {
       final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillExit$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenExit$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
-            api.onFullScreenWillExit();
+            api.beforeFullScreenExit();
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

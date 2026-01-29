@@ -40,6 +40,13 @@ class _VideoScreenState extends State<VideoScreen> {
               showDownloadOption: widget.showDownloadOption,
               onPlayerCreated: (controller) {
                 _controller = controller;
+                _controller.onBeforeFullScreenEnter = () {
+                  print('Will enter fullscreen');
+                };
+
+                _controller.onBeforeFullScreenExit = () {
+                  print('Will exit fullscreen');
+                };
                 // Listen to player value changes
                 _controller.addListener(_onPlayerValueChanged);
               },

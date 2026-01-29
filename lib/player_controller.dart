@@ -74,9 +74,9 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   static const _positionUpdateInterval = Duration(milliseconds: 500);
 
-  VoidCallback? onWillEnterFullScreen;
+  VoidCallback? onBeforeFullScreenEnter;
 
-  VoidCallback? onWillExitFullScreen;
+  VoidCallback? onBeforeFullScreenExit;
 
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
@@ -140,13 +140,13 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   }
 
   @override
-  void onFullScreenWillEnter() {
-    onWillEnterFullScreen?.call();
+  void beforeFullScreenEnter() {
+    onBeforeFullScreenEnter?.call();
   }
 
   @override
-  void onFullScreenWillExit() {
-    onWillExitFullScreen?.call();
+  void beforeFullScreenExit() {
+    onBeforeFullScreenExit?.call();
   }
 
   void _updateDurationIfNeeded() {
@@ -180,3 +180,5 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     super.dispose();
   }
 }
+
+

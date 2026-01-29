@@ -127,10 +127,10 @@ class NativePlayerListener(private val binaryMessenger: BinaryMessenger, private
       } 
     }
   }
-  fun onFullScreenWillEnter(callback: (Result<Unit>) -> Unit)
+  fun beforeFullScreenEnter(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillEnter$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenEnter$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(null) {
       if (it is List<*>) {
@@ -144,10 +144,10 @@ class NativePlayerListener(private val binaryMessenger: BinaryMessenger, private
       } 
     }
   }
-  fun onFullScreenWillExit(callback: (Result<Unit>) -> Unit)
+  fun beforeFullScreenExit(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onFullScreenWillExit$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.beforeFullScreenExit$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(null) {
       if (it is List<*>) {
