@@ -79,3 +79,6 @@
 ## 2.2.8
 - Added support for launching player in fullscreen and (dependency)iOSPlayerSDK version update
 
+## 2.2.9
+- Added `onBeforeFullScreenEnter` and `onBeforeFullScreenExit` callbacks to allow apps to respond before fullscreen transitions occur
+- Updated Android SDK dependency version
