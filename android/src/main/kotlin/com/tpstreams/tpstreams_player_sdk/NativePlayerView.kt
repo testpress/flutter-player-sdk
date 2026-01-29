@@ -32,6 +32,7 @@ class NativePlayerView(
     
     private val initializationListener = NativePlayerInitializationListener(messenger, messageChannelSuffix = id.toString())
     private val playerListener = NativePlayerListener(messenger, messageChannelSuffix = id.toString())
+    private var pendingTokenCallback: ((String) -> Unit)? = null
 
     override fun getView(): View {
         return linearLayout
@@ -207,7 +208,15 @@ class NativePlayerView(
         playerListener.beforeFullScreenExit(handleFlutterCallResult)
     }
 
-    override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {}
+    override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
+        pendingTokenCallback = callback
+        playerListener.accessTokenExpired(videoId, handleFlutterCallResult)
+    }
+
+    override fun resolveAccessToken(newAccessToken: String) {
+        pendingTokenCallback?.invoke(newAccessToken)
+        pendingTokenCallback = null
+    }
 
     private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->
         if (result.isFailure) {

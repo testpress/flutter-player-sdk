@@ -51,6 +51,7 @@ interface NativePlayerApi {
   fun getDuration(): Long
   fun getCurrentTime(): Long
   fun dispose()
+  fun resolveAccessToken(newAccessToken: String)
 
   companion object {
     /** The codec used by NativePlayerApi. */
@@ -165,6 +166,24 @@ interface NativePlayerApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.dispose()
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.resolveAccessToken$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val newAccessTokenArg = args[0] as String
+            val wrapped: List<Any?> = try {
+              api.resolveAccessToken(newAccessTokenArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

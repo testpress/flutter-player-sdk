@@ -24,4 +24,5 @@ abstract class NativePlayerApi {
   int getDuration();
   int getCurrentTime();
   void dispose();
+  void resolveAccessToken(String newAccessToken);
 } 

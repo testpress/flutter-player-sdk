@@ -182,6 +182,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         player.replaceCurrentItem(with: nil)
         player = nil
     }
+    
+    func resolveAccessToken(newAccessToken: String) throws {
+        // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
+    }
 
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
