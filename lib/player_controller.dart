@@ -154,8 +154,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void accessTokenExpired(String videoId) async {
     if (onAccessTokenExpired != null) {
-      final newToken = await onAccessTokenExpired!(videoId);
-      _nativeApi.resolveAccessToken(newToken);
+      try {
+        final newToken = await onAccessTokenExpired!(videoId);
+        await _nativeApi.resolveAccessToken(newToken);
+      } catch (e, s) {
+        debugPrint('Error refreshing access token: $e\n$s');
+      }
     }
   }
 
