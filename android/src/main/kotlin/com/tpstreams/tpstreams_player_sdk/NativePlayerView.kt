@@ -197,6 +197,16 @@ class NativePlayerView(
         playerListener.onFullScreenChanged(fullScreen, handleFlutterCallResult)
     }
 
+    override fun onBeforeFullScreenEnter() {
+        super.onBeforeFullScreenEnter()
+        playerListener.beforeFullScreenEnter(handleFlutterCallResult)
+    }
+
+    override fun onBeforeFullScreenExit() {
+        super.onBeforeFullScreenExit()
+        playerListener.beforeFullScreenExit(handleFlutterCallResult)
+    }
+
     override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {}
 
     private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->

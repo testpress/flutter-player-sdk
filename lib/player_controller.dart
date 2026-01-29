@@ -74,6 +74,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   static const _positionUpdateInterval = Duration(milliseconds: 500);
 
+  VoidCallback? onBeforeFullScreenEnter;
+
+  VoidCallback? onBeforeFullScreenExit;
+
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
@@ -133,6 +137,16 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void onFullScreenChanged(bool isFullScreen) {
     value = value.copyWith(isFullScreen: isFullScreen);
+  }
+
+  @override
+  void beforeFullScreenEnter() {
+    onBeforeFullScreenEnter?.call();
+  }
+
+  @override
+  void beforeFullScreenExit() {
+    onBeforeFullScreenExit?.call();
   }
 
   void _updateDurationIfNeeded() {
