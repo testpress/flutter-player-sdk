@@ -2,6 +2,7 @@ library tpstreams_player_sdk;
 
 export 'tpstreams_player.dart';
 export 'player_controller.dart';
+export 'generated/player_preferences.g.dart';
 import 'package:flutter/widgets.dart';
 import 'generated/native_sdk_api.g.dart';
 export 'generated/native_sdk_api.g.dart' show PROVIDER;

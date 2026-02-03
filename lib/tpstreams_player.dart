@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/player_controller.dart';
+import 'package:tpstreams_player_sdk/generated/player_preferences.g.dart';
 
 import 'generated/native_player_listeners.g.dart';
 
@@ -19,8 +20,9 @@ class TPStreamPlayer extends StatefulWidget {
   final int? offlineLicenseExpireDays;
   final bool _isOfflinePlayback;
   final Map<String, String>? metadata;
+  final TPStreamsPlayerPreferences preferences;
 
-  const TPStreamPlayer({
+  TPStreamPlayer({
     super.key,
     required this.assetId,
     required this.accessToken,
@@ -30,9 +32,17 @@ class TPStreamPlayer extends StatefulWidget {
     this.startInFullscreen = false,
     this.offlineLicenseExpireDays = 15,
     this.metadata,
-  }) : _isOfflinePlayback = false;
+    TPStreamsPlayerPreferences? preferences,
+  }) : _isOfflinePlayback = false,
+       preferences = preferences ?? TPStreamsPlayerPreferences(
+           enableFullscreen: true,
+           enablePlaybackSpeed: true,
+           enableCaptions: true,
+           showResolutionOptions: true,
+           enableSeekButtons: true,
+       );
 
-  const TPStreamPlayer.offline({
+  TPStreamPlayer.offline({
     super.key,
     required String assetId,
     this.aspectRatio = 16 / 9,
@@ -43,7 +53,14 @@ class TPStreamPlayer extends StatefulWidget {
        startInFullscreen = false,
        offlineLicenseExpireDays = 15,
        _isOfflinePlayback = true,
-       metadata = null;
+       metadata = null,
+       preferences = TPStreamsPlayerPreferences(
+           enableFullscreen: true,
+           enablePlaybackSpeed: true,
+           enableCaptions: true,
+           showResolutionOptions: true,
+           enableSeekButtons: true,
+       );
 
   @override
   State<TPStreamPlayer> createState() => _TPStreamPlayerState();
@@ -116,6 +133,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "startInFullscreen": widget.startInFullscreen,
     "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     if (widget.metadata != null) "metadata": widget.metadata,
+    "playerPreferences": widget.preferences.encode(),
   };
 
   void Function(int id) _onAndroidPlatformViewCreated(Function platformViewCreatedCallback) {

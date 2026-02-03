@@ -60,7 +60,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         let startInFullscreen = (args["startInFullscreen"] as? Bool) ?? false
         let metadata = args["metadata"] as? [String: String]
         
-        if showDownloadOption || metadata != nil || startInFullscreen {
+        let playerPreferences = args["playerPreferences"] as? [Any]
+        
+        if showDownloadOption || metadata != nil || startInFullscreen || playerPreferences != nil {
             let configBuilder = TPStreamPlayerConfigurationBuilder()
             
             if showDownloadOption {
@@ -74,6 +76,22 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             if let metadata = metadata {
                 let metadataAny = metadata as [String: Any]
                 configBuilder.setDownloadMetadata(metadataAny)
+            }
+            
+            if let prefsList = playerPreferences,
+               let prefs = TPStreamsPlayerPreferences.fromList(prefsList) {
+                
+                configBuilder.enableFullscreen(prefs.enableFullscreen)
+                configBuilder.enablePlaybackSpeed(prefs.enablePlaybackSpeed)
+                configBuilder.enableCaptions(prefs.enableCaptions)
+                configBuilder.showResolutionOptions(prefs.showResolutionOptions)
+                configBuilder.enableSeekButtons(prefs.enableSeekButtons)
+                
+                if let seekBarColor = prefs.seekBarColor {
+                    let color = UIColor(argb: Int(seekBarColor))
+                    configBuilder.setprogressBarThumbColor(color)
+                    configBuilder.setwatchedProgressTrackColor(color)
+                }
             }
             
             playerViewController?.config = configBuilder.build()

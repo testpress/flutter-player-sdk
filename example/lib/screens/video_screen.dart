@@ -12,7 +12,10 @@ class VideoScreen extends StatefulWidget {
     required this.assetId,
     required this.accessToken,
     this.showDownloadOption = false,
+    this.preferences,
   });
+
+  final TPStreamsPlayerPreferences? preferences;
 
   @override
   State<VideoScreen> createState() => _VideoScreenState();
@@ -38,6 +41,7 @@ class _VideoScreenState extends State<VideoScreen> {
               assetId: widget.assetId,
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
+              preferences: widget.preferences,
               onPlayerCreated: (controller) {
                 _controller = controller;
                 _controller.onBeforeFullScreenEnter = () {
