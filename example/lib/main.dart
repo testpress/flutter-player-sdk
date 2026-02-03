@@ -71,6 +71,14 @@ class _HomePageState extends State<HomePage> {
                         assetId: video.assetId,
                         accessToken: video.accessToken,
                         showDownloadOption: true,
+                        preferences: TPStreamsPlayerPreferences(
+                          enableFullscreen: false,
+                          enablePlaybackSpeed: false,
+                          enableCaptions: false,
+                          showResolutionOptions: false,
+                          enableSeekButtons: false,
+                          seekBarColor: Colors.blue.value,
+                        ),
                       ),
                     ),
                   );

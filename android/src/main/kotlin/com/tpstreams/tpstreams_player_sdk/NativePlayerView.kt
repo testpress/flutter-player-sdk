@@ -13,6 +13,7 @@ import com.tpstream.player.TpStreamPlayer
 import com.tpstream.player.constants.PlaybackError
 import com.tpstream.player.ui.InitializationListener
 import com.tpstream.player.ui.TpStreamPlayerFragment
+import com.tpstream.player.TpStreamPlayerPreference
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
 import android.util.Log
@@ -101,7 +102,9 @@ class NativePlayerView(
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
         val metadata = creationParams?.get("metadata") as? Map<String, String>
 
-        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback)
+        val playerPreferences = creationParams?.get("playerPreferences")
+
+        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback, playerPreferences)
         
         this.player!!.load(parameters, metadata)
         this.player!!.setListener(this)
@@ -118,7 +121,8 @@ class NativePlayerView(
         accessToken: String?,
         showDownloadOption: Boolean,
         offlineLicenseExpireDays: Int,
-        isOfflinePlayback: Boolean
+        isOfflinePlayback: Boolean,
+        playerPreferences: Any?
     ): TpInitParams {
         return if (isOfflinePlayback) {
             TpInitParams.createOfflineParams(requireNotNull(assetId))
@@ -130,6 +134,17 @@ class NativePlayerView(
                     if (showDownloadOption) {
                         enableDownloadSupport(true)
                         setOfflineLicenseExpireTime(60 * 60 * 24 * offlineLicenseExpireDays)
+                    }
+                    playerPreferences?.let { prefsList ->
+                        val prefs = TPStreamsPlayerPreferences.fromList(prefsList as List<Any?>)
+                        val preferenceBuilder = TpStreamPlayerPreference.Builder()
+                        preferenceBuilder.enableFullscreen(prefs.enableFullscreen)
+                        preferenceBuilder.enablePlaybackSpeed(prefs.enablePlaybackSpeed)
+                        preferenceBuilder.enableCaptions(prefs.enableCaptions)
+                        preferenceBuilder.showResolutionOptions(prefs.showResolutionOptions)
+                        preferenceBuilder.enableSeekButtons(prefs.enableSeekButtons)
+                        prefs.seekBarColor?.let { preferenceBuilder.setSeekBarColor(it.toInt()) }
+                        setPlayerPreference(preferenceBuilder.build())
                     }
                 }
                 .build()
