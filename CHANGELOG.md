@@ -85,3 +85,6 @@
 
 ## 2.2.10
 - Added `onAccessTokenExpired` callback to support seamless token refreshing in Android.
+
+## 2.2.11
+- Player preference config to control UI elements in Android and iOS.
