@@ -11,6 +11,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             player.onError = sendPlayerErrorEvent
         }
     }
+    var autoPlay: Bool = true
     var playerViewController: TPStreamPlayerViewController?
     private var playerState: PlayerState = .unknown {
         didSet {
@@ -29,6 +30,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
             let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
+            self.autoPlay = args["autoPlay"] as? Bool ?? true
             
             if isOfflinePlayback {
                 player = TPAVPlayer(offlineAssetId: assetId)
@@ -143,6 +145,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         case #keyPath(AVPlayerItem.status):
             if player.currentItem?.status == .readyToPlay {
                 playerState = .ready
+                if autoPlay {
+                    player.play()
+                }
             }
         default:
             break

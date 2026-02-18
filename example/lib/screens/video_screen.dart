@@ -6,12 +6,14 @@ class VideoScreen extends StatefulWidget {
   final String assetId;
   final String accessToken;
   final bool showDownloadOption;
+  final bool autoPlay;
 
   const VideoScreen({
     super.key,
     required this.assetId,
     required this.accessToken,
     this.showDownloadOption = false,
+    this.autoPlay = true,
     this.preferences,
   });
 
@@ -41,6 +43,7 @@ class _VideoScreenState extends State<VideoScreen> {
               assetId: widget.assetId,
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
+              autoPlay: widget.autoPlay,
               preferences: widget.preferences,
               onPlayerCreated: (controller) {
                 _controller = controller;
