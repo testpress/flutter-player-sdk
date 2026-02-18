@@ -230,7 +230,7 @@ class NativePlayerView(
 
     override fun onReplay() {
         super.onReplay()
-        playerListener.onReplayReceived(handleFlutterCallResult)
+        playerListener.notifyReplay(handleFlutterCallResult)
     }
 
     override fun resolveAccessToken(newAccessToken: String) {

@@ -86,7 +86,7 @@ protocol NativePlayerListenerProtocol {
   func beforeFullScreenEnter(completion: @escaping (Result<Void, PigeonError>) -> Void)
   func beforeFullScreenExit(completion: @escaping (Result<Void, PigeonError>) -> Void)
   func handleAccessTokenExpiration(videoId videoIdArg: String, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  func onReplayReceived(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  func notifyReplay(completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class NativePlayerListener: NativePlayerListenerProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -224,8 +224,8 @@ class NativePlayerListener: NativePlayerListenerProtocol {
       }
     }
   }
-  func onReplayReceived(completion: @escaping (Result<Void, PigeonError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onReplayReceived\(messageChannelSuffix)"
+  func notifyReplay(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.notifyReplay\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage(nil) { response in
       guard let listResponse = response as? [Any?] else {

@@ -154,7 +154,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   }
 
   @override
-  void onReplayReceived() {
+  void notifyReplay() {
     onReplay?.call();
   }
 

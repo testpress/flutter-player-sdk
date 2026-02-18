@@ -92,7 +92,7 @@ abstract class NativePlayerListener {
 
   void handleAccessTokenExpiration(String videoId);
 
-  void onReplayReceived();
+  void notifyReplay();
 
   static void setUp(NativePlayerListener? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
@@ -261,14 +261,14 @@ abstract class NativePlayerListener {
     }
     {
       final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onReplayReceived$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.notifyReplay$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           try {
-            api.onReplayReceived();
+            api.notifyReplay();
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

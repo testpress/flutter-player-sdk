@@ -261,6 +261,6 @@ extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
     }
 
     func didTapReplay() {
-        playerListener.onReplayReceived(completion: handleFlutterCallResult)
+        playerListener.notifyReplay(completion: handleFlutterCallResult)
     }
 }

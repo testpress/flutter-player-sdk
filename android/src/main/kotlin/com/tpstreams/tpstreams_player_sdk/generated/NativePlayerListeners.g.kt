@@ -178,10 +178,10 @@ class NativePlayerListener(private val binaryMessenger: BinaryMessenger, private
       } 
     }
   }
-  fun onReplayReceived(callback: (Result<Unit>) -> Unit)
+  fun notifyReplay(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.onReplayReceived$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerListener.notifyReplay$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(null) {
       if (it is List<*>) {
