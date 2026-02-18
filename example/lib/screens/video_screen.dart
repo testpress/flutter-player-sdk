@@ -60,6 +60,10 @@ class _VideoScreenState extends State<VideoScreen> {
                   return newToken;
                 };
 
+                _controller.onReplay = () {
+                  Fluttertoast.showToast(msg: 'Replay button clicked');
+                };
+
                 // Listen to player value changes
                 _controller.addListener(_onPlayerValueChanged);
               },

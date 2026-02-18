@@ -231,6 +231,11 @@ class NativePlayerView(
         playerListener.handleAccessTokenExpiration(videoId, handleFlutterCallResult)
     }
 
+    override fun onReplay() {
+        super.onReplay()
+        playerListener.notifyReplay(handleFlutterCallResult)
+    }
+
     override fun resolveAccessToken(newAccessToken: String) {
         pendingTokenCallback?.invoke(newAccessToken)
         pendingTokenCallback = null
