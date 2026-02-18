@@ -88,3 +88,8 @@
 
 ## 2.2.11
 - Player preference config to control UI elements in Android and iOS.
+
+## 2.2.12
+- Added `onReplay` callback to listen for replay button clicks.
+- Added support for configurable auto-play.
+- Updated Android and iOS player SDK versions.
