@@ -27,4 +27,5 @@ abstract class NativePlayerListener {
   void beforeFullScreenEnter();
   void beforeFullScreenExit();
   void handleAccessTokenExpiration(String videoId);
+  void onReplayReceived();
 }

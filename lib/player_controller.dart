@@ -78,6 +78,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   VoidCallback? onBeforeFullScreenExit;
 
+  VoidCallback? onReplay;
+
   Future<String> Function(String videoId)? onAccessTokenExpired;
 
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
@@ -149,6 +151,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void beforeFullScreenExit() {
     onBeforeFullScreenExit?.call();
+  }
+
+
+  @override
+  void onReplayReceived() {
+    onReplay?.call();
   }
 
   @override

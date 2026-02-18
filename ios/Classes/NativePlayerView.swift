@@ -259,4 +259,8 @@ extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
     func willExitFullScreenMode() {
         playerListener.beforeFullScreenExit(completion: handleFlutterCallResult)
     }
+
+    func didTapReplay() {
+        playerListener.onReplayReceived(completion: handleFlutterCallResult)
+    }
 }
