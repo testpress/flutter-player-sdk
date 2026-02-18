@@ -101,10 +101,11 @@ class NativePlayerView(
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
         val metadata = creationParams?.get("metadata") as? Map<String, String>
+        val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
 
         val playerPreferences = creationParams?.get("playerPreferences")
 
-        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback, playerPreferences)
+        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback, playerPreferences, autoPlay)
         
         this.player!!.load(parameters, metadata)
         this.player!!.setListener(this)
@@ -122,7 +123,8 @@ class NativePlayerView(
         showDownloadOption: Boolean,
         offlineLicenseExpireDays: Int,
         isOfflinePlayback: Boolean,
-        playerPreferences: Any?
+        playerPreferences: Any?,
+        autoPlay: Boolean
     ): TpInitParams {
         return if (isOfflinePlayback) {
             TpInitParams.createOfflineParams(requireNotNull(assetId))
@@ -130,6 +132,7 @@ class NativePlayerView(
             TpInitParams.Builder()
                 .setVideoId(requireNotNull(assetId))
                 .setAccessToken(requireNotNull(accessToken))
+                .setAutoPlay(autoPlay)
                 .apply {
                     if (showDownloadOption) {
                         enableDownloadSupport(true)

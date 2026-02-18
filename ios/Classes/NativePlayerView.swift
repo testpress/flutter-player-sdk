@@ -29,6 +29,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
             let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
+            let autoPlay = args["autoPlay"] as? Bool ?? true
             
             if isOfflinePlayback {
                 player = TPAVPlayer(offlineAssetId: assetId)
@@ -39,6 +40,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
+            
+            if autoPlay {
+                player.play()
+            }
         }
         self.viewId = viewId
         initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
