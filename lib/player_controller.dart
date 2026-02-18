@@ -153,7 +153,6 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     onBeforeFullScreenExit?.call();
   }
 
-
   @override
   void onReplayReceived() {
     onReplay?.call();
