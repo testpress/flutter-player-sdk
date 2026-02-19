@@ -25,4 +25,5 @@ abstract class NativePlayerApi {
   int getCurrentTime();
   void dispose();
   void resolveAccessToken(String newAccessToken);
+  void setMaxResolution(int resolution);
 } 
