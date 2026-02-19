@@ -96,4 +96,5 @@
 
 ## 2.2.13
 - Added `setMaxResolution` API to cap video playback resolution in Android.
+- Fixed iOS crash occurring on multiple player dispose calls.
 - Updated Android SDK dependency version.
