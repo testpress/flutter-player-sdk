@@ -213,6 +213,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
 
     func setMaxResolution(resolution: Int64) {
         // No-op: iOS does not currently support setMaxResolution
+        NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
     }
 
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
