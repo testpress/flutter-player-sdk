@@ -93,3 +93,7 @@
 - Added `onReplay` callback to listen for replay button clicks.
 - Added support for configurable auto-play.
 - Updated Android and iOS player SDK versions.
+
+## 2.2.13
+- Added `setMaxResolution` API to cap video playback resolution in Android.
+- Updated Android SDK dependency version.
