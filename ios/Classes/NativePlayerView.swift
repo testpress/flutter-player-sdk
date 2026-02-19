@@ -201,6 +201,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func dispose() throws {
+        guard player != nil else { return }
         removeObservers()
         player.replaceCurrentItem(with: nil)
         player = nil
@@ -221,12 +222,13 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func removeObservers() {
+        guard player != nil else { return }
         currentItemChangeObservation?.invalidate()
         player.removeObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus))
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp))
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty))
         player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
 
     private func handleFlutterCallResult(_ result: Result<Void, PigeonError>) {
