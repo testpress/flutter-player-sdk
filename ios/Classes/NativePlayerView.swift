@@ -211,6 +211,11 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
     }
 
+    func setMaxResolution(resolution: Int64) {
+        // No-op: iOS does not currently support setMaxResolution
+        NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
+    }
+
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
             playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)

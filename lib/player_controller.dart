@@ -99,6 +99,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Set the playback speed of the video
   Future<void> setPlaybackSpeed(double speed) => _nativeApi.setPlaybackSpeed(speed);
 
+/// Sets the maximum resolution for video playback.
+/// The [resolution] parameter defines the maximum video height in pixels (for example, 720 for 720p).
+/// Android: Limits playback to video tracks whose resolution is less than or equal to the specified value. Higher-resolution tracks will not be selected.
+/// iOS: Currently a no-op (the setting is ignored).
+  Future<void> setMaxResolution(int resolution) => _nativeApi.setMaxResolution(resolution);
+
   /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();
