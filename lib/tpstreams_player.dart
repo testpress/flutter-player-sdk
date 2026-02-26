@@ -73,6 +73,7 @@ class TPStreamPlayer extends StatefulWidget {
 class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
   int? _platformViewId;
+  bool _isPlayerCreated = false;
   late NativePlayerApi _nativeApi;
 
   @override
@@ -159,6 +160,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   @override
   void onNativePlayerCreated(int platformViewId) {
     _controller = TPStreamsPlayerController(platformViewId);
+    _isPlayerCreated = true;
     widget.onPlayerCreated?.call(_controller!);
   }
 
@@ -166,7 +168,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   void dispose() {
     final viewId = _platformViewId;
     if (viewId != null) {
-      if (_controller != null) {
+      if (_isPlayerCreated) {
         _controller!.dispose();
       } else {
         _nativeApi.dispose();
