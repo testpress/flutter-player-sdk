@@ -8,6 +8,8 @@ import 'package:tpstreams_player_sdk/player_controller.dart';
 import 'package:tpstreams_player_sdk/generated/player_preferences.g.dart';
 
 import 'generated/native_player_listeners.g.dart';
+import 'generated/native_player_api.g.dart';
+import 'generated/native_player_listeners.g.dart';
 
 
 class TPStreamPlayer extends StatefulWidget {
@@ -71,6 +73,7 @@ class TPStreamPlayer extends StatefulWidget {
 
 class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
+  int? _platformViewId;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +151,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   }
 
   void setUpNativePlayerInitializationListener(int id) {
+    _platformViewId = id;
     NativePlayerInitializationListener.setUp(this, messageChannelSuffix: id.toString());
   }
 
@@ -159,7 +163,16 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
 
   @override
   void dispose() {
-    _controller?.dispose();
+    if (_controller != null) {
+      _controller!.dispose();
+    } else if (_platformViewId != null) {
+      NativePlayerApi(messageChannelSuffix: _platformViewId.toString()).dispose();
+    }
+
+    if (_platformViewId != null) {
+      NativePlayerInitializationListener.setUp(null, messageChannelSuffix: _platformViewId!.toString());
+    }
+
     super.dispose();
   }
 }

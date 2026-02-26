@@ -199,6 +199,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   @override
   void dispose() {
     _nativeApi.dispose();
+    NativePlayerListener.setUp(null, messageChannelSuffix: platformViewId.toString());
     stopUpdatePositionTimer();
     super.dispose();
   }
