@@ -73,6 +73,7 @@ class TPStreamPlayer extends StatefulWidget {
 class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayerInitializationListener {
   TPStreamsPlayerController? _controller;
   int? _platformViewId;
+  late NativePlayerApi _nativeApi;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +152,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
 
   void setUpNativePlayerInitializationListener(int id) {
     _platformViewId = id;
+    _nativeApi = NativePlayerApi(messageChannelSuffix: id.toString());
     NativePlayerInitializationListener.setUp(this, messageChannelSuffix: id.toString());
   }
 
@@ -164,13 +166,11 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   void dispose() {
     final viewId = _platformViewId;
     if (viewId != null) {
-      final controller = _controller;
-      if (controller != null) {
-        controller.dispose();
+      if (_controller != null) {
+        _controller!.dispose();
       } else {
-        NativePlayerApi(messageChannelSuffix: viewId.toString()).dispose();
+        _nativeApi.dispose();
       }
-      NativePlayerInitializationListener.setUp(null, messageChannelSuffix: viewId.toString());
     }
 
     super.dispose();
