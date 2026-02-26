@@ -203,7 +203,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     func dispose() throws {
         guard player != nil else { return }
         removeObservers()
-        player.pause()
         player.replaceCurrentItem(with: nil)
         player = nil
     }
