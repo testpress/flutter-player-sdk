@@ -182,6 +182,14 @@ class NativePlayerView(
         return player?.getCurrentTime() ?: throw IllegalStateException("Player not initialized")
     }
 
+    override fun enterFullScreen() {
+        playerFragment.showFullScreen()
+    }
+
+    override fun exitFullScreen() {
+        playerFragment.exitFullScreen()
+    }
+
     override fun dispose() {
         player?.release()
         player = null
