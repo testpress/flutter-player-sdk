@@ -216,6 +216,14 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
     }
 
+    func enterFullScreen() {
+        playerViewController?.enterFullScreen()
+    }
+
+    func exitFullScreen() {
+        playerViewController?.exitFullScreen()
+    }
+
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
             playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)

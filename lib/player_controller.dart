@@ -105,6 +105,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 /// iOS: Currently a no-op (the setting is ignored).
   Future<void> setMaxResolution(int resolution) => _nativeApi.setMaxResolution(resolution);
 
+  /// Enter fullscreen mode
+  Future<void> enterFullScreen() => _nativeApi.enterFullScreen();
+
+  /// Exit fullscreen mode
+  Future<void> exitFullScreen() => _nativeApi.exitFullScreen();
+
   /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();

@@ -77,6 +77,8 @@ protocol NativePlayerApi {
   func dispose() throws
   func resolveAccessToken(newAccessToken: String) throws
   func setMaxResolution(resolution: Int64) throws
+  func enterFullScreen() throws
+  func exitFullScreen() throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -209,6 +211,32 @@ class NativePlayerApiSetup {
       }
     } else {
       setMaxResolutionChannel.setMessageHandler(nil)
+    }
+    let enterFullScreenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.enterFullScreen\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      enterFullScreenChannel.setMessageHandler { _, reply in
+        do {
+          try api.enterFullScreen()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      enterFullScreenChannel.setMessageHandler(nil)
+    }
+    let exitFullScreenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.exitFullScreen\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      exitFullScreenChannel.setMessageHandler { _, reply in
+        do {
+          try api.exitFullScreen()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      exitFullScreenChannel.setMessageHandler(nil)
     }
   }
 }

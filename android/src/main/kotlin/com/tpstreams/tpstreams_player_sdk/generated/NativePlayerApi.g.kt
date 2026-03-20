@@ -53,6 +53,8 @@ interface NativePlayerApi {
   fun dispose()
   fun resolveAccessToken(newAccessToken: String)
   fun setMaxResolution(resolution: Long)
+  fun enterFullScreen()
+  fun exitFullScreen()
 
   companion object {
     /** The codec used by NativePlayerApi. */
@@ -203,6 +205,38 @@ interface NativePlayerApi {
             val resolutionArg = args[0] as Long
             val wrapped: List<Any?> = try {
               api.setMaxResolution(resolutionArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.enterFullScreen$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.enterFullScreen()
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.exitFullScreen$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.exitFullScreen()
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

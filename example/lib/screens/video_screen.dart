@@ -103,6 +103,13 @@ class _VideoScreenState extends State<VideoScreen> {
                   icon: const Icon(Icons.download),
                   label: const Text('Download'),
                 ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    _controller.enterFullScreen();  
+                  },
+                  child: const Text('Enter Fullscreen'),
+                ),
               ],
             ],
           ),
