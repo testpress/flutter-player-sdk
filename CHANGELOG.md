@@ -98,3 +98,7 @@
 - Added `setMaxResolution` API to cap video playback resolution in Android.
 - Fixed iOS crash occurring on multiple player dispose calls.
 - Updated Android SDK dependency version.
+
+## 2.2.14
+- Added `enterFullScreen()` and `exitFullScreen()` APIs for programmatic fullscreen control.
+- Updated iOS SDK dependency version.
