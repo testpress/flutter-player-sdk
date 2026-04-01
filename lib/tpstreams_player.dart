@@ -31,7 +31,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.onPlayerCreated,
     this.showDownloadOption = false,
     this.startInFullscreen = false,
-    this.offlineLicenseExpireDays = 15,
+    this.offlineLicenseExpireDays = 0,
     this.metadata,
     this.autoPlay = true,
     TPStreamsPlayerPreferences? preferences,

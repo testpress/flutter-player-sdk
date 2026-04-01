@@ -135,8 +135,13 @@ class NativePlayerView(
                 .setAutoPlay(autoPlay)
                 .apply {
                     if (showDownloadOption) {
+                        val offlineLicenseExpireSeconds = 60 * 1 * 2 * offlineLicenseExpireDays
+                        Log.d(
+                            "NativePlayerView",
+                            "Applying offline license expiry: days=$offlineLicenseExpireDays, seconds=$offlineLicenseExpireSeconds"
+                        )
                         enableDownloadSupport(true)
-                        setOfflineLicenseExpireTime(60 * 60 * 24 * offlineLicenseExpireDays)
+                        setOfflineLicenseExpireTime(offlineLicenseExpireSeconds)
                     }
                     playerPreferences?.let { prefsList ->
                         val prefs = TPStreamsPlayerPreferences.fromList(prefsList as List<Any?>)
