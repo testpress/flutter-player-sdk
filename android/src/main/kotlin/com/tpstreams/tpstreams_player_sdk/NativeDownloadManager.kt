@@ -37,6 +37,7 @@ class NativeDownloadManager(
         val parameters = TpInitParams.Builder()
             .setVideoId(assetId)
             .setAccessToken(accessToken)
+            .setOfflineLicenseExpireTime(60)
             .build()
 
         downloadManager.startDownload(activity, parameters, metadata)

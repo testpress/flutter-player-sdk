@@ -4,7 +4,11 @@ import 'screens/downloads_screen.dart';
 import 'screens/video_screen.dart';
 
 void main() {
-  TPStreamsSDK.initialize(provider: PROVIDER.tpstreams, orgCode: "9q94nm");
+  TPStreamsSDK.initialize(
+    provider: PROVIDER.tpstreams,
+    orgCode: "hfdr5f",
+    userId: "test_user_id",
+  );
 
   runApp(MyApp());
 }
@@ -42,8 +46,8 @@ class _HomePageState extends State<HomePage> {
     final videos = [
       (
         title: 'Watch Video 1',
-        assetId: '57gHcHDBxKX',
-        accessToken: '5e28479d-69d8-41c7-9664-79b7eb8f1f95'
+        assetId: 'YsyzBFNe2Ga',
+        accessToken: '5cfaf516-7d37-46ec-9876-a8d069335474'
       ),
       (
         title: 'Watch Video 2', 
