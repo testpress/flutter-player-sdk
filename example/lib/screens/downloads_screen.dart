@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tpstreams_player_sdk/tpstreams_player_sdk.dart';
 import 'downloaded_video_screen.dart';
@@ -20,6 +21,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
 
   final _downloadManager = TPStreamsDownloadManager();
   List<DownloadAsset> _downloads = [];
+  StreamSubscription<List<DownloadAsset>>? _downloadsSubscription;
 
   @override
   void initState() {
@@ -36,8 +38,10 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   void _listenToDownloadProgress() {
-    _downloadManager.downloadsStream.listen(
+    _downloadsSubscription?.cancel();
+    _downloadsSubscription = _downloadManager.downloadsStream.listen(
       (downloads) {
+        if (!mounted) return;
         setState(() {
           _downloads = downloads;
         });
@@ -346,6 +350,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
 
   @override
   void dispose() {
+    _downloadsSubscription?.cancel();
     _downloadManager.dispose();
     super.dispose();
   }

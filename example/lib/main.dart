@@ -39,18 +39,33 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final videos = [
-      (
-        title: 'Watch Video 1',
-        assetId: '3Fag3cAA5u4',
-        accessToken: 'a47fe426-e9f7-4f59-b93b-c6c88fa3e9e1'
-      ),
-      (
-        title: 'Watch Video 2', 
-        assetId: 'BGdPKGKSK7R',
-        accessToken: '8af4648b-9949-4b6f-acff-b1ed5e7bd3ec'
-      ),
-    ];
+final videos = [
+  (
+    title: 'Video 1 - 3Fag3cAA5u4',
+    assetId: '3Fag3cAA5u4',
+    accessToken: 'a47fe426-e9f7-4f59-b93b-c6c88fa3e9e1'
+  ),
+  (
+    title: 'Video 2 - BGdPKGKSK7R',
+    assetId: 'BGdPKGKSK7R',
+    accessToken: '8af4648b-9949-4b6f-acff-b1ed5e7bd3ec'
+  ),
+  (
+    title: 'Video 3 - 9CZkRyABbxC',
+    assetId: '9CZkRyABbxC',
+    accessToken: 'd2f5c8f0-998b-40ab-8baa-adec513c296a'
+  ),
+  (
+    title: 'Video 4 - qGTApRERn4P',
+    assetId: 'qGTApRERn4P',
+    accessToken: 'ce3d90b5-e89d-4f48-aebc-b71e68f1312d'
+  ),
+  (
+    title: 'Video 5 - 86gaXq9FEpF',
+    assetId: '86gaXq9FEpF',
+    accessToken: '704257cc-727a-4016-9a7f-7f9cc3e225db'
+  ),
+];
 
     return Scaffold(
       appBar: AppBar(

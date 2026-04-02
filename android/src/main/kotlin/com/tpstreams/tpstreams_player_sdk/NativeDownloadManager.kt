@@ -1,6 +1,8 @@
 package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.fragment.app.FragmentActivity
 import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
@@ -15,7 +17,20 @@ class NativeDownloadManager(
     private val downloadClient = DownloadClient.Companion.getInstance(context)
     private val migrationOrchestrator = LegacyDownloadMigrationOrchestrator(context)
     private val legacyDownloadStoreReader = LegacyDownloadStoreReader(context)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val pollIntervalMs = 1000L
+    private var isPolling = false
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
+
+    private val pollRunnable = object : Runnable {
+        override fun run() {
+            if (!isPolling) {
+                return
+            }
+            notifyDownloadsChange()
+            mainHandler.postDelayed(this, pollIntervalMs)
+        }
+    }
 
     private val listener = object : DownloadClient.Listener {
         override fun onDownloadsChanged() {
@@ -111,14 +126,17 @@ class NativeDownloadManager(
 
     override fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?) {
         downloadClient.startDownload(activity, assetId, accessToken, null, metadata ?: emptyMap())
+        notifyDownloadsChange()
     }
 
     override fun cancelDownload(asset: DownloadAsset) {
         downloadClient.removeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun resumeDownload(asset: DownloadAsset) {
         downloadClient.resumeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun deleteDownload(asset: DownloadAsset) {
@@ -126,10 +144,12 @@ class NativeDownloadManager(
         asset.metadata?.get(LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY)?.let {
             legacyDownloadStoreReader.deleteLegacyDownload(it)
         }
+        notifyDownloadsChange()
     }
 
     override fun pauseDownload(asset: DownloadAsset) {
         downloadClient.pauseDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun deleteAllDownloads() {
@@ -137,21 +157,41 @@ class NativeDownloadManager(
             downloadClient.removeDownload(item.assetId)
         }
         legacyDownloadStoreReader.deleteAllLegacyDownloads()
+        notifyDownloadsChange()
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
         eventSink = sink
+        startPolling()
         notifyDownloadsChange()
     }
 
     override fun onCancel(arguments: Any?) {
+        stopPolling()
         eventSink = null
     }
 
     override fun dispose() {
+        stopPolling()
         downloadClient.removeListener(listener)
         eventSink?.endOfStream()
         eventSink = null
+    }
+
+    private fun startPolling() {
+        if (isPolling) {
+            return
+        }
+        isPolling = true
+        mainHandler.post(pollRunnable)
+    }
+
+    private fun stopPolling() {
+        if (!isPolling) {
+            return
+        }
+        isPolling = false
+        mainHandler.removeCallbacks(pollRunnable)
     }
 
     private fun notifyDownloadsChange() {
