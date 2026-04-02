@@ -34,6 +34,9 @@ class NativePlayerView(
     private var isFullscreen = false
     private var isOfflinePlaybackRequested = false
     private var isOfflineDownloadPlayback = false
+    private var offlinePlaybackDownloadId: String? = null
+    private var offlinePlaybackMetadata: Map<String, String> = emptyMap()
+    private var isOfflineReinjectInProgress = false
 
     private val sdkListener = object : TPStreamsPlayer.Listener {
         override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
@@ -54,6 +57,28 @@ class NativePlayerView(
     private val playbackListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
             playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), ::handleFlutterCallResult)
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            val sdkPlayer = player ?: return
+            val downloadId = offlinePlaybackDownloadId
+            if (!isOfflinePlaybackRequested || !playWhenReady || downloadId.isNullOrBlank()) {
+                return
+            }
+
+            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress) {
+                return
+            }
+
+            isOfflineReinjectInProgress = true
+            try {
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, offlinePlaybackMetadata)
+                if (refreshed) {
+                    isOfflineDownloadPlayback = true
+                }
+            } finally {
+                isOfflineReinjectInProgress = false
+            }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -105,6 +130,8 @@ class NativePlayerView(
                 migrationSource == LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_HYDRATED
         )
         isOfflinePlaybackRequested = isOfflinePlayback
+        offlinePlaybackDownloadId = assetId
+        offlinePlaybackMetadata = metadata
         isOfflineDownloadPlayback = false
 
         // Read player preferences (encoded as ordered List by Pigeon)
@@ -228,7 +255,19 @@ class NativePlayerView(
         }
 
         player?.refreshPlaybackWithDownloadMediaItem(mediaItem)
+        markOfflinePlayerPrepared()
         return true
+    }
+
+    private fun markOfflinePlayerPrepared() {
+        val sdkPlayer = player ?: return
+        try {
+            val isPreparedField = sdkPlayer.javaClass.getDeclaredField("isPrepared")
+            isPreparedField.isAccessible = true
+            isPreparedField.setBoolean(sdkPlayer, true)
+        } catch (exception: Exception) {
+            Log.w("NativePlayerView", "Failed to mark offline player prepared", exception)
+        }
     }
 
     private fun findOfflineDownload(
@@ -299,7 +338,22 @@ class NativePlayerView(
     }
 
     override fun play() {
-        player?.play() ?: throw IllegalStateException("Player not initialized")
+        val sdkPlayer = player ?: throw IllegalStateException("Player not initialized")
+
+        if (isOfflinePlaybackRequested) {
+            val downloadId = creationParams?.get("assetId") as? String
+            @Suppress("UNCHECKED_CAST")
+            val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
+
+            if (!downloadId.isNullOrBlank()) {
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, metadata)
+                if (refreshed) {
+                    return
+                }
+            }
+        }
+
+        sdkPlayer.play()
     }
 
     override fun pause() {
