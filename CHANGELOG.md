@@ -102,3 +102,7 @@
 ## 2.2.14
 - Added `enterFullScreen()` and `exitFullScreen()` APIs for programmatic fullscreen control.
 - Updated iOS SDK dependency version.
+
+## 2.2.15
+- Updated iOS SDK dependency to 1.2.29
+- Added support for DRM-protected live stream playback on iOS
