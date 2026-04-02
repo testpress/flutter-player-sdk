@@ -11,6 +11,13 @@ class DownloadsScreen extends StatefulWidget {
 }
 
 class _DownloadsScreenState extends State<DownloadsScreen> {
+  static const _migrationStateKey = 'tpstreams_migration_state';
+  static const _legacyDetectedState = 'legacy_detected';
+  static const _metadataHydratedState = 'metadata_hydrated';
+  static const _migrationSourceKey = 'tpstreams_migration_source';
+  static const _legacyRoomSource = 'legacy_room';
+  static const _legacyRoomBridgedSource = 'legacy_room_bridged';
+
   final _downloadManager = TPStreamsDownloadManager();
   List<DownloadAsset> _downloads = [];
 
@@ -83,6 +90,12 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   Widget _buildActionButtons(DownloadAsset asset) {
+    final isLegacyRoomDownload =
+        asset.metadata?[_migrationSourceKey] == _legacyRoomSource;
+    if (isLegacyRoomDownload) {
+      return const SizedBox.shrink();
+    }
+
     final List<Widget> buttons = [];
 
     switch (asset.state) {
@@ -183,6 +196,15 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   Widget _buildDownloadItem(DownloadAsset asset) {
+    final isLegacyDetected =
+        asset.metadata?[_migrationStateKey] == _legacyDetectedState;
+    final isMetadataHydrated =
+        asset.metadata?[_migrationStateKey] == _metadataHydratedState;
+    final isLegacyRoomDownload =
+      asset.metadata?[_migrationSourceKey] == _legacyRoomSource;
+    final isLegacyRoomBridged =
+      asset.metadata?[_migrationSourceKey] == _legacyRoomBridgedSource;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
@@ -206,6 +228,32 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                     ),
                     const SizedBox(height: 4),
                     _buildStateIndicator(asset.state),
+                    if (isLegacyDetected) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        isLegacyRoomDownload
+                            ? 'Old SDK download found. Migration pending.'
+                            : 'Legacy download detected. Migration pending.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    if (isMetadataHydrated) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        isLegacyRoomBridged
+                            ? 'Old SDK download restored.'
+                            : 'Old SDK metadata restored.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

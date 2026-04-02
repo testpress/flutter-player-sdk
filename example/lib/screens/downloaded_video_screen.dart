@@ -14,8 +14,6 @@ class DownloadedVideoScreen extends StatefulWidget {
 }
 
 class _DownloadedVideoScreenState extends State<DownloadedVideoScreen> {
-  late TPStreamsPlayerController _controller;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,6 +26,7 @@ class _DownloadedVideoScreenState extends State<DownloadedVideoScreen> {
             aspectRatio: 16 / 9,
             child: TPStreamPlayer.offline(
               assetId: widget.downloadAsset.assetId,
+              metadata: widget.downloadAsset.metadata,
             ),
           ),
           // ... player controls
