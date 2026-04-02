@@ -2,11 +2,9 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
-import com.tpstream.player.data.source.local.DownloadStatus
-import com.tpstream.player.offline.TpStreamDownloadManager
-import androidx.lifecycle.Observer
-import com.tpstream.player.TpInitParams
-import com.tpstream.player.data.Asset
+import androidx.media3.exoplayer.offline.Download
+import com.tpstreams.player.download.DownloadClient
+import com.tpstreams.player.download.DownloadItem
 import io.flutter.plugin.common.BinaryMessenger
 
 class NativeDownloadManager(
@@ -14,96 +12,192 @@ class NativeDownloadManager(
     private val activity: FragmentActivity,
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
-    private val downloadManager = TpStreamDownloadManager(context)
-    private val downloads = downloadManager.getAllDownloads()
+    private val downloadClient = DownloadClient.Companion.getInstance(context)
+    private val migrationOrchestrator = LegacyDownloadMigrationOrchestrator(context)
+    private val legacyDownloadStoreReader = LegacyDownloadStoreReader(context)
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
-    
-    private val downloadObserver = Observer<List<Asset>?> { assets ->
-        assets?.let { notifyDownloadsChange(it) }
+
+    private val listener = object : DownloadClient.Listener {
+        override fun onDownloadsChanged() {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadStateChanged(downloadItem: DownloadItem, exception: Exception?) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadStarted(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadResumed(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadCompleted(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadFailed(downloadItem: DownloadItem, error: Exception) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadDeleted(assetId: String) {
+            notifyDownloadsChange()
+        }
     }
 
     init {
-        downloads.observeForever(downloadObserver)
+        // Start with non-destructive detection. We should never delete legacy downloads
+        // before migration logic has a chance to reconcile and recover them.
+        migrationOrchestrator.recordLegacyCandidates(downloadClient.getAllDownloadItems())
+        downloadClient.addListener(listener)
         register(messenger, this)
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
-        return downloads.value?.map { asset ->
-            mapAssetToDownloadAsset(asset)
-        } ?: emptyList()
+        val legacyDownloadsById = legacyDownloadStoreReader.getLegacyDownloadsByAssetId()
+        val legacyDownloadsByUrl = legacyDownloadStoreReader.getLegacyDownloadsByUrl()
+        val matchedLegacyIds = mutableSetOf<String>()
+        val matchedLegacyUrls = mutableSetOf<String>()
+
+        val currentDownloads = downloadClient.getAllDownloadItems().map {
+            val matchedLegacyRecord = legacyDownloadsById[it.assetId] ?: legacyDownloadsByUrl[it.assetId]
+            if (matchedLegacyRecord != null) {
+                matchedLegacyIds += matchedLegacyRecord.assetId
+                if (matchedLegacyRecord.url.isNotBlank()) {
+                    matchedLegacyUrls += matchedLegacyRecord.url
+                }
+            }
+
+            mapDownloadItemToDownloadAsset(it, matchedLegacyRecord)
+        }
+        val currentDownloadIds = currentDownloads.map { it.assetId }.toHashSet()
+
+        val legacyDownloads = legacyDownloadsById.values
+            .filterNot { legacyRecord ->
+                legacyRecord.assetId in currentDownloadIds ||
+                    legacyRecord.assetId in matchedLegacyIds ||
+                    (legacyRecord.url.isNotBlank() && legacyRecord.url in currentDownloadIds) ||
+                    (legacyRecord.url.isNotBlank() && legacyRecord.url in matchedLegacyUrls)
+            }
+            .map { legacyRecord ->
+                val metadata = legacyRecord.metadata.toMutableMap()
+                val canBridgeToCurrentDownloadIndex = legacyRecord.url.isNotBlank()
+                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                    if (canBridgeToCurrentDownloadIndex) {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
+                    } else {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
+                    }
+                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                    if (canBridgeToCurrentDownloadIndex) {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_BRIDGED
+                    } else {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM
+                    }
+
+                DownloadAsset(
+                    assetId = legacyRecord.effectiveDownloadId,
+                    title = legacyRecord.title,
+                    state = legacyRecord.state,
+                    progress = legacyRecord.progress,
+                    metadata = metadata
+                )
+            }
+
+        return currentDownloads + legacyDownloads
     }
 
     override fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?) {
-        val parameters = TpInitParams.Builder()
-            .setVideoId(assetId)
-            .setAccessToken(accessToken)
-            .build()
-
-        downloadManager.startDownload(activity, parameters, metadata)
+        downloadClient.startDownload(activity, assetId, accessToken, null, metadata ?: emptyMap())
     }
 
     override fun cancelDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.cancelDownload(it) }
+        downloadClient.removeDownload(asset.assetId)
     }
 
     override fun resumeDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.resumeDownload(it) }
+        downloadClient.resumeDownload(asset.assetId)
     }
 
     override fun deleteDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.deleteDownload(it) }
+        downloadClient.removeDownload(asset.assetId)
+        asset.metadata?.get(LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY)?.let {
+            legacyDownloadStoreReader.deleteLegacyDownload(it)
+        }
     }
 
     override fun pauseDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.pauseDownload(it) }
-    }
-
-    private fun findAsset(assetId: String): Asset? {
-        return downloads.value?.find { it.id == assetId }
+        downloadClient.pauseDownload(asset.assetId)
     }
 
     override fun deleteAllDownloads() {
-        downloadManager.deleteAllDownloads()
+        downloadClient.getAllDownloadItems().forEach { item ->
+            downloadClient.removeDownload(item.assetId)
+        }
+        legacyDownloadStoreReader.deleteAllLegacyDownloads()
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
-        downloads.observeForever(downloadObserver)
         eventSink = sink
+        notifyDownloadsChange()
     }
 
     override fun onCancel(arguments: Any?) {
-        downloads.removeObserver(downloadObserver)
         eventSink = null
     }
 
     override fun dispose() {
-        downloads.removeObserver(downloadObserver)
+        downloadClient.removeListener(listener)
         eventSink?.endOfStream()
         eventSink = null
     }
 
-    private fun notifyDownloadsChange(assets: List<Asset>) {
-        val downloadAssets = assets.map { asset ->
-            mapAssetToDownloadAsset(asset)
-        }
-        eventSink?.success(DownloadsUpdateEvent(downloadAssets))
+    private fun notifyDownloadsChange() {
+        eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
     }
 
-    private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {
+    private fun mapDownloadItemToDownloadAsset(
+        item: DownloadItem,
+        legacyRecord: LegacyDownloadRecord?
+    ): DownloadAsset {
+        val metadataWithMigrationState = item.metadata?.toMutableMap() ?: mutableMapOf()
+        var title = item.title
+
+        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord != null) {
+            metadataWithMigrationState.putAll(legacyRecord.metadata)
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_HYDRATED
+            title = legacyRecord.title
+        } else {
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_NEW_DOWNLOAD_CLIENT
+        }
+
+        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord == null) {
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
+        }
+
         return DownloadAsset(
-            assetId = asset.id,
-            title = asset.title,
-            state = mapDownloadState(asset.video.downloadState),
-            progress = asset.video.percentageDownloaded.toDouble(),
-            metadata = asset.metadata
+            assetId = item.assetId,
+            title = title,
+            state = mapDownloadState(item.state),
+            progress = item.progressPercentage.toDouble(),
+            metadata = metadataWithMigrationState
         )
     }
 
-    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState = when (nativeState) {
-        DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
-        DownloadStatus.PAUSE -> DownloadState.PAUSED
-        DownloadStatus.COMPLETE -> DownloadState.COMPLETED
-        DownloadStatus.FAILED -> DownloadState.FAILED
-        else -> DownloadState.NOT_DOWNLOADED
+    private fun mapDownloadState(state: Int): DownloadState {
+        return when (state) {
+            Download.STATE_DOWNLOADING, Download.STATE_QUEUED, Download.STATE_RESTARTING -> DownloadState.DOWNLOADING
+            Download.STATE_COMPLETED -> DownloadState.COMPLETED
+            Download.STATE_FAILED -> DownloadState.FAILED
+            Download.STATE_STOPPED -> DownloadState.PAUSED
+            else -> DownloadState.NOT_DOWNLOADED
+        }
     }
 }
