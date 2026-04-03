@@ -101,16 +101,26 @@ class NativeDownloadManager(
     }
 
     override fun onCancel(arguments: Any?) {
+<<<<<<< HEAD
+=======
+        stopPolling()
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         eventSink = null
         stopListening()
     }
 
     override fun dispose() {
+<<<<<<< HEAD
         stopListening()
+=======
+        stopPolling()
+        downloadClient.removeListener(listener)
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         eventSink?.endOfStream()
         eventSink = null
     }
 
+<<<<<<< HEAD
     private fun notifyDownloadsChange() {
         mainHandler.post {
             eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
@@ -122,22 +132,49 @@ class NativeDownloadManager(
             downloadClient.removeListener(listener)
             isListening = false
         }
+=======
+    private fun startPolling() {
+        if (isPolling) {
+            return
+        }
+        isPolling = true
+        mainHandler.post(pollRunnable)
+    }
+
+    private fun stopPolling() {
+        if (!isPolling) {
+            return
+        }
+        isPolling = false
+        mainHandler.removeCallbacks(pollRunnable)
+    }
+
+    private fun notifyDownloadsChange() {
+        eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
     }
 
     private fun mapDownloadItemToDownloadAsset(
         item: DownloadItem
     ): DownloadAsset {
+<<<<<<< HEAD
         val computedProgress = if (item.totalBytes > 0L) {
             ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
         } else {
             item.progressPercentage.toDouble().coerceIn(0.0, 100.0)
         }
 
+=======
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         return DownloadAsset(
             assetId = item.assetId,
             title = item.title,
             state = mapDownloadState(item.state),
+<<<<<<< HEAD
             progress = computedProgress,
+=======
+            progress = item.progressPercentage.toDouble(),
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
             metadata = item.metadata ?: emptyMap()
         )
     }

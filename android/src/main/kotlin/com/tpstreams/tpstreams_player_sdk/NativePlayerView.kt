@@ -37,6 +37,7 @@ class NativePlayerView(
             pendingTokenCallback = callback
             playerListener.handleAccessTokenExpiration(videoId, ::handleFlutterCallResult)
         }
+<<<<<<< HEAD
 
         override fun onError(error: PlaybackError, errorMessage: String) {
             val message = if (errorMessage.isNotEmpty()) errorMessage else error.toString()
@@ -71,6 +72,68 @@ class NativePlayerView(
         }
     }
 
+=======
+
+        override fun onError(error: PlaybackError, errorMessage: String) {
+            if (shouldSuppressOfflineFallbackError(errorMessage)) {
+                Log.d("NativePlayerView", "Ignoring transient online fallback error during offline playback: $errorMessage")
+                return
+            }
+            val message = if (errorMessage.isNotEmpty()) errorMessage else error.toString()
+            playerListener.onPlayerError(message, ::handleFlutterCallResult)
+        }
+    }
+
+    private val playbackListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), ::handleFlutterCallResult)
+        }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            val sdkPlayer = player ?: return
+            val downloadId = offlinePlaybackDownloadId
+            if (!isOfflinePlaybackRequested || !playWhenReady || downloadId.isNullOrBlank()) {
+                return
+            }
+
+            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress) {
+                return
+            }
+
+            isOfflineReinjectInProgress = true
+            try {
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, offlinePlaybackMetadata)
+                if (refreshed) {
+                    isOfflineDownloadPlayback = true
+                }
+            } finally {
+                isOfflineReinjectInProgress = false
+            }
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            container.keepScreenOn = isPlaying
+            playerListener.onIsPlayingChanged(isPlaying, ::handleFlutterCallResult)
+        }
+    }
+
+    override fun getView(): View = container
+
+    init {
+        setupPlayer()
+        NativePlayerApi.setUp(messenger, this, id.toString())
+    }
+
+    private fun createContainer(): FrameLayout {
+        return FrameLayout(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+    }
+
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
     private fun setupPlayer() {
         val assetId = creationParams?.get("assetId") as? String
         val accessToken = creationParams?.get("accessToken") as? String
@@ -164,9 +227,17 @@ class NativePlayerView(
                     playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
                     if (wasPlayingBeforeDetach) {
                         wasPlayingBeforeDetach = false
+<<<<<<< HEAD
                         v.post { player?.play() }
                     }
                 } else if (!returningToContainer && !isFullscreen) {
+=======
+                        // post() ensures the surface is ready before we ask the player to play.
+                        v.post { player?.play() }
+                    }
+                } else if (!returningToContainer && !isFullscreen) {
+                    // View moved to decor view via native button → fullscreen entered.
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
                     isFullscreen = true
                     playerListener.onFullScreenChanged(true, ::handleFlutterCallResult)
                 }
@@ -183,17 +254,112 @@ class NativePlayerView(
         }
     }
 
+<<<<<<< HEAD
     private fun notifyFlutterPlayerInitialized(initialError: String? = null) {
         initializationListener.onNativePlayerCreated(id.toLong()) { result ->
             handleFlutterCallResult(result)
             if (result.isSuccess && initialError != null) {
                 playerListener.onPlayerError(initialError, ::handleFlutterCallResult)
             }
+=======
+    private fun injectOfflineDownloadMediaItem(
+        downloadId: String,
+        metadata: Map<String, String>
+    ): Boolean {
+        val download = findOfflineDownload(downloadId, metadata)
+        if (download == null) {
+            Log.w("NativePlayerView", "No download found for offline playback id: $downloadId")
+            return false
+>>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
+        }
+
+        val mediaItem = buildOfflineDownloadMediaItem(download)
+        if (mediaItem == null) {
+            Log.w("NativePlayerView", "Failed to build offline media item for: $downloadId")
+            return false
+        }
+
+        player?.refreshPlaybackWithDownloadMediaItem(mediaItem)
+        markOfflinePlayerPrepared()
+        return true
+    }
+
+    private fun markOfflinePlayerPrepared() {
+        val sdkPlayer = player ?: return
+        try {
+            val isPreparedField = sdkPlayer.javaClass.getDeclaredField("isPrepared")
+            isPreparedField.isAccessible = true
+            isPreparedField.setBoolean(sdkPlayer, true)
+        } catch (exception: Exception) {
+            Log.w("NativePlayerView", "Failed to mark offline player prepared", exception)
         }
     }
 
+    private fun findOfflineDownload(
+        downloadId: String,
+        metadata: Map<String, String>
+    ): Download? {
+        val downloadClient = DownloadClient.getInstance(context)
+        return downloadClient.getDownload(downloadId)
+    }
+
+    private fun buildOfflineDownloadMediaItem(download: Download): MediaItem? {
+        return try {
+            val request = download.request
+            val builder = MediaItem.Builder()
+                .setMediaId(request.id)
+                .setUri(request.uri)
+                .setCustomCacheKey(request.customCacheKey)
+                .setMimeType(request.mimeType)
+                .setStreamKeys(request.streamKeys)
+
+            request.keySetId?.let { keySetId ->
+                val drmConfig = MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
+                    .setKeySetId(keySetId)
+                    .setMultiSession(false)
+                    .build()
+                builder.setDrmConfiguration(drmConfig)
+            }
+
+            builder.build()
+        } catch (exception: Exception) {
+            Log.e("NativePlayerView", "Error building offline media item", exception)
+            null
+        }
+    }
+
+    private fun shouldSuppressOfflineFallbackError(errorMessage: String): Boolean {
+        if (!isOfflinePlaybackRequested) return false
+
+        val normalizedMessage = errorMessage.lowercase()
+        if (normalizedMessage.contains("error code: 5001")) return true
+
+        val looksLikeOnlineAuthError = normalizedMessage.contains("don't have permission") ||
+            normalizedMessage.contains("do not have permission") ||
+            normalizedMessage.contains("check your credential") ||
+            normalizedMessage.contains("unauthorized") ||
+            normalizedMessage.contains("forbidden")
+
+        return looksLikeOnlineAuthError
+    }
+
     override fun play() {
-        player?.play() ?: throw IllegalStateException("Player not initialized")
+        val sdkPlayer = player ?: throw IllegalStateException("Player not initialized")
+
+        if (isOfflinePlaybackRequested) {
+            val downloadId = creationParams?.get("assetId") as? String
+            @Suppress("UNCHECKED_CAST")
+            val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
+
+            if (!downloadId.isNullOrBlank()) {
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, metadata)
+                if (refreshed) {
+                    return
+                }
+            }
+        }
+
+        sdkPlayer.play()
     }
 
     override fun pause() {
