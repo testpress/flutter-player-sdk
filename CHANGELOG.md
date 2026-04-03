@@ -106,3 +106,10 @@
 ## 2.2.15
 - Updated iOS SDK dependency to 1.2.29
 - Added support for DRM-protected live stream playback on iOS
+
+## 2.2.16-beta.1
+
+### Improvements
+- Revamped player UI for improved usability and visual consistency
+### Breaking Changes
+- Removed `Testpress` provider support from SDK initialization.
