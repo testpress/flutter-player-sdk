@@ -33,9 +33,9 @@ class NativePlayerView(
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
     private var isOfflinePlaybackRequested = false
-    private var isOfflineDownloadPlayback = false
     private var isOfflineReady = false
     private var pendingPauseDuringPrep = false
+    private var isOfflineReinjectInProgress = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
 
     private val sdkListener = object : TPStreamsPlayer.Listener {
@@ -56,11 +56,15 @@ class NativePlayerView(
 
     private val playbackListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            if (isOfflinePlaybackRequested && playbackState == Player.STATE_READY) {
-                isOfflineReady = true
-                if (pendingPauseDuringPrep) {
-                    pendingPauseDuringPrep = false
-                    player?.pause()
+            if (isOfflinePlaybackRequested) {
+                if (playbackState == Player.STATE_READY) {
+                    isOfflineReady = true
+                    if (pendingPauseDuringPrep) {
+                        pendingPauseDuringPrep = false
+                        player?.pause()
+                    }
+                } else if (playbackState == Player.STATE_IDLE) {
+                    isOfflineReady = false
                 }
             }
             playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), ::handleFlutterCallResult)
@@ -73,13 +77,18 @@ class NativePlayerView(
                 return
             }
 
-            if (sdkPlayer.isPlaying()) {
+            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress) {
                 return
             }
 
-            val refreshed = injectOfflineDownloadMediaItem(downloadId)
-            if (refreshed) {
-                isOfflineDownloadPlayback = true
+            isOfflineReinjectInProgress = true
+            try {
+                val refreshed = injectOfflineDownloadMediaItem(downloadId)
+                if (refreshed) {
+                    isOfflineReady = false
+                }
+            } finally {
+                isOfflineReinjectInProgress = false
             }
         }
 
@@ -138,9 +147,9 @@ class NativePlayerView(
         val effectiveIsOffline = isOfflinePlayback || isCompletedDownload
 
         isOfflinePlaybackRequested = effectiveIsOffline
-        isOfflineDownloadPlayback = effectiveIsOffline
         isOfflineReady = false
         pendingPauseDuringPrep = false
+        isOfflineReinjectInProgress = false
 
         val offlineLicenseExpireSeconds = 60L * 60L * 24L * offlineLicenseExpireDays
         val effectiveAutoPlay = if (effectiveIsOffline) false else autoPlay
@@ -198,7 +207,13 @@ class NativePlayerView(
                     playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
                     if (wasPlayingBeforeDetach) {
                         wasPlayingBeforeDetach = false
-                        v.post { player?.play() }
+                        v.post {
+                            if (isOfflinePlaybackRequested) {
+                                player?.setPlayWhenReady(true)
+                            } else {
+                                player?.play()
+                            }
+                        }
                     }
                 } else if (!returningToContainer && !isFullscreen) {
                     isFullscreen = true
@@ -213,8 +228,8 @@ class NativePlayerView(
         if (effectiveIsOffline) {
             player?.listener = sdkListener
 
-            isOfflineDownloadPlayback = injectOfflineDownloadMediaItem(assetId)
-            if (!isOfflineDownloadPlayback) {
+            val injected = injectOfflineDownloadMediaItem(assetId)
+            if (!injected) {
                 playerListener.onPlayerError("Downloaded video not found on device. Please re-download and try again.", ::handleFlutterCallResult)
             }
         }
