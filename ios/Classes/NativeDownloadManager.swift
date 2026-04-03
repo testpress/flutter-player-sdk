@@ -1,10 +1,13 @@
 import TPStreamsSDK
 import Foundation
 import Flutter
+import UIKit
 
 class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadManagerApi, TPStreamsDownloadDelegate {
     private let downloadManager = TPStreamsDownloadManager.shared
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>?
+    private var pollTimer: Timer?
+    private let pollInterval: TimeInterval = 1.0
     
     override init() {
         super.init()
@@ -16,34 +19,59 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
-    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {}
+    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {
+        let metadataAny = metadata?.reduce(into: [String: Any]()) { partialResult, entry in
+            partialResult[entry.key] = entry.value
+        }
+
+        downloadManager.startDownload(
+            assetID: assetId,
+            accessToken: accessToken,
+            metadata: metadataAny,
+            presentingViewController: topViewController()
+        ) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.notifyDownloadsChange()
+            }
+        }
+
+        notifyDownloadsChange()
+    }
     
     func cancelDownload(asset: DownloadAsset) throws {
         downloadManager.cancelDownload(asset.assetId)
+        notifyDownloadsChange()
     }
     
     func resumeDownload(asset: DownloadAsset) throws {
         downloadManager.resumeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
     
     func deleteDownload(asset: DownloadAsset) throws {
         downloadManager.deleteDownload(asset.assetId)
+        notifyDownloadsChange()
     }
     
     func pauseDownload(asset: DownloadAsset) throws {
         downloadManager.pauseDownload(asset.assetId)
+        notifyDownloadsChange()
     }
     
     func deleteAllDownloads() throws {
         getAllDownloads().forEach { downloadManager.deleteDownload($0.assetId) }
+        notifyDownloadsChange()
     }
     
 
     override func onListen(withArguments arguments: Any?, sink eventSink: PigeonEventSink<DownloadsUpdateEvent>) {
         self.eventSink = eventSink
+        startPolling()
+        notifyDownloadsChange()
     }
     
     override func onCancel(withArguments arguments: Any?){
+        stopPolling()
         eventSink = nil
     }
     
@@ -103,17 +131,69 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     
     func onComplete(offlineAsset: OfflineAsset) {}
     
-    func onPause(offlineAsset: OfflineAsset) {}
+    func onPause(offlineAsset: OfflineAsset) {
+        notifyDownloadsChange()
+    }
     
-    func onResume(offlineAsset: OfflineAsset) {}
+    func onResume(offlineAsset: OfflineAsset) {
+        notifyDownloadsChange()
+    }
     
     func onCanceled(assetId: String) {
         notifyDownloadsChange()
     }
 
     func dispose() {
+        stopPolling()
         eventSink?.endOfStream()
         eventSink = nil
+    }
+
+    private func startPolling() {
+        guard pollTimer == nil else { return }
+        pollTimer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { [weak self] _ in
+            self?.notifyDownloadsChange()
+        }
+        if let pollTimer {
+            RunLoop.main.add(pollTimer, forMode: .common)
+        }
+    }
+
+    private func stopPolling() {
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
+    private func topViewController(base: UIViewController? = nil) -> UIViewController? {
+        let rootController: UIViewController?
+        if let base {
+            rootController = base
+        } else {
+            if #available(iOS 13.0, *) {
+                rootController = UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .flatMap { $0.windows }
+                    .first(where: { $0.isKeyWindow })?
+                    .rootViewController
+            } else {
+                rootController = UIApplication.shared.keyWindow?.rootViewController
+            }
+        }
+
+        if let navigationController = rootController as? UINavigationController {
+            return topViewController(base: navigationController.visibleViewController)
+        }
+
+        if let tabBarController = rootController as? UITabBarController,
+           let selectedViewController = tabBarController.selectedViewController {
+            return topViewController(base: selectedViewController)
+        }
+
+        if let presentedViewController = rootController?.presentedViewController {
+            return topViewController(base: presentedViewController)
+        }
+
+        return rootController
     }
 
     deinit {

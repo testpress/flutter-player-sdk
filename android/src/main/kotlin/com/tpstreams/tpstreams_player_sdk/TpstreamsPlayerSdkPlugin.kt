@@ -3,7 +3,7 @@ package com.tpstreams.tpstreams_player_sdk
 import android.app.Activity
 import androidx.annotation.NonNull
 import androidx.fragment.app.FragmentActivity
-import com.tpstream.player.TPStreamsSDK
+import com.tpstreams.player.TPStreamsSDK
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
@@ -28,11 +28,7 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   }
 
   override fun initialize(provider: PROVIDER, orgCode: String) {
-    val sdkProvider = when (provider) {
-      PROVIDER.TESTPRESS -> TPStreamsSDK.Provider.TestPress
-      PROVIDER.TPSTREAMS -> TPStreamsSDK.Provider.TPStreams
-    }
-    TPStreamsSDK.initialize(sdkProvider, orgCode)
+    TPStreamsSDK.init(orgCode)
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
@@ -44,6 +40,10 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
     activity = binding.activity
     flutterPluginBinding.platformViewRegistry.registerViewFactory(
       "tpstreams_player_sdk/player_view", PlayerViewFactory(flutterPluginBinding.binaryMessenger, activity))
+
+    if (activity !is FragmentActivity) {
+      return
+    }
 
     this.downloadManager = NativeDownloadManager(
       flutterPluginBinding.applicationContext,

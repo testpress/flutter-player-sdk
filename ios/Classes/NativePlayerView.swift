@@ -21,6 +21,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private let initializationListener: NativePlayerInitializationListener
     private let playerListener: NativePlayerListener
     private var currentItemChangeObservation: NSKeyValueObservation!
+    private var hasSentInitializationEvent = false
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -56,6 +57,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
+        self.completeInitializationIfPossible()
     }
     
     private func configurePlayerViewController(args: Any?) {
@@ -110,11 +112,17 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
          
          currentItemChangeObservation = player.observe(\.currentItem, options: [.new]) { [weak self] (_, _) in
              guard let self = self else { return }
-             self.observePlayerBufferingStatusChange()
-             self.observeVideoEnd()
-             self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: handleFlutterCallResult)
+             self.completeInitializationIfPossible()
          }
      }
+
+    private func completeInitializationIfPossible() {
+        guard !hasSentInitializationEvent, player.currentItem != nil else { return }
+        hasSentInitializationEvent = true
+        observePlayerBufferingStatusChange()
+        observeVideoEnd()
+        initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: handleFlutterCallResult)
+    }
      
      private func observePlayerStatusChange(){
          player.addObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus), options: .new, context: nil)
