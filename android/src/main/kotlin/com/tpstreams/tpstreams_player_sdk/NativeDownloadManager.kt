@@ -56,12 +56,15 @@ class NativeDownloadManager(
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
+        val currentItems = downloadClient.getAllDownloadItems()
+        migrationOrchestrator.recordLegacyCandidates(currentItems)
+
         val legacyDownloadsById = legacyDownloadStoreReader.getLegacyDownloadsByAssetId()
         val legacyDownloadsByUrl = legacyDownloadStoreReader.getLegacyDownloadsByUrl()
         val matchedLegacyIds = mutableSetOf<String>()
         val matchedLegacyUrls = mutableSetOf<String>()
 
-        val currentDownloads = downloadClient.getAllDownloadItems().map {
+        val currentDownloads = currentItems.map {
             val matchedLegacyRecord = legacyDownloadsById[it.assetId] ?: legacyDownloadsByUrl[it.assetId]
             if (matchedLegacyRecord != null) {
                 matchedLegacyIds += matchedLegacyRecord.assetId
@@ -155,26 +158,16 @@ class NativeDownloadManager(
     }
 
     override fun onCancel(arguments: Any?) {
-<<<<<<< HEAD
-=======
-        stopPolling()
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         eventSink = null
         stopListening()
     }
 
     override fun dispose() {
-<<<<<<< HEAD
         stopListening()
-=======
-        stopPolling()
-        downloadClient.removeListener(listener)
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         eventSink?.endOfStream()
         eventSink = null
     }
 
-<<<<<<< HEAD
     private fun notifyDownloadsChange() {
         mainHandler.post {
             eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
@@ -186,43 +179,17 @@ class NativeDownloadManager(
             downloadClient.removeListener(listener)
             isListening = false
         }
-=======
-    private fun startPolling() {
-        if (isPolling) {
-            return
-        }
-        isPolling = true
-        mainHandler.post(pollRunnable)
-    }
-
-    private fun stopPolling() {
-        if (!isPolling) {
-            return
-        }
-        isPolling = false
-        mainHandler.removeCallbacks(pollRunnable)
-    }
-
-    private fun notifyDownloadsChange() {
-        eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
     }
 
     private fun mapDownloadItemToDownloadAsset(
         item: DownloadItem,
         legacyRecord: LegacyDownloadRecord?
     ): DownloadAsset {
-<<<<<<< HEAD
-<<<<<<< HEAD
         val computedProgress = if (item.totalBytes > 0L) {
             ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
         } else {
             item.progressPercentage.toDouble().coerceIn(0.0, 100.0)
         }
-
-=======
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
-=======
         val metadataWithMigrationState = item.metadata?.toMutableMap() ?: mutableMapOf()
         var title = item.title
 
@@ -242,22 +209,12 @@ class NativeDownloadManager(
             metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
                 LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
         }
-
->>>>>>> 4649a69 (feat: Add legacy download migration for Android)
         return DownloadAsset(
             assetId = item.assetId,
             title = title,
             state = mapDownloadState(item.state),
-<<<<<<< HEAD
             progress = computedProgress,
-=======
-            progress = item.progressPercentage.toDouble(),
-<<<<<<< HEAD
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
-            metadata = item.metadata ?: emptyMap()
-=======
             metadata = metadataWithMigrationState
->>>>>>> 4649a69 (feat: Add legacy download migration for Android)
         )
     }
 

@@ -24,7 +24,7 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreenState extends State<VideoScreen> {
-  TPStreamsPlayerController? _controller;
+  late TPStreamsPlayerController _controller;
   bool _isPlaying = false;
   bool _isFullScreen = false;
   final _downloadManager = TPStreamsDownloadManager();
@@ -43,33 +43,30 @@ class _VideoScreenState extends State<VideoScreen> {
               assetId: widget.assetId,
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
-              startInFullscreen: false,
               autoPlay: widget.autoPlay,
               preferences: widget.preferences,
               onPlayerCreated: (controller) {
-                _controller?.removeListener(_onPlayerValueChanged);
                 _controller = controller;
-                _controller!.setMaxResolution(240);
-                _controller!.onBeforeFullScreenEnter = () {
+                _controller.setMaxResolution(240);
+                _controller.onBeforeFullScreenEnter = () {
                   print('Will enter fullscreen');
                 };
 
-                _controller!.onBeforeFullScreenExit = () {
+                _controller.onBeforeFullScreenExit = () {
                   print('Will exit fullscreen');
                 };
 
-                _controller!.onAccessTokenExpired = (String videoId) async {
+                _controller.onAccessTokenExpired = (String videoId) async {
                   String newToken = "Token"; //await getNewToken();
-                  Fluttertoast.showToast(msg: 'Access token expired for video $videoId. New token: $newToken');
                   return newToken;
                 };
 
-                _controller!.onReplay = () {
+                _controller.onReplay = () {
                   Fluttertoast.showToast(msg: 'Replay button clicked');
                 };
 
                 // Listen to player value changes
-                _controller!.addListener(_onPlayerValueChanged);
+                _controller.addListener(_onPlayerValueChanged);
               },
             ),
           ),
@@ -80,15 +77,13 @@ class _VideoScreenState extends State<VideoScreen> {
               IconButton(
                 icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
                 iconSize: 32,
-                onPressed: _controller == null
-                    ? null
-                    : () {
-                        if (_isPlaying) {
-                          _controller!.pause();
-                        } else {
-                          _controller!.play();
-                        }
-                      },
+                onPressed: () {
+                  if (_isPlaying) {
+                    _controller.pause();
+                  } else {
+                    _controller.play();
+                  }
+                },
               ),
               if (widget.showDownloadOption) ...[
                 const SizedBox(width: 16),
@@ -110,11 +105,9 @@ class _VideoScreenState extends State<VideoScreen> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _controller == null
-                      ? null
-                      : () {
-                          _controller!.enterFullScreen();
-                        },
+                  onPressed: () {
+                    _controller.enterFullScreen();  
+                  },
                   child: const Text('Enter Fullscreen'),
                 ),
               ],
@@ -126,13 +119,8 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   void _onPlayerValueChanged() {
-    final controller = _controller;
-    if (!mounted || controller == null) {
-      return;
-    }
-
-    final newIsPlaying = controller.value.isPlaying;
-    final newIsFullScreen = controller.value.isFullScreen;
+    final newIsPlaying = _controller.value.isPlaying;
+    final newIsFullScreen = _controller.value.isFullScreen;
     
     if (newIsPlaying != _isPlaying) {
       setState(() {
@@ -159,7 +147,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   void dispose() {
-    _controller?.removeListener(_onPlayerValueChanged);
+    _controller.removeListener(_onPlayerValueChanged);
     super.dispose();
   }
 } 

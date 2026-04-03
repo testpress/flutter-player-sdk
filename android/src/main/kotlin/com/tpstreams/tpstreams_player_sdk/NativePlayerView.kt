@@ -109,25 +109,6 @@ class NativePlayerView(
             TPStreamsPlayerPreferences.fromList(it).enableFullscreen
         } ?: true
 
-        // Auto-detect: check if video is already downloaded before creating player.
-        // If completed download exists, play offline (no streaming attempt).
-        // Otherwise, stream online.
-        val existingDownload = if (!isOfflinePlayback) {
-            downloadClient.getDownload(assetId)
-        } else {
-            null
-        }
-
-        val isCompletedDownload = existingDownload != null &&
-            existingDownload.state == Download.STATE_COMPLETED
-
-        val effectiveIsOffline = isOfflinePlayback || isCompletedDownload
-
-        isOfflinePlaybackRequested = effectiveIsOffline
-        offlinePlaybackDownloadId = assetId
-        offlinePlaybackMetadata = metadata
-        isOfflineDownloadPlayback = effectiveIsOffline
-
         val offlineLicenseExpireSeconds = 60L * 60L * 24L * offlineLicenseExpireDays
 
         try {
@@ -209,94 +190,10 @@ class NativePlayerView(
                 playerListener.onPlayerError(initialError, ::handleFlutterCallResult)
             }
         }
-
-        val mediaItem = buildOfflineDownloadMediaItem(download)
-        if (mediaItem == null) {
-            Log.w("NativePlayerView", "Failed to build offline media item for: $downloadId")
-            return false
-        }
-
-        player?.refreshPlaybackWithDownloadMediaItem(mediaItem)
-        markOfflinePlayerPrepared()
-        return true
-    }
-
-    private fun markOfflinePlayerPrepared() {
-        val sdkPlayer = player ?: return
-        try {
-            val isPreparedField = sdkPlayer.javaClass.getDeclaredField("isPrepared")
-            isPreparedField.isAccessible = true
-            isPreparedField.setBoolean(sdkPlayer, true)
-        } catch (exception: Exception) {
-            Log.w("NativePlayerView", "Failed to mark offline player prepared", exception)
-        }
-    }
-
-    private fun findOfflineDownload(
-        downloadId: String,
-        metadata: Map<String, String>,
-        downloadClient: DownloadClient
-    ): Download? {
-        return downloadClient.getDownload(downloadId)
-    }
-
-    private fun buildOfflineDownloadMediaItem(download: Download): MediaItem? {
-        return try {
-            val request = download.request
-            val builder = MediaItem.Builder()
-                .setMediaId(request.id)
-                .setUri(request.uri)
-                .setCustomCacheKey(request.customCacheKey)
-                .setMimeType(request.mimeType)
-                .setStreamKeys(request.streamKeys)
-
-            request.keySetId?.let { keySetId ->
-                val drmConfig = MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
-                    .setKeySetId(keySetId)
-                    .setMultiSession(false)
-                    .build()
-                builder.setDrmConfiguration(drmConfig)
-            }
-
-            builder.build()
-        } catch (exception: Exception) {
-            Log.e("NativePlayerView", "Error building offline media item", exception)
-            null
-        }
-    }
-
-    private fun shouldSuppressOfflineFallbackError(errorMessage: String): Boolean {
-        if (!isOfflinePlaybackRequested) return false
-
-        val normalizedMessage = errorMessage.lowercase()
-        if (normalizedMessage.contains("error code: 5001")) return true
-
-        val looksLikeOnlineAuthError = normalizedMessage.contains("don't have permission") ||
-            normalizedMessage.contains("do not have permission") ||
-            normalizedMessage.contains("check your credential") ||
-            normalizedMessage.contains("unauthorized") ||
-            normalizedMessage.contains("forbidden")
-
-        return looksLikeOnlineAuthError
     }
 
     override fun play() {
-        val sdkPlayer = player ?: throw IllegalStateException("Player not initialized")
-
-        if (isOfflinePlaybackRequested) {
-            val downloadId = creationParams?.get("assetId") as? String
-            @Suppress("UNCHECKED_CAST")
-            val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
-
-            if (!downloadId.isNullOrBlank()) {
-                val refreshed = injectOfflineDownloadMediaItem(downloadId, metadata, downloadClient)
-                if (refreshed) {
-                    return
-                }
-            }
-        }
-
-        sdkPlayer.play()
+        player?.play() ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun pause() {
