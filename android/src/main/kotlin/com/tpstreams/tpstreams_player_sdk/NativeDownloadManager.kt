@@ -16,19 +16,8 @@ class NativeDownloadManager(
 ) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
     private val downloadClient = DownloadClient.Companion.getInstance(context)
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val pollIntervalMs = 1000L
-    private var isPolling = false
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
-
-    private val pollRunnable = object : Runnable {
-        override fun run() {
-            if (!isPolling) {
-                return
-            }
-            notifyDownloadsChange()
-            mainHandler.postDelayed(this, pollIntervalMs)
-        }
-    }
+    private var isListening = false
 
     private val listener = object : DownloadClient.Listener {
         override fun onDownloadsChanged() {
@@ -61,7 +50,6 @@ class NativeDownloadManager(
     }
 
     init {
-        downloadClient.addListener(listener)
         register(messenger, this)
     }
 
@@ -105,50 +93,51 @@ class NativeDownloadManager(
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
         eventSink = sink
-        startPolling()
+        if (!isListening) {
+            downloadClient.addListener(listener)
+            isListening = true
+        }
         notifyDownloadsChange()
     }
 
     override fun onCancel(arguments: Any?) {
-        stopPolling()
         eventSink = null
+        stopListening()
     }
 
     override fun dispose() {
-        stopPolling()
-        downloadClient.removeListener(listener)
+        stopListening()
         eventSink?.endOfStream()
         eventSink = null
     }
 
-    private fun startPolling() {
-        if (isPolling) {
-            return
-        }
-        isPolling = true
-        mainHandler.post(pollRunnable)
-    }
-
-    private fun stopPolling() {
-        if (!isPolling) {
-            return
-        }
-        isPolling = false
-        mainHandler.removeCallbacks(pollRunnable)
-    }
-
     private fun notifyDownloadsChange() {
-        eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
+        mainHandler.post {
+            eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
+        }
+    }
+
+    private fun stopListening() {
+        if (isListening) {
+            downloadClient.removeListener(listener)
+            isListening = false
+        }
     }
 
     private fun mapDownloadItemToDownloadAsset(
         item: DownloadItem
     ): DownloadAsset {
+        val computedProgress = if (item.totalBytes > 0L) {
+            ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
+        } else {
+            item.progressPercentage.toDouble().coerceIn(0.0, 100.0)
+        }
+
         return DownloadAsset(
             assetId = item.assetId,
             title = item.title,
             state = mapDownloadState(item.state),
-            progress = item.progressPercentage.toDouble(),
+            progress = computedProgress,
             metadata = item.metadata ?: emptyMap()
         )
     }
