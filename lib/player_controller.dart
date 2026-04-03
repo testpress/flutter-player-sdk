@@ -130,10 +130,11 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     final bool isEnded = state == 'ended';
     final bool isReady = state == 'ready';
     final bool isBuffering = state == 'buffering';
-    final bool isIdle = state == 'idle';
+    final bool shouldKeepLoading =
+        !isReady && !isEnded && value.error == null && (isBuffering || value.duration == Duration.zero || value.isLoading);
 
     value = value.copyWith(
-      isLoading: isBuffering || (!isReady && !isEnded && !isIdle && value.isLoading),
+      isLoading: shouldKeepLoading,
       isBuffering: isBuffering,
       isEnded: isEnded,
       position: isEnded ? value.duration : value.position,

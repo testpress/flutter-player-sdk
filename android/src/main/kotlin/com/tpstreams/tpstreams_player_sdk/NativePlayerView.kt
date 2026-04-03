@@ -6,8 +6,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
@@ -32,10 +30,6 @@ class NativePlayerView(
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
-    private var isOfflinePlaybackRequested = false
-    private var isOfflineReady = false
-    private var pendingPauseDuringPrep = false
-    private var isOfflineReinjectInProgress = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
 
     private val sdkListener = object : TPStreamsPlayer.Listener {
@@ -45,10 +39,6 @@ class NativePlayerView(
         }
 
         override fun onError(error: PlaybackError, errorMessage: String) {
-            if (shouldSuppressOfflineFallbackError(errorMessage)) {
-                Log.d("NativePlayerView", "Ignoring transient online fallback error during offline playback: $errorMessage")
-                return
-            }
             val message = if (errorMessage.isNotEmpty()) errorMessage else error.toString()
             playerListener.onPlayerError(message, ::handleFlutterCallResult)
         }
@@ -56,40 +46,7 @@ class NativePlayerView(
 
     private val playbackListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
-            if (isOfflinePlaybackRequested) {
-                if (playbackState == Player.STATE_READY) {
-                    isOfflineReady = true
-                    if (pendingPauseDuringPrep) {
-                        pendingPauseDuringPrep = false
-                        player?.pause()
-                    }
-                } else if (playbackState == Player.STATE_IDLE) {
-                    isOfflineReady = false
-                }
-            }
             playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), ::handleFlutterCallResult)
-        }
-
-        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-            val sdkPlayer = player ?: return
-            val downloadId = creationParams?.get("assetId") as? String
-            if (!isOfflinePlaybackRequested || !playWhenReady || downloadId.isNullOrBlank()) {
-                return
-            }
-
-            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress || isOfflineReady) {
-                return
-            }
-
-            isOfflineReinjectInProgress = true
-            try {
-                val refreshed = injectOfflineDownloadMediaItem(downloadId)
-                if (refreshed) {
-                    isOfflineReady = false
-                }
-            } finally {
-                isOfflineReinjectInProgress = false
-            }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -101,8 +58,8 @@ class NativePlayerView(
     override fun getView(): View = playerRootView
 
     init {
-        setupPlayer()
         NativePlayerApi.setUp(messenger, this, id.toString())
+        setupPlayer()
     }
 
     private fun createPlayerRootView(): FrameLayout {
@@ -120,23 +77,22 @@ class NativePlayerView(
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
 
         if (assetId.isNullOrEmpty()) {
-            playerListener.onPlayerError("Missing assetId", ::handleFlutterCallResult)
+            notifyFlutterPlayerInitialized("Missing assetId")
             return
         }
 
-        val existingDownload = if (!isOfflinePlayback) {
-            downloadClient.getDownload(assetId)
-        } else {
-            null
-        }
+        val existingDownload = downloadClient.getDownload(assetId)
+        val hasCompletedDownload = existingDownload?.state == Download.STATE_COMPLETED
 
-        val isCompletedDownload = existingDownload != null &&
-            existingDownload.state == Download.STATE_COMPLETED
-
-        val effectiveIsOffline = isOfflinePlayback || isCompletedDownload
-
-        if (!effectiveIsOffline && accessToken.isNullOrEmpty()) {
-            playerListener.onPlayerError("Missing accessToken", ::handleFlutterCallResult)
+        if (isOfflinePlayback) {
+            if (!hasCompletedDownload) {
+                notifyFlutterPlayerInitialized(
+                    "Downloaded video not found on device. Please re-download and try again."
+                )
+                return
+            }
+        } else if (accessToken.isNullOrEmpty() && !hasCompletedDownload) {
+            notifyFlutterPlayerInitialized("Missing accessToken")
             return
         }
 
@@ -153,20 +109,14 @@ class NativePlayerView(
             TPStreamsPlayerPreferences.fromList(it).enableFullscreen
         } ?: true
 
-        isOfflinePlaybackRequested = effectiveIsOffline
-        isOfflineReady = false
-        pendingPauseDuringPrep = false
-        isOfflineReinjectInProgress = false
-
         val offlineLicenseExpireSeconds = 60L * 60L * 24L * offlineLicenseExpireDays
-        val effectiveAutoPlay = if (effectiveIsOffline) false else autoPlay
 
         try {
             player = TPStreamsPlayer.create(
                 context,
                 assetId,
                 accessToken ?: "",
-                effectiveAutoPlay,
+                autoPlay,
                 0L,
                 showDownloadOption,
                 false,
@@ -183,7 +133,7 @@ class NativePlayerView(
                 is IllegalStateException -> "SDK not initialized. Call TPStreamsSDK.init() first."
                 else -> "Failed to create player: ${e.message}"
             }
-            playerListener.onPlayerError(errorMessage, ::handleFlutterCallResult)
+            notifyFlutterPlayerInitialized(errorMessage)
             return
         }
 
@@ -214,13 +164,7 @@ class NativePlayerView(
                     playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
                     if (wasPlayingBeforeDetach) {
                         wasPlayingBeforeDetach = false
-                        v.post {
-                            if (isOfflinePlaybackRequested) {
-                                player?.setPlayWhenReady(true)
-                            } else {
-                                player?.play()
-                            }
-                        }
+                        v.post { player?.play() }
                     }
                 } else if (!returningToContainer && !isFullscreen) {
                     isFullscreen = true
@@ -232,111 +176,28 @@ class NativePlayerView(
         playerView?.setPlayer(player)
         playerRootView.addView(playerView)
 
-        if (effectiveIsOffline) {
-            player?.listener = sdkListener
-
-            isOfflineReinjectInProgress = true
-            try {
-                val injected = injectOfflineDownloadMediaItem(assetId)
-                if (!injected) {
-                    playerListener.onPlayerError("Downloaded video not found on device. Please re-download and try again.", ::handleFlutterCallResult)
-                } else if (autoPlay) {
-                    player?.setPlayWhenReady(true)
-                }
-            } finally {
-                isOfflineReinjectInProgress = false
-            }
-        }
-
-        initializationListener.onNativePlayerCreated(id.toLong(), ::handleFlutterCallResult)
+        notifyFlutterPlayerInitialized()
 
         if (startInFullscreen) {
             enterFullScreen()
         }
     }
 
-    private fun injectOfflineDownloadMediaItem(downloadId: String): Boolean {
-        val download = downloadClient.getDownload(downloadId)
-            ?: run {
-                Log.w("NativePlayerView", "No download found for offline playback id: $downloadId")
-                return false
+    private fun notifyFlutterPlayerInitialized(initialError: String? = null) {
+        initializationListener.onNativePlayerCreated(id.toLong()) { result ->
+            handleFlutterCallResult(result)
+            if (result.isSuccess && initialError != null) {
+                playerListener.onPlayerError(initialError, ::handleFlutterCallResult)
             }
-
-        val mediaItem = buildOfflineDownloadMediaItem(download)
-            ?: run {
-                Log.w("NativePlayerView", "Failed to build offline media item for: $downloadId")
-                return false
-            }
-
-        player?.refreshPlaybackWithDownloadMediaItem(mediaItem)
-        return true
-    }
-
-    private fun buildOfflineDownloadMediaItem(download: Download): MediaItem? {
-        return try {
-            val request = download.request
-            val builder = MediaItem.Builder()
-                .setMediaId(request.id)
-                .setUri(request.uri)
-                .setCustomCacheKey(request.customCacheKey)
-                .setMimeType(request.mimeType)
-                .setStreamKeys(request.streamKeys)
-
-            request.keySetId?.let { keySetId ->
-                val drmConfig = MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
-                    .setKeySetId(keySetId)
-                    .setMultiSession(false)
-                    .build()
-                builder.setDrmConfiguration(drmConfig)
-            }
-
-            builder.build()
-        } catch (exception: Exception) {
-            Log.e("NativePlayerView", "Error building offline media item", exception)
-            null
         }
-    }
-
-    private fun shouldSuppressOfflineFallbackError(errorMessage: String): Boolean {
-        if (!isOfflinePlaybackRequested) return false
-
-        val normalizedMessage = errorMessage.lowercase()
-        if (normalizedMessage.contains("error code: 5001")) return true
-
-        return normalizedMessage.contains("don't have permission") ||
-            normalizedMessage.contains("do not have permission") ||
-            normalizedMessage.contains("check your credential") ||
-            normalizedMessage.contains("unauthorized") ||
-            normalizedMessage.contains("forbidden")
     }
 
     override fun play() {
-        val sdkPlayer = player ?: throw IllegalStateException("Player not initialized")
-
-        if (isOfflinePlaybackRequested && sdkPlayer.playbackState == Player.STATE_IDLE) {
-            val downloadId = creationParams?.get("assetId") as? String
-            if (!downloadId.isNullOrBlank()) {
-                injectOfflineDownloadMediaItem(downloadId)
-            }
-        }
-
-        if (isOfflinePlaybackRequested) {
-            pendingPauseDuringPrep = false
-            sdkPlayer.setPlayWhenReady(true)
-        } else {
-            sdkPlayer.play()
-        }
+        player?.play() ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun pause() {
-        val sdkPlayer = player ?: throw IllegalStateException("Player not initialized")
-
-        if (isOfflinePlaybackRequested && !isOfflineReady) {
-            pendingPauseDuringPrep = true
-            return
-        }
-
-        sdkPlayer.pause()
+        player?.pause() ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun seek(position: Long) {
