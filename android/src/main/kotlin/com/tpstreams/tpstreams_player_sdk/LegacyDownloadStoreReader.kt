@@ -3,6 +3,8 @@ package com.tpstreams.tpstreams_player_sdk
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
@@ -25,6 +27,7 @@ data class LegacyDownloadRecord(
 class LegacyDownloadStoreReader(private val context: Context) {
     private val lock = Any()
     private val ioExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
     @Volatile private var cachedRecords: List<LegacyDownloadRecord> = emptyList()
     @Volatile private var isCacheLoaded = false
     @Volatile private var onRecordsChanged: (() -> Unit)? = null
@@ -39,6 +42,18 @@ class LegacyDownloadStoreReader(private val context: Context) {
 
     fun getLegacyDownloadsByAssetId(): Map<String, LegacyDownloadRecord> {
         return getCachedLegacyDownloads().associateBy { it.assetId }
+    }
+
+    fun getLegacyDownloadByAssetIdAsync(
+        assetId: String,
+        callback: (LegacyDownloadRecord?) -> Unit
+    ) {
+        ioExecutor.execute {
+            val record = getCachedLegacyDownloads().firstOrNull { it.assetId == assetId }
+            mainHandler.post {
+                callback(record)
+            }
+        }
     }
 
     fun getLegacyDownloadsByUrl(): Map<String, LegacyDownloadRecord> {
@@ -115,20 +130,31 @@ class LegacyDownloadStoreReader(private val context: Context) {
 
     private fun ensureCacheWarmup() {
         if (!isCacheLoaded) {
-            refreshCacheAsync(notify = true)
+            // Player creation can happen before async warmup completes. Perform an
+            // initial blocking load so first read paths (home screen playback)
+            // can still resolve legacy download ids deterministically.
+            val loaded = loadFromDatabase()
+            updateCache(loaded, onlyIfUninitialized = true)
         }
     }
 
     private fun refreshCacheAsync(notify: Boolean) {
         ioExecutor.execute {
             val loaded = loadFromDatabase()
-            synchronized(lock) {
-                cachedRecords = loaded
-                isCacheLoaded = true
-            }
+            updateCache(loaded, onlyIfUninitialized = false)
             if (notify) {
                 dispatchRecordsChanged()
             }
+        }
+    }
+
+    private fun updateCache(loaded: List<LegacyDownloadRecord>, onlyIfUninitialized: Boolean) {
+        synchronized(lock) {
+            if (onlyIfUninitialized && isCacheLoaded) {
+                return
+            }
+            cachedRecords = loaded
+            isCacheLoaded = true
         }
     }
 

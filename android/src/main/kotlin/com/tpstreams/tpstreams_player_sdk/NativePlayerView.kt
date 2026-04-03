@@ -30,7 +30,11 @@ class NativePlayerView(
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
+    private var isDisposed = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
+    private val legacyDownloadStoreReader: LegacyDownloadStoreReader by lazy {
+        LegacyDownloadStoreReader(context)
+    }
 
     private val sdkListener = object : TPStreamsPlayer.Listener {
         override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
@@ -72,17 +76,39 @@ class NativePlayerView(
     }
 
     private fun setupPlayer() {
-        val assetId = creationParams?.get("assetId") as? String
+        val requestedAssetId = creationParams?.get("assetId") as? String
         val accessToken = creationParams?.get("accessToken") as? String
         val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
 
-        if (assetId.isNullOrEmpty()) {
+        if (requestedAssetId.isNullOrEmpty()) {
             notifyFlutterPlayerInitialized("Missing assetId")
             return
         }
 
-        val existingDownload = downloadClient.getDownload(assetId)
-        val hasCompletedDownload = existingDownload?.state == Download.STATE_COMPLETED
+        legacyDownloadStoreReader.getLegacyDownloadByAssetIdAsync(requestedAssetId) { legacyRecord ->
+            if (isDisposed || player != null) {
+                return@getLegacyDownloadByAssetIdAsync
+            }
+            setupPlayerWithResolvedLegacyRecord(
+                requestedAssetId = requestedAssetId,
+                accessToken = accessToken,
+                isOfflinePlayback = isOfflinePlayback,
+                legacyRecord = legacyRecord
+            )
+        }
+    }
+
+    private fun setupPlayerWithResolvedLegacyRecord(
+        requestedAssetId: String,
+        accessToken: String?,
+        isOfflinePlayback: Boolean,
+        legacyRecord: LegacyDownloadRecord?
+    ) {
+        val playbackAssetId = resolvePlaybackAssetId(requestedAssetId, legacyRecord)
+        val existingDownload = downloadClient.getDownload(playbackAssetId)
+        val hasCompletedDownload = (existingDownload?.state == Download.STATE_COMPLETED) ||
+            (legacyRecord?.state == DownloadState.COMPLETED && legacyRecord.effectiveDownloadId == playbackAssetId)
+        val shouldPreferOfflinePlayback = isOfflinePlayback || hasCompletedDownload
 
         if (isOfflinePlayback) {
             if (!hasCompletedDownload) {
@@ -102,6 +128,7 @@ class NativePlayerView(
         val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
         @Suppress("UNCHECKED_CAST")
         val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
+        val playbackAccessToken = if (shouldPreferOfflinePlayback) "" else (accessToken ?: "")
 
         @Suppress("UNCHECKED_CAST")
         val playerPrefs = creationParams?.get("playerPreferences") as? List<*>
@@ -114,8 +141,8 @@ class NativePlayerView(
         try {
             player = TPStreamsPlayer.create(
                 context,
-                assetId,
-                accessToken ?: "",
+                playbackAssetId,
+                playbackAccessToken,
                 autoPlay,
                 0L,
                 showDownloadOption,
@@ -240,8 +267,10 @@ class NativePlayerView(
     }
 
     override fun dispose() {
+        isDisposed = true
         player?.removeListener(playbackListener)
         player?.release()
+        legacyDownloadStoreReader.dispose()
         playerView?.let {
             try {
                 playerRootView.removeView(it)
@@ -271,6 +300,30 @@ class NativePlayerView(
     private fun handleFlutterCallResult(result: Result<Unit>) {
         if (result.isFailure) {
             Log.e("NativePlayerView", "Failed to call flutter from native: ${result.exceptionOrNull()?.message}")
+        }
+    }
+
+    private fun resolvePlaybackAssetId(
+        requestedAssetId: String,
+        legacyRecord: LegacyDownloadRecord?
+    ): String {
+        if (downloadClient.getDownload(requestedAssetId) != null) {
+            return requestedAssetId
+        }
+
+        val record = legacyRecord ?: return requestedAssetId
+
+        val effectiveDownloadId = record.effectiveDownloadId
+        if (effectiveDownloadId.isBlank()) {
+            return requestedAssetId
+        }
+
+        return if (downloadClient.getDownload(effectiveDownloadId) != null) {
+            effectiveDownloadId
+        } else if (record.state == DownloadState.COMPLETED) {
+            effectiveDownloadId
+        } else {
+            requestedAssetId
         }
     }
 }
