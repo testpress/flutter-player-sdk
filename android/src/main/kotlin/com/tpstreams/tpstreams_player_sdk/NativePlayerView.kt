@@ -37,6 +37,7 @@ class NativePlayerView(
     private var offlinePlaybackDownloadId: String? = null
     private var offlinePlaybackMetadata: Map<String, String> = emptyMap()
     private var isOfflineReinjectInProgress = false
+    private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
 
     private val sdkListener = object : TPStreamsPlayer.Listener {
         override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
@@ -72,7 +73,7 @@ class NativePlayerView(
 
             isOfflineReinjectInProgress = true
             try {
-                val refreshed = injectOfflineDownloadMediaItem(downloadId, offlinePlaybackMetadata)
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, offlinePlaybackMetadata, downloadClient)
                 if (refreshed) {
                     isOfflineDownloadPlayback = true
                 }
@@ -113,11 +114,6 @@ class NativePlayerView(
             return
         }
 
-        if (!isOfflinePlayback && accessToken.isNullOrEmpty()) {
-            playerListener.onPlayerError("Missing accessToken", ::handleFlutterCallResult)
-            return
-        }
-
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
         val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
@@ -135,8 +131,27 @@ class NativePlayerView(
         val playerPrefs = creationParams?.get("playerPreferences") as? List<*>
         val enableFullscreen = playerPrefs?.getOrNull(0) as? Boolean ?: true
 
+        // Auto-detect: check if video is already downloaded before creating player.
+        // If completed download exists, play offline (no streaming attempt).
+        // Otherwise, stream online.
+        val existingDownload = if (!isOfflinePlayback) {
+            downloadClient.getDownload(assetId)
+        } else {
+            null
+        }
+
+        val isCompletedDownload = existingDownload != null &&
+            existingDownload.state == Download.STATE_COMPLETED
+
+        val effectiveIsOffline = isOfflinePlayback || isCompletedDownload
+
+        isOfflinePlaybackRequested = effectiveIsOffline
+        offlinePlaybackDownloadId = assetId
+        offlinePlaybackMetadata = metadata
+        isOfflineDownloadPlayback = effectiveIsOffline
+
         val offlineLicenseExpireSeconds = 60L * 60L * 24L * offlineLicenseExpireDays
-        val effectiveAutoPlay = if (isOfflinePlayback) false else autoPlay
+        val effectiveAutoPlay = if (effectiveIsOffline) false else autoPlay
 
         // SDK signature (1.1.10 source):
         // create(context, assetId, accessToken, shouldAutoPlay, startAt,
@@ -206,17 +221,15 @@ class NativePlayerView(
         playerView?.setPlayer(player)
         container.addView(playerView)
 
-        if (isOfflinePlayback) {
+        if (effectiveIsOffline) {
             // TPStreamsPlayerView wraps the player's listener in setPlayer() and shows a
             // native error overlay on every onError callback. For offline flow we suppress
             // transient online fallback errors, so restore our listener after binding.
             player?.listener = sdkListener
-        }
 
-        if (isOfflinePlayback) {
-            // Force offline media item injection for all offline playback entries
-            // to avoid SDK failures when parsing DRM license URI from download request data.
-            isOfflineDownloadPlayback = injectOfflineDownloadMediaItem(assetId, metadata)
+            // Offline playback: inject offline media item to avoid SDK failures when parsing
+            // DRM license URI from download request data.
+            isOfflineDownloadPlayback = injectOfflineDownloadMediaItem(assetId, metadata, downloadClient)
             if (isOfflineDownloadPlayback && autoPlay) {
                 player?.play()
             } else if (!isOfflineDownloadPlayback) {
@@ -233,9 +246,10 @@ class NativePlayerView(
 
     private fun injectOfflineDownloadMediaItem(
         downloadId: String,
-        metadata: Map<String, String>
+        metadata: Map<String, String>,
+        downloadClient: DownloadClient
     ): Boolean {
-        val download = findOfflineDownload(downloadId, metadata)
+        val download = findOfflineDownload(downloadId, metadata, downloadClient)
         if (download == null) {
             Log.w("NativePlayerView", "No download found for offline playback id: $downloadId")
             return false
@@ -265,9 +279,9 @@ class NativePlayerView(
 
     private fun findOfflineDownload(
         downloadId: String,
-        metadata: Map<String, String>
+        metadata: Map<String, String>,
+        downloadClient: DownloadClient
     ): Download? {
-        val downloadClient = DownloadClient.getInstance(context)
         return downloadClient.getDownload(downloadId)
     }
 
@@ -320,7 +334,7 @@ class NativePlayerView(
             val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
 
             if (!downloadId.isNullOrBlank()) {
-                val refreshed = injectOfflineDownloadMediaItem(downloadId, metadata)
+                val refreshed = injectOfflineDownloadMediaItem(downloadId, metadata, downloadClient)
                 if (refreshed) {
                     return
                 }
