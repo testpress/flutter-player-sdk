@@ -30,6 +30,7 @@ class NativePlayerView(
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
+    private var isDisposed = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
     private val legacyDownloadStoreReader: LegacyDownloadStoreReader by lazy {
         LegacyDownloadStoreReader(context)
@@ -84,7 +85,25 @@ class NativePlayerView(
             return
         }
 
-        val legacyRecord = legacyDownloadStoreReader.getLegacyDownloadsByAssetId()[requestedAssetId]
+        legacyDownloadStoreReader.getLegacyDownloadByAssetIdAsync(requestedAssetId) { legacyRecord ->
+            if (isDisposed || player != null) {
+                return@getLegacyDownloadByAssetIdAsync
+            }
+            setupPlayerWithResolvedLegacyRecord(
+                requestedAssetId = requestedAssetId,
+                accessToken = accessToken,
+                isOfflinePlayback = isOfflinePlayback,
+                legacyRecord = legacyRecord
+            )
+        }
+    }
+
+    private fun setupPlayerWithResolvedLegacyRecord(
+        requestedAssetId: String,
+        accessToken: String?,
+        isOfflinePlayback: Boolean,
+        legacyRecord: LegacyDownloadRecord?
+    ) {
         val playbackAssetId = resolvePlaybackAssetId(requestedAssetId, legacyRecord)
         val existingDownload = downloadClient.getDownload(playbackAssetId)
         val hasCompletedDownload = (existingDownload?.state == Download.STATE_COMPLETED) ||
@@ -248,6 +267,7 @@ class NativePlayerView(
     }
 
     override fun dispose() {
+        isDisposed = true
         player?.removeListener(playbackListener)
         player?.release()
         legacyDownloadStoreReader.dispose()
