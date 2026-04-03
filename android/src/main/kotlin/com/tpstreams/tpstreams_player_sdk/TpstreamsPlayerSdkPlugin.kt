@@ -21,6 +21,7 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   private lateinit var activity: Activity
   private lateinit var flutterPluginBinding: FlutterPlugin.FlutterPluginBinding
   private var downloadManager: NativeDownloadManager? = null
+  private var isPlayerViewFactoryRegistered = false
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     this.flutterPluginBinding = flutterPluginBinding
@@ -32,30 +33,53 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-    downloadManager?.dispose()
-    downloadManager = null
+    tearDownDownloadManager()
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-    activity = binding.activity
-    flutterPluginBinding.platformViewRegistry.registerViewFactory(
-      "tpstreams_player_sdk/player_view", PlayerViewFactory(flutterPluginBinding.binaryMessenger, activity))
+    attachToActivity(binding.activity)
+  }
+
+  override fun onDetachedFromActivityForConfigChanges() {
+    tearDownDownloadManager()
+  }
+
+  override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+    attachToActivity(binding.activity)
+  }
+
+  override fun onDetachedFromActivity() {
+    tearDownDownloadManager()
+  }
+
+  private fun attachToActivity(activity: Activity) {
+    this.activity = activity
+
+    if (!isPlayerViewFactoryRegistered) {
+      flutterPluginBinding.platformViewRegistry.registerViewFactory(
+        "tpstreams_player_sdk/player_view",
+        PlayerViewFactory(flutterPluginBinding.binaryMessenger, activity)
+      )
+      isPlayerViewFactoryRegistered = true
+    }
 
     if (activity !is FragmentActivity) {
+      NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, null)
       return
     }
 
-    this.downloadManager = NativeDownloadManager(
+    downloadManager?.dispose()
+    downloadManager = NativeDownloadManager(
       flutterPluginBinding.applicationContext,
-      activity as FragmentActivity,
+      activity,
       flutterPluginBinding.binaryMessenger
     )
-    NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, this.downloadManager!!)
+    NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, downloadManager)
   }
 
-  override fun onDetachedFromActivityForConfigChanges() {}
-
-  override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {}
-
-  override fun onDetachedFromActivity() {}
+  private fun tearDownDownloadManager() {
+    downloadManager?.dispose()
+    downloadManager = null
+    NativeDownloadManagerApi.setUp(flutterPluginBinding.binaryMessenger, null)
+  }
 }

@@ -84,7 +84,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   Future<String> Function(String videoId)? onAccessTokenExpired;
 
-  TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
+  TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue(isLoading: true)) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
   }
@@ -129,10 +129,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   void onPlaybackStateChanged(String state) {
     final bool isEnded = state == 'ended';
     final bool isReady = state == 'ready';
+    final bool isBuffering = state == 'buffering';
+    final bool isIdle = state == 'idle';
 
     value = value.copyWith(
-      isLoading: value.isLoading && !isReady,
-      isBuffering: state == 'buffering',
+      isLoading: isBuffering || (!isReady && !isEnded && !isIdle && value.isLoading),
+      isBuffering: isBuffering,
       isEnded: isEnded,
       position: isEnded ? value.duration : value.position,
       error: isReady ? null : value.error,
@@ -153,7 +155,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlayerError(String error) {
-    value = value.copyWith(error: TPStreamsError(null, error));
+    value = value.copyWith(
+      isLoading: false,
+      error: TPStreamsError(null, error),
+    );
   }
 
   @override

@@ -24,7 +24,7 @@ class NativePlayerView(
     val creationParams: Map<String, Any>?,
     val activity: Activity
 ) : PlatformView, NativePlayerApi {
-    private val container = createContainer()
+    private val playerRootView = createPlayerRootView()
     private val initializationListener = NativePlayerInitializationListener(messenger, messageChannelSuffix = id.toString())
     private val playerListener = NativePlayerListener(messenger, messageChannelSuffix = id.toString())
 
@@ -93,19 +93,19 @@ class NativePlayerView(
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            container.keepScreenOn = isPlaying
+            playerRootView.keepScreenOn = isPlaying
             playerListener.onIsPlayingChanged(isPlaying, ::handleFlutterCallResult)
         }
     }
 
-    override fun getView(): View = container
+    override fun getView(): View = playerRootView
 
     init {
         setupPlayer()
         NativePlayerApi.setUp(messenger, this, id.toString())
     }
 
-    private fun createContainer(): FrameLayout {
+    private fun createPlayerRootView(): FrameLayout {
         return FrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -208,7 +208,7 @@ class NativePlayerView(
             }
 
             override fun onViewAttachedToWindow(v: View) {
-                val returningToContainer = v.parent == container
+                val returningToContainer = v.parent == playerRootView
                 if (returningToContainer && isFullscreen) {
                     isFullscreen = false
                     playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
@@ -230,7 +230,7 @@ class NativePlayerView(
         })
 
         playerView?.setPlayer(player)
-        container.addView(playerView)
+        playerRootView.addView(playerView)
 
         if (effectiveIsOffline) {
             player?.listener = sdkListener
@@ -240,6 +240,8 @@ class NativePlayerView(
                 val injected = injectOfflineDownloadMediaItem(assetId)
                 if (!injected) {
                     playerListener.onPlayerError("Downloaded video not found on device. Please re-download and try again.", ::handleFlutterCallResult)
+                } else if (autoPlay) {
+                    player?.setPlayWhenReady(true)
                 }
             } finally {
                 isOfflineReinjectInProgress = false
@@ -381,14 +383,14 @@ class NativePlayerView(
         player?.release()
         playerView?.let {
             try {
-                container.removeView(it)
+                playerRootView.removeView(it)
             } catch (e: Exception) {
                 Log.w("NativePlayerView", "Error removing player view during dispose", e)
             }
         }
         player = null
         playerView = null
-        container.keepScreenOn = false
+        playerRootView.keepScreenOn = false
         pendingTokenCallback = null
     }
 
