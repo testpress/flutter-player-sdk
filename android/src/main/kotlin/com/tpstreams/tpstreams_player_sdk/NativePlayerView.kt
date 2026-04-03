@@ -183,17 +183,9 @@ class NativePlayerView(
                     playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
                     if (wasPlayingBeforeDetach) {
                         wasPlayingBeforeDetach = false
-<<<<<<< HEAD
                         v.post { player?.play() }
                     }
                 } else if (!returningToContainer && !isFullscreen) {
-=======
-                        // post() ensures the surface is ready before we ask the player to play.
-                        v.post { player?.play() }
-                    }
-                } else if (!returningToContainer && !isFullscreen) {
-                    // View moved to decor view via native button → fullscreen entered.
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
                     isFullscreen = true
                     playerListener.onFullScreenChanged(true, ::handleFlutterCallResult)
                 }
@@ -210,24 +202,12 @@ class NativePlayerView(
         }
     }
 
-<<<<<<< HEAD
     private fun notifyFlutterPlayerInitialized(initialError: String? = null) {
         initializationListener.onNativePlayerCreated(id.toLong()) { result ->
             handleFlutterCallResult(result)
             if (result.isSuccess && initialError != null) {
                 playerListener.onPlayerError(initialError, ::handleFlutterCallResult)
             }
-=======
-    private fun injectOfflineDownloadMediaItem(
-        downloadId: String,
-        metadata: Map<String, String>,
-        downloadClient: DownloadClient
-    ): Boolean {
-        val download = findOfflineDownload(downloadId, metadata, downloadClient)
-        if (download == null) {
-            Log.w("NativePlayerView", "No download found for offline playback id: $downloadId")
-            return false
->>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
         }
 
         val mediaItem = buildOfflineDownloadMediaItem(download)

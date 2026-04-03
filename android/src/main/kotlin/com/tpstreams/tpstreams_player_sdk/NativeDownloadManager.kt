@@ -15,6 +15,8 @@ class NativeDownloadManager(
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
     private val downloadClient = DownloadClient.Companion.getInstance(context)
+    private val migrationOrchestrator = LegacyDownloadMigrationOrchestrator(context)
+    private val legacyDownloadStoreReader = LegacyDownloadStoreReader(context)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
     private var isListening = false
@@ -54,9 +56,57 @@ class NativeDownloadManager(
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
-        return downloadClient.getAllDownloadItems().map {
-            mapDownloadItemToDownloadAsset(it)
+        val legacyDownloadsById = legacyDownloadStoreReader.getLegacyDownloadsByAssetId()
+        val legacyDownloadsByUrl = legacyDownloadStoreReader.getLegacyDownloadsByUrl()
+        val matchedLegacyIds = mutableSetOf<String>()
+        val matchedLegacyUrls = mutableSetOf<String>()
+
+        val currentDownloads = downloadClient.getAllDownloadItems().map {
+            val matchedLegacyRecord = legacyDownloadsById[it.assetId] ?: legacyDownloadsByUrl[it.assetId]
+            if (matchedLegacyRecord != null) {
+                matchedLegacyIds += matchedLegacyRecord.assetId
+                if (matchedLegacyRecord.url.isNotBlank()) {
+                    matchedLegacyUrls += matchedLegacyRecord.url
+                }
+            }
+
+            mapDownloadItemToDownloadAsset(it, matchedLegacyRecord)
         }
+        val currentDownloadIds = currentDownloads.map { it.assetId }.toHashSet()
+
+        val legacyDownloads = legacyDownloadsById.values
+            .filterNot { legacyRecord ->
+                legacyRecord.assetId in currentDownloadIds ||
+                    legacyRecord.assetId in matchedLegacyIds ||
+                    (legacyRecord.url.isNotBlank() && legacyRecord.url in currentDownloadIds) ||
+                    (legacyRecord.url.isNotBlank() && legacyRecord.url in matchedLegacyUrls)
+            }
+            .map { legacyRecord ->
+                val metadata = legacyRecord.metadata.toMutableMap()
+                val canBridgeToCurrentDownloadIndex = legacyRecord.url.isNotBlank()
+                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                    if (canBridgeToCurrentDownloadIndex) {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
+                    } else {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
+                    }
+                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                    if (canBridgeToCurrentDownloadIndex) {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_BRIDGED
+                    } else {
+                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM
+                    }
+
+                DownloadAsset(
+                    assetId = legacyRecord.effectiveDownloadId,
+                    title = legacyRecord.title,
+                    state = legacyRecord.state,
+                    progress = legacyRecord.progress,
+                    metadata = metadata
+                )
+            }
+
+        return currentDownloads + legacyDownloads
     }
 
     override fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?) {
@@ -76,6 +126,9 @@ class NativeDownloadManager(
 
     override fun deleteDownload(asset: DownloadAsset) {
         downloadClient.removeDownload(asset.assetId)
+        asset.metadata?.get(LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY)?.let {
+            legacyDownloadStoreReader.deleteLegacyDownload(it)
+        }
         notifyDownloadsChange()
     }
 
@@ -88,6 +141,7 @@ class NativeDownloadManager(
         downloadClient.getAllDownloadItems().forEach { item ->
             downloadClient.removeDownload(item.assetId)
         }
+        legacyDownloadStoreReader.deleteAllLegacyDownloads()
         notifyDownloadsChange()
     }
 
@@ -155,8 +209,10 @@ class NativeDownloadManager(
     }
 
     private fun mapDownloadItemToDownloadAsset(
-        item: DownloadItem
+        item: DownloadItem,
+        legacyRecord: LegacyDownloadRecord?
     ): DownloadAsset {
+<<<<<<< HEAD
 <<<<<<< HEAD
         val computedProgress = if (item.totalBytes > 0L) {
             ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
@@ -166,16 +222,42 @@ class NativeDownloadManager(
 
 =======
 >>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
+=======
+        val metadataWithMigrationState = item.metadata?.toMutableMap() ?: mutableMapOf()
+        var title = item.title
+
+        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord != null) {
+            metadataWithMigrationState.putAll(legacyRecord.metadata)
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_HYDRATED
+            title = legacyRecord.title
+        } else {
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_NEW_DOWNLOAD_CLIENT
+        }
+
+        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord == null) {
+            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
+                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
+        }
+
+>>>>>>> 4649a69 (feat: Add legacy download migration for Android)
         return DownloadAsset(
             assetId = item.assetId,
-            title = item.title,
+            title = title,
             state = mapDownloadState(item.state),
 <<<<<<< HEAD
             progress = computedProgress,
 =======
             progress = item.progressPercentage.toDouble(),
+<<<<<<< HEAD
 >>>>>>> bd8855b (Upgrade to TPStreams Android SDK 1.1.10)
             metadata = item.metadata ?: emptyMap()
+=======
+            metadata = metadataWithMigrationState
+>>>>>>> 4649a69 (feat: Add legacy download migration for Android)
         )
     }
 

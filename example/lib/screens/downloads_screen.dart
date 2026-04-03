@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tpstreams_player_sdk/tpstreams_player_sdk.dart';
@@ -11,8 +12,16 @@ class DownloadsScreen extends StatefulWidget {
 }
 
 class _DownloadsScreenState extends State<DownloadsScreen> {
+  static const _migrationStateKey = 'tpstreams_migration_state';
+  static const _legacyDetectedState = 'legacy_detected';
+  static const _metadataHydratedState = 'metadata_hydrated';
+  static const _migrationSourceKey = 'tpstreams_migration_source';
+  static const _legacyRoomSource = 'legacy_room';
+  static const _legacyRoomBridgedSource = 'legacy_room_bridged';
+
   final _downloadManager = TPStreamsDownloadManager();
   List<DownloadAsset> _downloads = [];
+  StreamSubscription<List<DownloadAsset>>? _downloadsSubscription;
 
   @override
   void initState() {
@@ -29,8 +38,10 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   void _listenToDownloadProgress() {
-    _downloadManager.downloadsStream.listen(
+    _downloadsSubscription?.cancel();
+    _downloadsSubscription = _downloadManager.downloadsStream.listen(
       (downloads) {
+        if (!mounted) return;
         setState(() {
           _downloads = downloads;
         });
@@ -83,6 +94,12 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   Widget _buildActionButtons(DownloadAsset asset) {
+    final isLegacyRoomDownload =
+        asset.metadata?[_migrationSourceKey] == _legacyRoomSource;
+    if (isLegacyRoomDownload) {
+      return const SizedBox.shrink();
+    }
+
     final List<Widget> buttons = [];
 
     switch (asset.state) {
@@ -168,7 +185,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         LinearProgressIndicator(
           value: asset.progress / 100,
           backgroundColor: Colors.grey[200],
-          valueColor: AlwaysStoppedAnimation<Color>(_getStateColor(asset.state)),
+          valueColor:
+              AlwaysStoppedAnimation<Color>(_getStateColor(asset.state)),
         ),
         const SizedBox(height: 4),
         Text(
@@ -183,6 +201,15 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   }
 
   Widget _buildDownloadItem(DownloadAsset asset) {
+    final isLegacyDetected =
+        asset.metadata?[_migrationStateKey] == _legacyDetectedState;
+    final isMetadataHydrated =
+        asset.metadata?[_migrationStateKey] == _metadataHydratedState;
+    final isLegacyRoomDownload =
+        asset.metadata?[_migrationSourceKey] == _legacyRoomSource;
+    final isLegacyRoomBridged =
+        asset.metadata?[_migrationSourceKey] == _legacyRoomBridgedSource;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
@@ -206,6 +233,32 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                     ),
                     const SizedBox(height: 4),
                     _buildStateIndicator(asset.state),
+                    if (isLegacyDetected) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        isLegacyRoomDownload
+                            ? 'Old SDK download found. Migration pending.'
+                            : 'Legacy download detected. Migration pending.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.deepOrange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                    if (isMetadataHydrated) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        isLegacyRoomBridged
+                            ? 'Old SDK download restored.'
+                            : 'Old SDK metadata restored.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -291,14 +344,16 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: _downloads.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) => _buildDownloadItem(_downloads[index]),
+              itemBuilder: (context, index) =>
+                  _buildDownloadItem(_downloads[index]),
             ),
     );
   }
 
   @override
   void dispose() {
+    _downloadsSubscription?.cancel();
     _downloadManager.dispose();
     super.dispose();
   }
-} 
+}
