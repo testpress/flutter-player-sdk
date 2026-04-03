@@ -17,12 +17,15 @@ data class LegacyDownloadRecord(
 }
 
 class LegacyDownloadStoreReader(private val context: Context) {
+    @Volatile
+    private var cachedRecords: List<LegacyDownloadRecord>? = null
+
     fun getLegacyDownloadsByAssetId(): Map<String, LegacyDownloadRecord> {
-        return getLegacyDownloads().associateBy { it.assetId }
+        return getCachedLegacyDownloads().associateBy { it.assetId }
     }
 
     fun getLegacyDownloadsByUrl(): Map<String, LegacyDownloadRecord> {
-        return getLegacyDownloads()
+        return getCachedLegacyDownloads()
             .filter { it.url.isNotBlank() }
             .associateBy { it.url }
     }
@@ -42,6 +45,8 @@ class LegacyDownloadStoreReader(private val context: Context) {
         database.use { db ->
             db.delete(LEGACY_ASSET_TABLE, "videoId = ?", arrayOf(videoId))
         }
+
+        invalidateCache()
     }
 
     fun deleteAllLegacyDownloads() {
@@ -59,9 +64,26 @@ class LegacyDownloadStoreReader(private val context: Context) {
         database.use { db ->
             db.delete(LEGACY_ASSET_TABLE, null, null)
         }
+
+        invalidateCache()
     }
 
-    fun getLegacyDownloads(): List<LegacyDownloadRecord> {
+    private fun getCachedLegacyDownloads(): List<LegacyDownloadRecord> {
+        val existing = cachedRecords
+        if (existing != null) {
+            return existing
+        }
+
+        val loaded = loadFromDatabase()
+        cachedRecords = loaded
+        return loaded
+    }
+
+    private fun invalidateCache() {
+        cachedRecords = null
+    }
+
+    private fun loadFromDatabase(): List<LegacyDownloadRecord> {
         val databasePath = context.getDatabasePath(LEGACY_DATABASE_NAME)
         if (!databasePath.exists()) {
             return emptyList()
@@ -85,14 +107,21 @@ class LegacyDownloadStoreReader(private val context: Context) {
             )
 
             cursor.use {
+                val assetIdIdx = cursor.getColumnIndexOrThrow("videoId")
+                val urlIdx = cursor.getColumnIndexOrThrow("url")
+                val titleIdx = cursor.getColumnIndexOrThrow("title")
+                val progressIdx = cursor.getColumnIndexOrThrow("percentageDownloaded")
+                val stateIdx = cursor.getColumnIndexOrThrow("downloadState")
+                val metadataIdx = cursor.getColumnIndexOrThrow("metadata")
+
                 buildList {
                     while (cursor.moveToNext()) {
-                        val assetId = cursor.getString(0) ?: continue
-                        val url = cursor.getString(1) ?: ""
-                        val title = cursor.getString(2) ?: "Untitled"
-                        val progress = cursor.getInt(3).toDouble()
-                        val state = mapLegacyState(cursor.getString(4))
-                        val metadata = parseMetadata(cursor.getString(5)).toMutableMap()
+                        val assetId = cursor.getString(assetIdIdx) ?: continue
+                        val url = cursor.getString(urlIdx) ?: ""
+                        val title = cursor.getString(titleIdx) ?: "Untitled"
+                        val progress = cursor.getDouble(progressIdx)
+                        val state = mapLegacyState(cursor.getString(stateIdx))
+                        val metadata = parseMetadata(cursor.getString(metadataIdx)).toMutableMap()
                         metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
                             LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
                         metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
