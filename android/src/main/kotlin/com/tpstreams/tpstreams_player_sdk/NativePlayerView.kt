@@ -77,7 +77,7 @@ class NativePlayerView(
                 return
             }
 
-            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress) {
+            if (sdkPlayer.isPlaying() || isOfflineReinjectInProgress || isOfflineReady) {
                 return
             }
 
@@ -124,17 +124,6 @@ class NativePlayerView(
             return
         }
 
-        val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
-        val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
-        val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
-        val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
-        @Suppress("UNCHECKED_CAST")
-        val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
-
-        @Suppress("UNCHECKED_CAST")
-        val playerPrefs = creationParams?.get("playerPreferences") as? List<*>
-        val enableFullscreen = playerPrefs?.getOrNull(0) as? Boolean ?: true
-
         val existingDownload = if (!isOfflinePlayback) {
             downloadClient.getDownload(assetId)
         } else {
@@ -145,6 +134,24 @@ class NativePlayerView(
             existingDownload.state == Download.STATE_COMPLETED
 
         val effectiveIsOffline = isOfflinePlayback || isCompletedDownload
+
+        if (!effectiveIsOffline && accessToken.isNullOrEmpty()) {
+            playerListener.onPlayerError("Missing accessToken", ::handleFlutterCallResult)
+            return
+        }
+
+        val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
+        val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
+        val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
+        val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
+        @Suppress("UNCHECKED_CAST")
+        val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
+
+        @Suppress("UNCHECKED_CAST")
+        val playerPrefs = creationParams?.get("playerPreferences") as? List<*>
+        val enableFullscreen = playerPrefs?.let {
+            TPStreamsPlayerPreferences.fromList(it).enableFullscreen
+        } ?: true
 
         isOfflinePlaybackRequested = effectiveIsOffline
         isOfflineReady = false
@@ -228,9 +235,14 @@ class NativePlayerView(
         if (effectiveIsOffline) {
             player?.listener = sdkListener
 
-            val injected = injectOfflineDownloadMediaItem(assetId)
-            if (!injected) {
-                playerListener.onPlayerError("Downloaded video not found on device. Please re-download and try again.", ::handleFlutterCallResult)
+            isOfflineReinjectInProgress = true
+            try {
+                val injected = injectOfflineDownloadMediaItem(assetId)
+                if (!injected) {
+                    playerListener.onPlayerError("Downloaded video not found on device. Please re-download and try again.", ::handleFlutterCallResult)
+                }
+            } finally {
+                isOfflineReinjectInProgress = false
             }
         }
 
@@ -302,10 +314,7 @@ class NativePlayerView(
         if (isOfflinePlaybackRequested && sdkPlayer.playbackState == Player.STATE_IDLE) {
             val downloadId = creationParams?.get("assetId") as? String
             if (!downloadId.isNullOrBlank()) {
-                val refreshed = injectOfflineDownloadMediaItem(downloadId)
-                if (refreshed) {
-                    return
-                }
+                injectOfflineDownloadMediaItem(downloadId)
             }
         }
 
