@@ -8,6 +8,8 @@ import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
 import com.tpstreams.player.download.DownloadItem
 import io.flutter.plugin.common.BinaryMessenger
+import org.json.JSONObject
+import org.json.JSONTokener
 
 class NativeDownloadManager(
     context: Context,
@@ -15,7 +17,7 @@ class NativeDownloadManager(
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
     private val downloadClient = DownloadClient.Companion.getInstance(context)
-    private val migrationOrchestrator = LegacyDownloadMigrationOrchestrator(context)
+    private val migrationOrchestrator = LegacyDownloadMigrationOrchestrator()
     private val legacyDownloadStoreReader = LegacyDownloadStoreReader(context)
     private val mainHandler = Handler(Looper.getMainLooper())
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
@@ -52,20 +54,20 @@ class NativeDownloadManager(
     }
 
     init {
+        legacyDownloadStoreReader.setOnRecordsChangedListener(::notifyDownloadsChange)
         register(messenger, this)
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
-        val currentItems = downloadClient.getAllDownloadItems()
-        migrationOrchestrator.recordLegacyCandidates(currentItems)
-
+        val currentItems = downloadClient.getAllDownloads()
         val legacyDownloadsById = legacyDownloadStoreReader.getLegacyDownloadsByAssetId()
         val legacyDownloadsByUrl = legacyDownloadStoreReader.getLegacyDownloadsByUrl()
         val matchedLegacyIds = mutableSetOf<String>()
         val matchedLegacyUrls = mutableSetOf<String>()
 
         val currentDownloads = currentItems.map {
-            val matchedLegacyRecord = legacyDownloadsById[it.assetId] ?: legacyDownloadsByUrl[it.assetId]
+            val downloadId = it.request.id
+            val matchedLegacyRecord = legacyDownloadsById[downloadId] ?: legacyDownloadsByUrl[downloadId]
             if (matchedLegacyRecord != null) {
                 matchedLegacyIds += matchedLegacyRecord.assetId
                 if (matchedLegacyRecord.url.isNotBlank()) {
@@ -73,7 +75,7 @@ class NativeDownloadManager(
                 }
             }
 
-            mapDownloadItemToDownloadAsset(it, matchedLegacyRecord)
+            mapDownloadToDownloadAsset(it, matchedLegacyRecord)
         }
         val currentDownloadIds = currentDownloads.map { it.assetId }.toHashSet()
 
@@ -85,27 +87,12 @@ class NativeDownloadManager(
                     (legacyRecord.url.isNotBlank() && legacyRecord.url in matchedLegacyUrls)
             }
             .map { legacyRecord ->
-                val metadata = legacyRecord.metadata.toMutableMap()
-                val canBridgeToCurrentDownloadIndex = legacyRecord.url.isNotBlank()
-                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
-                    if (canBridgeToCurrentDownloadIndex) {
-                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
-                    } else {
-                        LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
-                    }
-                metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
-                    if (canBridgeToCurrentDownloadIndex) {
-                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_BRIDGED
-                    } else {
-                        LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM
-                    }
-
                 DownloadAsset(
                     assetId = legacyRecord.effectiveDownloadId,
                     title = legacyRecord.title,
                     state = legacyRecord.state,
                     progress = legacyRecord.progress,
-                    metadata = metadata
+                    metadata = legacyRecord.metadata
                 )
             }
 
@@ -118,8 +105,7 @@ class NativeDownloadManager(
     }
 
     override fun cancelDownload(asset: DownloadAsset) {
-        downloadClient.removeDownload(asset.assetId)
-        notifyDownloadsChange()
+        removeDownloadAndCleanup(asset)
     }
 
     override fun resumeDownload(asset: DownloadAsset) {
@@ -128,11 +114,7 @@ class NativeDownloadManager(
     }
 
     override fun deleteDownload(asset: DownloadAsset) {
-        downloadClient.removeDownload(asset.assetId)
-        asset.metadata?.get(LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY)?.let {
-            legacyDownloadStoreReader.deleteLegacyDownload(it)
-        }
-        notifyDownloadsChange()
+        removeDownloadAndCleanup(asset)
     }
 
     override fun pauseDownload(asset: DownloadAsset) {
@@ -141,8 +123,8 @@ class NativeDownloadManager(
     }
 
     override fun deleteAllDownloads() {
-        downloadClient.getAllDownloadItems().forEach { item ->
-            downloadClient.removeDownload(item.assetId)
+        downloadClient.getAllDownloads().forEach { item ->
+            downloadClient.removeDownload(item.request.id)
         }
         legacyDownloadStoreReader.deleteAllLegacyDownloads()
         notifyDownloadsChange()
@@ -164,6 +146,8 @@ class NativeDownloadManager(
 
     override fun dispose() {
         stopListening()
+        legacyDownloadStoreReader.setOnRecordsChangedListener(null)
+        legacyDownloadStoreReader.dispose()
         eventSink?.endOfStream()
         eventSink = null
     }
@@ -181,41 +165,72 @@ class NativeDownloadManager(
         }
     }
 
-    private fun mapDownloadItemToDownloadAsset(
-        item: DownloadItem,
+    private fun mapDownloadToDownloadAsset(
+        item: Download,
         legacyRecord: LegacyDownloadRecord?
     ): DownloadAsset {
-        val computedProgress = if (item.totalBytes > 0L) {
-            ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
+        val computedProgress = if (item.contentLength > 0L) {
+            ((item.bytesDownloaded.toDouble() / item.contentLength.toDouble()) * 100.0).coerceIn(0.0, 100.0)
         } else {
-            item.progressPercentage.toDouble().coerceIn(0.0, 100.0)
+            item.percentDownloaded.toDouble().coerceIn(0.0, 100.0)
         }
-        val metadataWithMigrationState = item.metadata?.toMutableMap() ?: mutableMapOf()
-        var title = item.title
 
-        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord != null) {
+        val requestJsonObject = parseRequestJsonObject(item)
+        val parsedMetadata = parseRequestMetadata(requestJsonObject)
+        val metadataWithMigrationState = parsedMetadata.toMutableMap()
+        var title = parseRequestTitle(requestJsonObject)
+
+        if (legacyRecord != null) {
             metadataWithMigrationState.putAll(legacyRecord.metadata)
-            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
-                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_METADATA_HYDRATED
-            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
-                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM_HYDRATED
-            title = legacyRecord.title
-        } else {
-            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
-                LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_NEW_DOWNLOAD_CLIENT
+            if (migrationOrchestrator.isLegacyCandidate(title, metadataWithMigrationState)) {
+                title = legacyRecord.title
+            }
         }
 
-        if (migrationOrchestrator.isLegacyCandidate(item) && legacyRecord == null) {
-            metadataWithMigrationState[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
-                LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
-        }
         return DownloadAsset(
-            assetId = item.assetId,
+            assetId = item.request.id,
             title = title,
             state = mapDownloadState(item.state),
             progress = computedProgress,
             metadata = metadataWithMigrationState
         )
+    }
+
+    private fun parseRequestJsonObject(download: Download): JSONObject? {
+        val requestData = download.request.data ?: return null
+        return try {
+            val parsed = JSONTokener(String(requestData, Charsets.UTF_8)).nextValue()
+            parsed as? JSONObject
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun parseRequestTitle(requestJsonObject: JSONObject?): String {
+        return requestJsonObject?.optString("title", "Unknown Title") ?: "Unknown Title"
+    }
+
+    private fun parseRequestMetadata(requestJsonObject: JSONObject?): Map<String, String> {
+        val metadataObject = requestJsonObject?.optJSONObject("metadata")
+            ?: requestJsonObject?.optJSONObject("customMetadata")
+            ?: requestJsonObject?.optJSONObject("custom_metadata")
+            ?: return emptyMap()
+
+        return metadataObject.keys().asSequence().associateWith { key ->
+            metadataObject.optString(key, "")
+        }
+    }
+
+    private fun removeDownloadAndCleanup(asset: DownloadAsset) {
+        downloadClient.removeDownload(asset.assetId)
+        cleanupLegacyRecordIfPresent(asset)
+        notifyDownloadsChange()
+    }
+
+    private fun cleanupLegacyRecordIfPresent(asset: DownloadAsset) {
+        asset.metadata?.get(LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY)?.let {
+            legacyDownloadStoreReader.deleteLegacyDownload(it)
+        }
     }
 
     private fun mapDownloadState(state: Int): DownloadState {

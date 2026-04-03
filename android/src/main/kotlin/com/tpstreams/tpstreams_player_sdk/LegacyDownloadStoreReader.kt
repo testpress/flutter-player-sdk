@@ -2,7 +2,10 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import org.json.JSONObject
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 data class LegacyDownloadRecord(
     val assetId: String,
@@ -12,13 +15,22 @@ data class LegacyDownloadRecord(
     val progress: Double,
     val metadata: Map<String, String>
 ) {
+    // Legacy rows may only have a persisted URL key; we expose that as the effective
+    // identifier so delete/bridge logic can still match the old download entry.
     val effectiveDownloadId: String
         get() = if (url.isNotBlank()) url else assetId
 }
 
 class LegacyDownloadStoreReader(private val context: Context) {
-    @Volatile
-    private var cachedRecords: List<LegacyDownloadRecord>? = null
+    private val lock = Any()
+    private val ioExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    @Volatile private var cachedRecords: List<LegacyDownloadRecord> = emptyList()
+    @Volatile private var isCacheLoaded = false
+    @Volatile private var onRecordsChanged: (() -> Unit)? = null
+
+    fun setOnRecordsChangedListener(listener: (() -> Unit)?) {
+        onRecordsChanged = listener
+    }
 
     fun getLegacyDownloadsByAssetId(): Map<String, LegacyDownloadRecord> {
         return getCachedLegacyDownloads().associateBy { it.assetId }
@@ -30,57 +42,96 @@ class LegacyDownloadStoreReader(private val context: Context) {
             .associateBy { it.url }
     }
 
+    fun dispose() {
+        onRecordsChanged = null
+        ioExecutor.shutdown()
+    }
+
     fun deleteLegacyDownload(videoId: String) {
+        removeLegacyRecordFromCache(videoId)
+        dispatchRecordsChanged()
+
         val databasePath = context.getDatabasePath(LEGACY_DATABASE_NAME)
         if (!databasePath.exists()) {
             return
         }
 
-        val database = SQLiteDatabase.openDatabase(
-            databasePath.path,
-            null,
-            SQLiteDatabase.OPEN_READWRITE
-        )
+        ioExecutor.execute {
+            val database = try {
+                SQLiteDatabase.openDatabase(
+                    databasePath.path,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE
+                )
+            } catch (exception: Exception) {
+                Log.e(TAG, "Failed to open legacy DB for deletion", exception)
+                return@execute
+            }
 
-        database.use { db ->
-            db.delete(LEGACY_ASSET_TABLE, "videoId = ?", arrayOf(videoId))
+            database.use { db ->
+                db.delete(LEGACY_ASSET_TABLE, "videoId = ?", arrayOf(videoId))
+            }
+
+            refreshCacheAsync(notify = true)
         }
-
-        invalidateCache()
     }
 
     fun deleteAllLegacyDownloads() {
+        synchronized(lock) {
+            cachedRecords = emptyList()
+            isCacheLoaded = true
+        }
+        dispatchRecordsChanged()
+
         val databasePath = context.getDatabasePath(LEGACY_DATABASE_NAME)
         if (!databasePath.exists()) {
             return
         }
 
-        val database = SQLiteDatabase.openDatabase(
-            databasePath.path,
-            null,
-            SQLiteDatabase.OPEN_READWRITE
-        )
+        ioExecutor.execute {
+            val database = try {
+                SQLiteDatabase.openDatabase(
+                    databasePath.path,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE
+                )
+            } catch (exception: Exception) {
+                Log.e(TAG, "Failed to open legacy DB for delete-all", exception)
+                return@execute
+            }
 
-        database.use { db ->
-            db.delete(LEGACY_ASSET_TABLE, null, null)
+            database.use { db ->
+                db.delete(LEGACY_ASSET_TABLE, null, null)
+            }
+
+            refreshCacheAsync(notify = true)
         }
-
-        invalidateCache()
     }
 
     private fun getCachedLegacyDownloads(): List<LegacyDownloadRecord> {
-        val existing = cachedRecords
-        if (existing != null) {
-            return existing
+        ensureCacheWarmup()
+        synchronized(lock) {
+            return cachedRecords
         }
-
-        val loaded = loadFromDatabase()
-        cachedRecords = loaded
-        return loaded
     }
 
-    private fun invalidateCache() {
-        cachedRecords = null
+    private fun ensureCacheWarmup() {
+        if (!isCacheLoaded) {
+            refreshCacheAsync(notify = true)
+        }
+    }
+
+    private fun refreshCacheAsync(notify: Boolean) {
+        ioExecutor.execute {
+            val loaded = loadFromDatabase()
+            synchronized(lock) {
+                cachedRecords = loaded
+                isCacheLoaded = true
+            }
+            if (notify) {
+                dispatchRecordsChanged()
+            }
+        }
     }
 
     private fun loadFromDatabase(): List<LegacyDownloadRecord> {
@@ -89,11 +140,16 @@ class LegacyDownloadStoreReader(private val context: Context) {
             return emptyList()
         }
 
-        val database = SQLiteDatabase.openDatabase(
-            databasePath.path,
-            null,
-            SQLiteDatabase.OPEN_READONLY
-        )
+        val database = try {
+            SQLiteDatabase.openDatabase(
+                databasePath.path,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+            )
+        } catch (exception: Exception) {
+            Log.e(TAG, "Failed to open legacy DB for read", exception)
+            return emptyList()
+        }
 
         return database.use { db ->
             val cursor = db.query(
@@ -122,10 +178,6 @@ class LegacyDownloadStoreReader(private val context: Context) {
                         val progress = cursor.getDouble(progressIdx)
                         val state = mapLegacyState(cursor.getString(stateIdx))
                         val metadata = parseMetadata(cursor.getString(metadataIdx)).toMutableMap()
-                        metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_KEY] =
-                            LegacyDownloadMigrationOrchestrator.MIGRATION_STATE_LEGACY_DETECTED
-                        metadata[LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_KEY] =
-                            LegacyDownloadMigrationOrchestrator.MIGRATION_SOURCE_LEGACY_ROOM
                         metadata[LegacyDownloadMigrationOrchestrator.LEGACY_VIDEO_ID_KEY] = assetId
                         if (url.isNotBlank()) {
                             metadata[LegacyDownloadMigrationOrchestrator.LEGACY_URL_KEY] = url
@@ -145,6 +197,21 @@ class LegacyDownloadStoreReader(private val context: Context) {
                 }
             }
         }
+    }
+
+    private fun removeLegacyRecordFromCache(videoId: String) {
+        synchronized(lock) {
+            if (cachedRecords.isEmpty()) {
+                return
+            }
+
+            cachedRecords = cachedRecords.filterNot { it.assetId == videoId }
+            isCacheLoaded = true
+        }
+    }
+
+    private fun dispatchRecordsChanged() {
+        onRecordsChanged?.invoke()
     }
 
     private fun mapLegacyState(rawState: String?): DownloadState {
@@ -173,6 +240,7 @@ class LegacyDownloadStoreReader(private val context: Context) {
     }
 
     companion object {
+        private const val TAG = "LegacyDownloadStore"
         private const val LEGACY_DATABASE_NAME = "tpStreams-database"
         private const val LEGACY_ASSET_TABLE = "Asset"
     }
