@@ -113,3 +113,8 @@
 - Revamped player UI for improved usability and visual consistency
 ### Breaking Changes
 - Removed `Testpress` provider support from SDK initialization.
+
+## 2.2.16-beta.2
+
+### Fixes
+- Bug fixes and code optimization
