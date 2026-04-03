@@ -16,8 +16,10 @@ buildscript {
 
 rootProject.allprojects {
     repositories {
-        google()
         mavenCentral()
+        google()
+        maven { url 'https://jitpack.io' }
+
         maven {
             url "https://github.com/testpress/maven/raw/main/repo"
         }
@@ -68,5 +70,5 @@ android {
 }
 
 dependencies {
-    implementation "com.tpstreams.player:player:3.1.16"
+    implementation "com.github.testpress:TPStreamsAndroidPlayer:1.1.11-beta.1"
 }

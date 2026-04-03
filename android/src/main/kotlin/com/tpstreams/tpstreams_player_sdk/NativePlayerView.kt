@@ -2,23 +2,18 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.fragment.app.FragmentActivity
-import com.tpstream.player.TPStreamPlayerListener
-import com.tpstream.player.TpInitParams
-import com.tpstream.player.TpStreamPlayer
-import com.tpstream.player.constants.PlaybackError
-import com.tpstream.player.ui.InitializationListener
-import com.tpstream.player.ui.TpStreamPlayerFragment
-import com.tpstream.player.TpStreamPlayerPreference
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.offline.Download
+import com.tpstreams.player.download.DownloadClient
+import com.tpstreams.player.TPStreamsPlayer
+import com.tpstreams.player.TPStreamsPlayerView
+import com.tpstreams.player.constants.PlaybackError
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
-import android.util.Log
-
-const val FRAME_LAYOUT_ID = 0x123456
 
 class NativePlayerView(
     val context: Context,
@@ -26,131 +21,174 @@ class NativePlayerView(
     val id: Int,
     val creationParams: Map<String, Any>?,
     val activity: Activity
-) : PlatformView, InitializationListener, TPStreamPlayerListener, NativePlayerApi {
-    private val linearLayout = createLinearLayout()
-    private val playerFragment = TpStreamPlayerFragment()
-    private var player: TpStreamPlayer? = null
-    
+) : PlatformView, NativePlayerApi {
+    private val playerRootView = createPlayerRootView()
     private val initializationListener = NativePlayerInitializationListener(messenger, messageChannelSuffix = id.toString())
     private val playerListener = NativePlayerListener(messenger, messageChannelSuffix = id.toString())
+
+    private var playerView: TPStreamsPlayerView? = null
+    private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
+    private var isFullscreen = false
+    private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
 
-    override fun getView(): View {
-        return linearLayout
-    }
+    private val sdkListener = object : TPStreamsPlayer.Listener {
+        override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
+            pendingTokenCallback = callback
+            playerListener.handleAccessTokenExpiration(videoId, ::handleFlutterCallResult)
+        }
 
-    init {
-        val frameLayout = createFrameLayout()
-        linearLayout.addView(frameLayout)
-        setupPlayerFragmentOnAttach(frameLayout)
-
-        NativePlayerApi.setUp(messenger, this, id.toString())
-    }
-
-    private fun createLinearLayout(): LinearLayout {
-        val vParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        val layout = LinearLayout(context)
-        layout.orientation = LinearLayout.VERTICAL
-        layout.layoutParams = vParams
-        return layout
-    }
-
-    private fun createFrameLayout(): FrameLayout {
-        val layout = FrameLayout(context)
-        layout.layoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-        layout.id = FRAME_LAYOUT_ID
-        return layout
-    }
-
-    private fun setupPlayerFragmentOnAttach(frameLayout: FrameLayout) {
-        frameLayout.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
-                initializePlayerFragment()
-            }
-
-            override fun onViewDetachedFromWindow(v: View) {}
-        })
-    }
-
-    private fun initializePlayerFragment() {
-        if (activity is FragmentActivity) {
-            playerFragment.setOnInitializationListener(this)
-            val fragmentManager = activity.supportFragmentManager
-            val fragmentTransaction = fragmentManager.beginTransaction()
-            fragmentTransaction.replace(
-                FRAME_LAYOUT_ID,
-                playerFragment,
-                playerFragment::class.toString()
-            )
-            fragmentTransaction.commitNow()
+        override fun onError(error: PlaybackError, errorMessage: String) {
+            val message = if (errorMessage.isNotEmpty()) errorMessage else error.toString()
+            playerListener.onPlayerError(message, ::handleFlutterCallResult)
         }
     }
 
-    override fun onInitializationSuccess(player: TpStreamPlayer) {
-        this.player = player
+    private val playbackListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), ::handleFlutterCallResult)
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            playerRootView.keepScreenOn = isPlaying
+            playerListener.onIsPlayingChanged(isPlaying, ::handleFlutterCallResult)
+        }
+    }
+
+    override fun getView(): View = playerRootView
+
+    init {
+        NativePlayerApi.setUp(messenger, this, id.toString())
+        setupPlayer()
+    }
+
+    private fun createPlayerRootView(): FrameLayout {
+        return FrameLayout(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+    }
+
+    private fun setupPlayer() {
         val assetId = creationParams?.get("assetId") as? String
         val accessToken = creationParams?.get("accessToken") as? String
+        val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
+
+        if (assetId.isNullOrEmpty()) {
+            notifyFlutterPlayerInitialized("Missing assetId")
+            return
+        }
+
+        val existingDownload = downloadClient.getDownload(assetId)
+        val hasCompletedDownload = existingDownload?.state == Download.STATE_COMPLETED
+
+        if (isOfflinePlayback) {
+            if (!hasCompletedDownload) {
+                notifyFlutterPlayerInitialized(
+                    "Downloaded video not found on device. Please re-download and try again."
+                )
+                return
+            }
+        } else if (accessToken.isNullOrEmpty() && !hasCompletedDownload) {
+            notifyFlutterPlayerInitialized("Missing accessToken")
+            return
+        }
+
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
         val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
-        val isOfflinePlayback = creationParams?.get("isOfflinePlayback") as? Boolean ?: false
-        val metadata = creationParams?.get("metadata") as? Map<String, String>
         val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
+        @Suppress("UNCHECKED_CAST")
+        val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
 
-        val playerPreferences = creationParams?.get("playerPreferences")
+        @Suppress("UNCHECKED_CAST")
+        val playerPrefs = creationParams?.get("playerPreferences") as? List<*>
+        val enableFullscreen = playerPrefs?.let {
+            TPStreamsPlayerPreferences.fromList(it).enableFullscreen
+        } ?: true
 
-        val parameters = getTpInitParams(assetId, accessToken, showDownloadOption, offlineLicenseExpireDays, isOfflinePlayback, playerPreferences, autoPlay)
-        
-        this.player!!.load(parameters, metadata)
-        this.player!!.setListener(this)
-        
-        if (startInFullscreen) {
-            playerFragment.showFullScreen()
+        val offlineLicenseExpireSeconds = 60L * 60L * 24L * offlineLicenseExpireDays
+
+        try {
+            player = TPStreamsPlayer.create(
+                context,
+                assetId,
+                accessToken ?: "",
+                autoPlay,
+                0L,
+                showDownloadOption,
+                false,
+                startInFullscreen,
+                metadata,
+                offlineLicenseExpireSeconds
+            )
+
+            player?.listener = sdkListener
+            player?.addListener(playbackListener)
+        } catch (e: Exception) {
+            Log.e("NativePlayerView", "Error creating player", e)
+            val errorMessage = when (e) {
+                is IllegalStateException -> "SDK not initialized. Call TPStreamsSDK.init() first."
+                else -> "Failed to create player: ${e.message}"
+            }
+            notifyFlutterPlayerInitialized(errorMessage)
+            return
         }
 
-        initializationListener.onNativePlayerCreated(id.toLong(), handleFlutterCallResult)
+        playerView = TPStreamsPlayerView(context)
+        playerView?.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+
+        if (!enableFullscreen) {
+            playerView?.post {
+                playerView?.findViewById<View>(androidx.media3.ui.R.id.exo_fullscreen)
+                    ?.visibility = View.GONE
+            }
+        }
+
+        playerView?.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            private var wasPlayingBeforeDetach = false
+
+            override fun onViewDetachedFromWindow(v: View) {
+                wasPlayingBeforeDetach = player?.isPlaying() ?: false
+            }
+
+            override fun onViewAttachedToWindow(v: View) {
+                val returningToContainer = v.parent == playerRootView
+                if (returningToContainer && isFullscreen) {
+                    isFullscreen = false
+                    playerListener.onFullScreenChanged(false, ::handleFlutterCallResult)
+                    if (wasPlayingBeforeDetach) {
+                        wasPlayingBeforeDetach = false
+                        v.post { player?.play() }
+                    }
+                } else if (!returningToContainer && !isFullscreen) {
+                    isFullscreen = true
+                    playerListener.onFullScreenChanged(true, ::handleFlutterCallResult)
+                }
+            }
+        })
+
+        playerView?.setPlayer(player)
+        playerRootView.addView(playerView)
+
+        notifyFlutterPlayerInitialized()
+
+        if (startInFullscreen) {
+            enterFullScreen()
+        }
     }
 
-    private fun getTpInitParams(
-        assetId: String?, 
-        accessToken: String?,
-        showDownloadOption: Boolean,
-        offlineLicenseExpireDays: Int,
-        isOfflinePlayback: Boolean,
-        playerPreferences: Any?,
-        autoPlay: Boolean
-    ): TpInitParams {
-        return if (isOfflinePlayback) {
-            TpInitParams.createOfflineParams(requireNotNull(assetId))
-        } else {
-            TpInitParams.Builder()
-                .setVideoId(requireNotNull(assetId))
-                .setAccessToken(requireNotNull(accessToken))
-                .setAutoPlay(autoPlay)
-                .apply {
-                    if (showDownloadOption) {
-                        enableDownloadSupport(true)
-                        setOfflineLicenseExpireTime(60 * 60 * 24 * offlineLicenseExpireDays)
-                    }
-                    playerPreferences?.let { prefsList ->
-                        val prefs = TPStreamsPlayerPreferences.fromList(prefsList as List<Any?>)
-                        val preferenceBuilder = TpStreamPlayerPreference.Builder()
-                        preferenceBuilder.enableFullscreen(prefs.enableFullscreen)
-                        preferenceBuilder.enablePlaybackSpeed(prefs.enablePlaybackSpeed)
-                        preferenceBuilder.enableCaptions(prefs.enableCaptions)
-                        preferenceBuilder.showResolutionOptions(prefs.showResolutionOptions)
-                        preferenceBuilder.enableSeekButtons(prefs.enableSeekButtons)
-                        prefs.seekBarColor?.let { preferenceBuilder.setSeekBarColor(it.toInt()) }
-                        setPlayerPreference(preferenceBuilder.build())
-                    }
-                }
-                .build()
+    private fun notifyFlutterPlayerInitialized(initialError: String? = null) {
+        initializationListener.onNativePlayerCreated(id.toLong()) { result ->
+            handleFlutterCallResult(result)
+            if (result.isSuccess && initialError != null) {
+                playerListener.onPlayerError(initialError, ::handleFlutterCallResult)
+            }
         }
     }
 
@@ -171,81 +209,29 @@ class NativePlayerView(
     }
 
     override fun setMaxResolution(resolution: Long) {
-        player?.setMaxResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
+        player?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getDuration(): Long {
-        return player?.getDuration() ?: throw IllegalStateException("Player not initialized")
+        return player?.duration ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getCurrentTime(): Long {
-        return player?.getCurrentTime() ?: throw IllegalStateException("Player not initialized")
+        return player?.currentPosition ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun enterFullScreen() {
-        playerFragment.showFullScreen()
-    }
-
-    override fun exitFullScreen() {
-        playerFragment.exitFullScreen()
-    }
-
-    override fun dispose() {
-        player?.release()
-        player = null
-        linearLayout.keepScreenOn = false
-    }
-
-    override fun onPlaybackStateChanged(playbackState: Int) {
-        super.onPlaybackStateChanged(playbackState)
-        playerListener.onPlaybackStateChanged(getPlaybackStateString(playbackState), handleFlutterCallResult)
-        linearLayout.keepScreenOn = playbackState == TpStreamPlayer.PLAYBACK_STATE.STATE_BUFFERING
-    }
-
-    private fun getPlaybackStateString(playbackState: Int): String {
-        return when (playbackState) {
-            TpStreamPlayer.PLAYBACK_STATE.STATE_IDLE -> "idle"
-            TpStreamPlayer.PLAYBACK_STATE.STATE_BUFFERING -> "buffering"
-            TpStreamPlayer.PLAYBACK_STATE.STATE_READY -> "ready"
-            TpStreamPlayer.PLAYBACK_STATE.STATE_ENDED -> "ended"
-            else -> "unknown"
+        if (!isFullscreen) {
+            playerListener.beforeFullScreenEnter(::handleFlutterCallResult)
+            playerView?.toggleFullscreen()
         }
     }
 
-    override fun onIsPlayingChanged(playing: Boolean) {
-        super.onIsPlayingChanged(playing)
-        linearLayout.keepScreenOn = playing
-        playerListener.onIsPlayingChanged(playing, handleFlutterCallResult)
-    }
-
-    override fun onPlayerError(playbackError: PlaybackError) {
-        super.onPlayerError(playbackError)
-        playerListener.onPlayerError(playbackError.toString(), handleFlutterCallResult)
-    }
-
-    override fun onFullScreenChanged(fullScreen: Boolean) {
-        super.onFullScreenChanged(fullScreen)
-        playerListener.onFullScreenChanged(fullScreen, handleFlutterCallResult)
-    }
-
-    override fun onBeforeFullScreenEnter() {
-        super.onBeforeFullScreenEnter()
-        playerListener.beforeFullScreenEnter(handleFlutterCallResult)
-    }
-
-    override fun onBeforeFullScreenExit() {
-        super.onBeforeFullScreenExit()
-        playerListener.beforeFullScreenExit(handleFlutterCallResult)
-    }
-
-    override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
-        pendingTokenCallback = callback
-        playerListener.handleAccessTokenExpiration(videoId, handleFlutterCallResult)
-    }
-
-    override fun onReplay() {
-        super.onReplay()
-        playerListener.notifyReplay(handleFlutterCallResult)
+    override fun exitFullScreen() {
+        if (isFullscreen) {
+            playerListener.beforeFullScreenExit(::handleFlutterCallResult)
+            playerView?.toggleFullscreen()
+        }
     }
 
     override fun resolveAccessToken(newAccessToken: String) {
@@ -253,7 +239,36 @@ class NativePlayerView(
         pendingTokenCallback = null
     }
 
-    private val handleFlutterCallResult: (Result<Unit>) -> Unit = { result ->
+    override fun dispose() {
+        player?.removeListener(playbackListener)
+        player?.release()
+        playerView?.let {
+            try {
+                playerRootView.removeView(it)
+            } catch (e: Exception) {
+                Log.w("NativePlayerView", "Error removing player view during dispose", e)
+            }
+        }
+        player = null
+        playerView = null
+        playerRootView.keepScreenOn = false
+        pendingTokenCallback = null
+    }
+
+    private fun getPlaybackStateString(playbackState: Int): String {
+        return when (playbackState) {
+            Player.STATE_IDLE -> "idle"
+            Player.STATE_BUFFERING -> "buffering"
+            Player.STATE_READY -> "ready"
+            Player.STATE_ENDED -> {
+                playerListener.notifyReplay(::handleFlutterCallResult)
+                "ended"
+            }
+            else -> "unknown"
+        }
+    }
+
+    private fun handleFlutterCallResult(result: Result<Unit>) {
         if (result.isFailure) {
             Log.e("NativePlayerView", "Failed to call flutter from native: ${result.exceptionOrNull()?.message}")
         }

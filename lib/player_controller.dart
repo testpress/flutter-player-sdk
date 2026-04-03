@@ -8,6 +8,8 @@ import 'generated/native_player_listeners.g.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {
+  static const Object _noErrorUpdate = Object();
+
   /// Indicates whether a video is currently being loaded into the player.
   final bool isLoading;
 
@@ -51,7 +53,7 @@ class TPStreamsPlayerValue {
     bool? isBuffering,
     bool? isEnded,
     bool? isFullScreen,
-    TPStreamsError? error,
+    Object? error = _noErrorUpdate,
   }) {
     return TPStreamsPlayerValue(
       isLoading: isLoading ?? this.isLoading,
@@ -61,7 +63,7 @@ class TPStreamsPlayerValue {
       isBuffering: isBuffering ?? this.isBuffering,
       isEnded: isEnded ?? this.isEnded,
       isFullScreen: isFullScreen ?? this.isFullScreen,
-      error: error ?? this.error,
+      error: identical(error, _noErrorUpdate) ? this.error : error as TPStreamsError?,
     );
   }
 }
@@ -82,7 +84,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   Future<String> Function(String videoId)? onAccessTokenExpired;
 
-  TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue()) {
+  TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue(isLoading: true)) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
   }
@@ -127,12 +129,16 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   void onPlaybackStateChanged(String state) {
     final bool isEnded = state == 'ended';
     final bool isReady = state == 'ready';
+    final bool isBuffering = state == 'buffering';
+    final bool shouldKeepLoading =
+        !isReady && !isEnded && value.error == null && (isBuffering || value.duration == Duration.zero || value.isLoading);
 
     value = value.copyWith(
-      isLoading: value.isLoading && !isReady,
-      isBuffering: state == 'buffering',
+      isLoading: shouldKeepLoading,
+      isBuffering: isBuffering,
       isEnded: isEnded,
       position: isEnded ? value.duration : value.position,
+      error: isReady ? null : value.error,
     );
     
     _updateDurationIfNeeded();
@@ -141,13 +147,19 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onIsPlayingChanged(bool isPlaying) {
-    value = value.copyWith(isPlaying: isPlaying);
+    value = value.copyWith(
+      isPlaying: isPlaying,
+      error: isPlaying ? null : value.error,
+    );
     isPlaying ? startUpdatePositionTimer() : stopUpdatePositionTimer();
   }
 
   @override
   void onPlayerError(String error) {
-    value = value.copyWith(error: TPStreamsError(null, error));
+    value = value.copyWith(
+      isLoading: false,
+      error: TPStreamsError(null, error),
+    );
   }
 
   @override

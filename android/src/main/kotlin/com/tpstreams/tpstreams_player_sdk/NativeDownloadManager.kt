@@ -1,12 +1,12 @@
 package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.fragment.app.FragmentActivity
-import com.tpstream.player.data.source.local.DownloadStatus
-import com.tpstream.player.offline.TpStreamDownloadManager
-import androidx.lifecycle.Observer
-import com.tpstream.player.TpInitParams
-import com.tpstream.player.data.Asset
+import androidx.media3.exoplayer.offline.Download
+import com.tpstreams.player.download.DownloadClient
+import com.tpstreams.player.download.DownloadItem
 import io.flutter.plugin.common.BinaryMessenger
 
 class NativeDownloadManager(
@@ -14,96 +14,141 @@ class NativeDownloadManager(
     private val activity: FragmentActivity,
     messenger: BinaryMessenger
 ) : NativeDownloadManagerApi, GetDownloadsStreamStreamHandler() {
-    private val downloadManager = TpStreamDownloadManager(context)
-    private val downloads = downloadManager.getAllDownloads()
+    private val downloadClient = DownloadClient.Companion.getInstance(context)
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var eventSink: PigeonEventSink<DownloadsUpdateEvent>? = null
-    
-    private val downloadObserver = Observer<List<Asset>?> { assets ->
-        assets?.let { notifyDownloadsChange(it) }
+    private var isListening = false
+
+    private val listener = object : DownloadClient.Listener {
+        override fun onDownloadsChanged() {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadStateChanged(downloadItem: DownloadItem, exception: Exception?) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadStarted(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadResumed(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadCompleted(downloadItem: DownloadItem) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadFailed(downloadItem: DownloadItem, error: Exception) {
+            notifyDownloadsChange()
+        }
+
+        override fun onDownloadDeleted(assetId: String) {
+            notifyDownloadsChange()
+        }
     }
 
     init {
-        downloads.observeForever(downloadObserver)
         register(messenger, this)
     }
 
     override fun getAllDownloads(): List<DownloadAsset> {
-        return downloads.value?.map { asset ->
-            mapAssetToDownloadAsset(asset)
-        } ?: emptyList()
+        return downloadClient.getAllDownloadItems().map {
+            mapDownloadItemToDownloadAsset(it)
+        }
     }
 
     override fun startDownload(assetId: String, accessToken: String, metadata: Map<String, String>?) {
-        val parameters = TpInitParams.Builder()
-            .setVideoId(assetId)
-            .setAccessToken(accessToken)
-            .build()
-
-        downloadManager.startDownload(activity, parameters, metadata)
+        downloadClient.startDownload(activity, assetId, accessToken, null, metadata ?: emptyMap())
+        notifyDownloadsChange()
     }
 
     override fun cancelDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.cancelDownload(it) }
+        downloadClient.removeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun resumeDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.resumeDownload(it) }
+        downloadClient.resumeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun deleteDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.deleteDownload(it) }
+        downloadClient.removeDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun pauseDownload(asset: DownloadAsset) {
-        findAsset(asset.assetId)?.let { downloadManager.pauseDownload(it) }
-    }
-
-    private fun findAsset(assetId: String): Asset? {
-        return downloads.value?.find { it.id == assetId }
+        downloadClient.pauseDownload(asset.assetId)
+        notifyDownloadsChange()
     }
 
     override fun deleteAllDownloads() {
-        downloadManager.deleteAllDownloads()
+        downloadClient.getAllDownloadItems().forEach { item ->
+            downloadClient.removeDownload(item.assetId)
+        }
+        notifyDownloadsChange()
     }
 
     override fun onListen(p0: Any?, sink: PigeonEventSink<DownloadsUpdateEvent>) {
-        downloads.observeForever(downloadObserver)
         eventSink = sink
+        if (!isListening) {
+            downloadClient.addListener(listener)
+            isListening = true
+        }
+        notifyDownloadsChange()
     }
 
     override fun onCancel(arguments: Any?) {
-        downloads.removeObserver(downloadObserver)
         eventSink = null
+        stopListening()
     }
 
     override fun dispose() {
-        downloads.removeObserver(downloadObserver)
+        stopListening()
         eventSink?.endOfStream()
         eventSink = null
     }
 
-    private fun notifyDownloadsChange(assets: List<Asset>) {
-        val downloadAssets = assets.map { asset ->
-            mapAssetToDownloadAsset(asset)
+    private fun notifyDownloadsChange() {
+        mainHandler.post {
+            eventSink?.success(DownloadsUpdateEvent(getAllDownloads()))
         }
-        eventSink?.success(DownloadsUpdateEvent(downloadAssets))
     }
 
-    private fun mapAssetToDownloadAsset(asset: Asset): DownloadAsset {
+    private fun stopListening() {
+        if (isListening) {
+            downloadClient.removeListener(listener)
+            isListening = false
+        }
+    }
+
+    private fun mapDownloadItemToDownloadAsset(
+        item: DownloadItem
+    ): DownloadAsset {
+        val computedProgress = if (item.totalBytes > 0L) {
+            ((item.downloadedBytes.toDouble() / item.totalBytes.toDouble()) * 100.0).coerceIn(0.0, 100.0)
+        } else {
+            item.progressPercentage.toDouble().coerceIn(0.0, 100.0)
+        }
+
         return DownloadAsset(
-            assetId = asset.id,
-            title = asset.title,
-            state = mapDownloadState(asset.video.downloadState),
-            progress = asset.video.percentageDownloaded.toDouble(),
-            metadata = asset.metadata
+            assetId = item.assetId,
+            title = item.title,
+            state = mapDownloadState(item.state),
+            progress = computedProgress,
+            metadata = item.metadata ?: emptyMap()
         )
     }
 
-    private fun mapDownloadState(nativeState: DownloadStatus?): DownloadState = when (nativeState) {
-        DownloadStatus.DOWNLOADING -> DownloadState.DOWNLOADING
-        DownloadStatus.PAUSE -> DownloadState.PAUSED
-        DownloadStatus.COMPLETE -> DownloadState.COMPLETED
-        DownloadStatus.FAILED -> DownloadState.FAILED
-        else -> DownloadState.NOT_DOWNLOADED
+    private fun mapDownloadState(state: Int): DownloadState {
+        return when (state) {
+            Download.STATE_DOWNLOADING, Download.STATE_QUEUED, Download.STATE_RESTARTING -> DownloadState.DOWNLOADING
+            Download.STATE_COMPLETED -> DownloadState.COMPLETED
+            Download.STATE_FAILED -> DownloadState.FAILED
+            Download.STATE_STOPPED -> DownloadState.PAUSED
+            else -> DownloadState.NOT_DOWNLOADED
+        }
     }
 }
