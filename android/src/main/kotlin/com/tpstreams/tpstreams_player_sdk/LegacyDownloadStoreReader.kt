@@ -115,20 +115,31 @@ class LegacyDownloadStoreReader(private val context: Context) {
 
     private fun ensureCacheWarmup() {
         if (!isCacheLoaded) {
-            refreshCacheAsync(notify = true)
+            // Player creation can happen before async warmup completes. Perform an
+            // initial blocking load so first read paths (home screen playback)
+            // can still resolve legacy download ids deterministically.
+            val loaded = loadFromDatabase()
+            updateCache(loaded, onlyIfUninitialized = true)
         }
     }
 
     private fun refreshCacheAsync(notify: Boolean) {
         ioExecutor.execute {
             val loaded = loadFromDatabase()
-            synchronized(lock) {
-                cachedRecords = loaded
-                isCacheLoaded = true
-            }
+            updateCache(loaded, onlyIfUninitialized = false)
             if (notify) {
                 dispatchRecordsChanged()
             }
+        }
+    }
+
+    private fun updateCache(loaded: List<LegacyDownloadRecord>, onlyIfUninitialized: Boolean) {
+        synchronized(lock) {
+            if (onlyIfUninitialized && isCacheLoaded) {
+                return
+            }
+            cachedRecords = loaded
+            isCacheLoaded = true
         }
     }
 
