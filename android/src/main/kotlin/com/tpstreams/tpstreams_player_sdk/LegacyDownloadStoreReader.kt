@@ -2,6 +2,7 @@ package com.tpstreams.tpstreams_player_sdk
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
 import android.util.Log
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
@@ -18,7 +19,7 @@ data class LegacyDownloadRecord(
     // Legacy rows may only have a persisted URL key; we expose that as the effective
     // identifier so delete/bridge logic can still match the old download entry.
     val effectiveDownloadId: String
-        get() = if (url.isNotBlank()) url else assetId
+        get() = if (url.isLikelyDownloadIdUrl()) url else assetId
 }
 
 class LegacyDownloadStoreReader(private val context: Context) {
@@ -27,6 +28,10 @@ class LegacyDownloadStoreReader(private val context: Context) {
     @Volatile private var cachedRecords: List<LegacyDownloadRecord> = emptyList()
     @Volatile private var isCacheLoaded = false
     @Volatile private var onRecordsChanged: (() -> Unit)? = null
+
+    init {
+        refreshCacheAsync(notify = false)
+    }
 
     fun setOnRecordsChangedListener(listener: (() -> Unit)?) {
         onRecordsChanged = listener
@@ -48,9 +53,6 @@ class LegacyDownloadStoreReader(private val context: Context) {
     }
 
     fun deleteLegacyDownload(videoId: String) {
-        removeLegacyRecordFromCache(videoId)
-        dispatchRecordsChanged()
-
         val databasePath = context.getDatabasePath(LEGACY_DATABASE_NAME)
         if (!databasePath.exists()) {
             return
@@ -65,6 +67,7 @@ class LegacyDownloadStoreReader(private val context: Context) {
                 )
             } catch (exception: Exception) {
                 Log.e(TAG, "Failed to open legacy DB for deletion", exception)
+                dispatchRecordsChanged()
                 return@execute
             }
 
@@ -77,12 +80,6 @@ class LegacyDownloadStoreReader(private val context: Context) {
     }
 
     fun deleteAllLegacyDownloads() {
-        synchronized(lock) {
-            cachedRecords = emptyList()
-            isCacheLoaded = true
-        }
-        dispatchRecordsChanged()
-
         val databasePath = context.getDatabasePath(LEGACY_DATABASE_NAME)
         if (!databasePath.exists()) {
             return
@@ -97,6 +94,7 @@ class LegacyDownloadStoreReader(private val context: Context) {
                 )
             } catch (exception: Exception) {
                 Log.e(TAG, "Failed to open legacy DB for delete-all", exception)
+                dispatchRecordsChanged()
                 return@execute
             }
 
@@ -199,26 +197,15 @@ class LegacyDownloadStoreReader(private val context: Context) {
         }
     }
 
-    private fun removeLegacyRecordFromCache(videoId: String) {
-        synchronized(lock) {
-            if (cachedRecords.isEmpty()) {
-                return
-            }
-
-            cachedRecords = cachedRecords.filterNot { it.assetId == videoId }
-            isCacheLoaded = true
-        }
-    }
-
     private fun dispatchRecordsChanged() {
         onRecordsChanged?.invoke()
     }
 
     private fun mapLegacyState(rawState: String?): DownloadState {
         return when (rawState?.uppercase()) {
-            "DOWNLOADING" -> DownloadState.DOWNLOADING
-            "PAUSE" -> DownloadState.PAUSED
-            "COMPLETE" -> DownloadState.COMPLETED
+            "DOWNLOADING", "QUEUED", "RESTARTING" -> DownloadState.DOWNLOADING
+            "PAUSE", "PAUSED", "STOPPED" -> DownloadState.PAUSED
+            "COMPLETE", "COMPLETED" -> DownloadState.COMPLETED
             "FAILED" -> DownloadState.FAILED
             else -> DownloadState.NOT_DOWNLOADED
         }
@@ -243,5 +230,15 @@ class LegacyDownloadStoreReader(private val context: Context) {
         private const val TAG = "LegacyDownloadStore"
         private const val LEGACY_DATABASE_NAME = "tpStreams-database"
         private const val LEGACY_ASSET_TABLE = "Asset"
+    }
+}
+
+private fun String.isLikelyDownloadIdUrl(): Boolean {
+    if (isBlank()) return false
+    return try {
+        val parsed = Uri.parse(this)
+        !parsed.scheme.isNullOrBlank()
+    } catch (_: Exception) {
+        false
     }
 }
