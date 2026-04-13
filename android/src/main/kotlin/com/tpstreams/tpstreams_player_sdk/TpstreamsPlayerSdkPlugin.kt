@@ -29,11 +29,11 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
   }
 
   override fun initialize(provider: PROVIDER, orgCode: String) {
-    if (provider == PROVIDER.TESTPRESS) {
-      TPStreamsSDK.init(orgCode, TPStreamsSDK.Provider.TestPress)
-    } else {
-      TPStreamsSDK.init(orgCode)
+    val sdkProvider = when (provider) {
+      PROVIDER.TESTPRESS -> TPStreamsSDK.Provider.TestPress
+      PROVIDER.TPSTREAMS -> TPStreamsSDK.Provider.TPStreams
     }
+    TPStreamsSDK.init(orgCode, sdkProvider)
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
