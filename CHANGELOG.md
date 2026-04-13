@@ -118,3 +118,9 @@
 
 ### Fixes
 - Bug fixes and code optimization
+
+## 2.2.16-beta.3
+
+### Features
+- Restored multi-provider support for TPStreams and Testpress backends in Android.
+- Updated Android native SDK dependency to v1.1.12.
