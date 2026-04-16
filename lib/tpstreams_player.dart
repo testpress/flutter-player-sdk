@@ -75,12 +75,21 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: Colors.black,
-        child: AspectRatio(
-          aspectRatio: widget.aspectRatio,
-          child: _buildPlatformView(),
+    return WillPopScope(
+      onWillPop: () async {
+        if (_controller?.value.isFullScreen ?? false) {
+          _controller?.exitFullScreen();
+          return false;
+        }
+        return true;
+      },
+      child: SafeArea(
+        child: Container(
+          color: Colors.black,
+          child: AspectRatio(
+            aspectRatio: widget.aspectRatio,
+            child: _buildPlatformView(),
+          ),
         ),
       ),
     );
