@@ -124,3 +124,11 @@
 ### Features
 - Restored multi-provider support for TPStreams and Testpress backends in Android.
 - Updated Android native SDK dependency to v1.1.12.
+
+## 2.2.16
+
+### Features
+- Revamped player UI for improved usability and visual consistency.
+
+### Bug Fixes
+- Bug fixes and code optimization.
