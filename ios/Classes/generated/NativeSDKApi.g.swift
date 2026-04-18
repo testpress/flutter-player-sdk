@@ -111,7 +111,7 @@ class NativeSDKApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable 
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol NativeSDKApi {
-  func initialize(provider: PROVIDER, orgCode: String) throws
+  func initialize(provider: PROVIDER, orgCode: String, authToken: String?) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -126,8 +126,9 @@ class NativeSDKApiSetup {
         let args = message as! [Any?]
         let providerArg = args[0] as! PROVIDER
         let orgCodeArg = args[1] as! String
+        let authTokenArg: String? = nilOrValue(args[2])
         do {
-          try api.initialize(provider: providerArg, orgCode: orgCodeArg)
+          try api.initialize(provider: providerArg, orgCode: orgCodeArg, authToken: authTokenArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))

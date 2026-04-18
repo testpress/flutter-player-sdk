@@ -16,7 +16,9 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
-    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {}
+    func startDownload(assetId: String, accessToken: String?, metadata: [String: String]?) throws {
+        downloadManager.startDownload(assetId, accessToken: accessToken)
+    }
     
     func cancelDownload(asset: DownloadAsset) throws {
         downloadManager.cancelDownload(asset.assetId)

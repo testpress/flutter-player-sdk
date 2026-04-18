@@ -26,7 +26,7 @@ class TPStreamPlayer extends StatefulWidget {
   TPStreamPlayer({
     super.key,
     required this.assetId,
-    required this.accessToken,
+    this.accessToken,
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
     this.showDownloadOption = false,
@@ -173,3 +173,6 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     super.dispose();
   }
 }
+
+
+typedef TestpressPlayer = TPStreamPlayer;

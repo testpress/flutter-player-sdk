@@ -165,7 +165,7 @@ class NativeDownloadManagerApi {
     }
   }
 
-  Future<void> startDownload(String assetId, String accessToken, Map<String, String>? metadata) async {
+  Future<void> startDownload(String assetId, String? accessToken, Map<String, String>? metadata) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
