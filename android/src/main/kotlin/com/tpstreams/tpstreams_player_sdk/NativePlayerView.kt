@@ -165,7 +165,8 @@ class NativePlayerView(
             return
         }
 
-        playerView = TPStreamsPlayerView(context)
+        val themedContext = android.view.ContextThemeWrapper(activity, androidx.appcompat.R.style.Theme_AppCompat_NoActionBar)
+        playerView = TPStreamsPlayerView(themedContext)
         playerView?.layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
