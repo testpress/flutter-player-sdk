@@ -18,14 +18,7 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     }
     
     func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {
-        var topVc = (UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap { $0.windows }
-            .first { $0.isKeyWindow })?.rootViewController
-
-        while let presented = topVc?.presentedViewController {
-            topVc = presented
-        }
+        let topVc = UIViewController.topMostViewController()
 
         downloadManager.startDownload(
             assetID: assetId,

@@ -101,8 +101,8 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 final downloadManager = TPStreamsDownloadManager();
                 downloadManager.startDownload(
-                  '57gHcHDBxKX',
-                  '5e28479d-69d8-41c7-9664-79b7eb8f1f95',
+                videos[0].assetId,
+                videos[0].accessToken,
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
