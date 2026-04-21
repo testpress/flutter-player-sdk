@@ -17,7 +17,7 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
-    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) {
+    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {
         var topVc = (UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap { $0.windows }
