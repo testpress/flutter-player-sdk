@@ -1,6 +1,7 @@
 import TPStreamsSDK
 import Foundation
 import Flutter
+import UIKit
 
 class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadManagerApi, TPStreamsDownloadDelegate {
     private let downloadManager = TPStreamsDownloadManager.shared
@@ -16,7 +17,16 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
         return downloadManager.getAllOfflineAssets().map { mapOfflineAssetToDownloadAsset($0) }
     }
     
-    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {}
+    func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {
+        let topVc = getTopMostViewController()
+
+        downloadManager.startDownload(
+            assetID: assetId,
+            accessToken: accessToken,
+            metadata: metadata,
+            presentingViewController: topVc
+        )
+    }
     
     func cancelDownload(asset: DownloadAsset) throws {
         downloadManager.cancelDownload(asset.assetId)
@@ -114,6 +124,26 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     func dispose() {
         eventSink?.endOfStream()
         eventSink = nil
+    }
+
+    private func getTopMostViewController() -> UIViewController? {
+        var topVc = (UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow })?.rootViewController
+
+        while let current = topVc {
+            if let nav = current as? UINavigationController {
+                topVc = nav.visibleViewController
+            } else if let tab = current as? UITabBarController {
+                topVc = tab.selectedViewController
+            } else if let presented = current.presentedViewController {
+                topVc = presented
+            } else {
+                break
+            }
+        }
+        return topVc
     }
 
     deinit {

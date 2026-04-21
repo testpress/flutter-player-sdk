@@ -97,6 +97,22 @@ class _HomePageState extends State<HomePage> {
               },
               child: const Text('Downloads'),
             ),
+            ElevatedButton(
+              onPressed: () {
+                final downloadManager = TPStreamsDownloadManager();
+                downloadManager.startDownload(
+                videos[0].assetId,
+                videos[0].accessToken,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Download started'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('Start Download via API'),
+            ),
           ],
         ),
       ),
