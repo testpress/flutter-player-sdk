@@ -18,7 +18,7 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     }
     
     func startDownload(assetId: String, accessToken: String, metadata: [String: String]?) throws {
-        let topVc = UIViewController.topMostViewController()
+        let topVc = getTopMostViewController()
 
         downloadManager.startDownload(
             assetID: assetId,
@@ -124,6 +124,26 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
     func dispose() {
         eventSink?.endOfStream()
         eventSink = nil
+    }
+
+    private func getTopMostViewController() -> UIViewController? {
+        var topVc = (UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow })?.rootViewController
+
+        while let current = topVc {
+            if let nav = current as? UINavigationController {
+                topVc = nav.visibleViewController
+            } else if let tab = current as? UITabBarController {
+                topVc = tab.selectedViewController
+            } else if let presented = current.presentedViewController {
+                topVc = presented
+            } else {
+                break
+            }
+        }
+        return topVc
     }
 
     deinit {
