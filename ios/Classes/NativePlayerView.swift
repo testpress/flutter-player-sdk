@@ -20,10 +20,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
  
     private let initializationListener: NativePlayerInitializationListener
     private let playerListener: NativePlayerListener
-    private let messenger: FlutterBinaryMessenger
     private var currentItemChangeObservation: NSKeyValueObservation!
-    private var isObservingPlayerStatus = false
-    private var observedItem: AVPlayerItem?
+    private var isInitialized = false
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -49,7 +47,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             }
         }
         self.viewId = viewId
-        self.messenger = messenger
         initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         
@@ -108,54 +105,33 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         playerViewController?.delegate = self
     }
  
-      private func observeCurrentItemChanges(){
-          currentItemChangeObservation = player.observe(\.currentItem, options: [.initial, .new]) { [weak self] (player, _) in
-              guard let self = self else { return }
-              self.observePlayerBufferingStatusChange()
-              self.observeVideoEnd()
-              self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: handleFlutterCallResult)
-          }
-      }
-      
-      private func observePlayerStatusChange(){
-          guard !isObservingPlayerStatus else { return }
-          player.addObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus), options: .new, context: nil)
-          isObservingPlayerStatus = true
-      }
-          
-      private func observePlayerBufferingStatusChange(){
-          guard let item = player.currentItem, item !== observedItem else { return }
-          
-          removeCurrentItemObservers()
-          
-          item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), options: .new, context: nil)
-          item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty), options: .new, context: nil)
-          item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.status), options: .new, context: nil)
-          observedItem = item
-      }
-      
-      private func observeVideoEnd(){
-          NotificationCenter.default.addObserver(self, selector:#selector(self.playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
-      }
+     private func observeCurrentItemChanges(){
+         // We're asynchronously setting the `currentItem` in the TPAVPlayer once the asset is fetched via network.
+         // So we adding observers on `currentItem` once it has been set.
+         
+         currentItemChangeObservation = player.observe(\.currentItem, options: [.initial, .new]) { [weak self] (player, _) in
+             guard let self = self else { return }
+             self.observePlayerBufferingStatusChange()
+             if !self.isInitialized {
+                 self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: self.handleFlutterCallResult)
+                 self.isInitialized = true
+             }
+         }
+     }
+     
+     private func observePlayerStatusChange(){
+         player.addObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus), options: .new, context: nil)
+     }
+         
+     private func observePlayerBufferingStatusChange(){
+         guard let item = player.currentItem else { return }
+         item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp), options: .new, context: nil)
+         item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty), options: .new, context: nil)
+         item.addObserver(self, forKeyPath: #keyPath(AVPlayerItem.status), options: .new, context: nil)
+         NotificationCenter.default.addObserver(self, selector:#selector(self.playerDidFinishPlaying), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
+     }
  
-    @objc private func playerDidFinishPlaying() { playerState = .ended }
-    
-    private func handleBufferStatusChange(of playerItem: AVPlayerItem, keyPath: String) {
-        switch keyPath {
-        case #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
-            if playerItem.isPlaybackBufferEmpty {
-                playerState = .buffering
-            }
-        case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp):
-            if playerItem.isPlaybackLikelyToKeepUp {
-                playerState = .ready
-            }
-        default:
-            break
-        }
-    }
-
-     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
         guard let keyPath = keyPath else { return }
         
         switch keyPath {
@@ -178,6 +154,24 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             break
         }
     }
+ 
+    @objc private func playerDidFinishPlaying() { playerState = .ended }
+
+     private func handleBufferStatusChange(of playerItem: AVPlayerItem, keyPath: String) {
+         switch keyPath {
+         case #keyPath(AVPlayerItem.isPlaybackBufferEmpty):
+             if playerItem.isPlaybackBufferEmpty {
+                 playerState = .buffering
+             }
+         case #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp):
+             if playerItem.isPlaybackLikelyToKeepUp {
+                 playerState = .ready
+             }
+         default:
+             break
+         }
+     }
+
         
     func play() throws {
         player.play()
@@ -243,19 +237,13 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func removeObservers() {
-        guard let player = player else { return }
+        guard player != nil else { return }
         currentItemChangeObservation?.invalidate()
         player.removeObserver(self, forKeyPath: #keyPath(TPAVPlayer.timeControlStatus))
-        removeCurrentItemObservers()
-    }
-
-    private func removeCurrentItemObservers() {
-        guard let item = observedItem else { return }
-        item.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp))
-        item.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty))
-        item.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: item)
-        observedItem = nil
+        player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp))
+        player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferEmpty))
+        player.currentItem?.removeObserver(self, forKeyPath: #keyPath(AVPlayerItem.status))
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: player.currentItem)
     }
 
     private func handleFlutterCallResult(_ result: Result<Void, PigeonError>) {
