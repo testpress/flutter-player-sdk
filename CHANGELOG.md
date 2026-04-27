@@ -132,3 +132,7 @@
 
 ### Bug Fixes
 - Bug fixes and code optimization.
+
+## 2.2.17
+- Added the missing Start Download API implementation on iOS.
+- Fixed an audio leak issue occurring after player disposal on iOS.
