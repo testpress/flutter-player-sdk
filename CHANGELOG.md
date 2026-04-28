@@ -136,3 +136,9 @@
 ## 2.2.17
 - Added the missing Start Download API implementation on iOS.
 - Fixed an audio leak issue occurring after player disposal on iOS.
+
+## 2.2.18
+- Added global JWT authentication support for Testpress.
+- Made `accessToken` optional (falls back to global `authToken`).
+- Restored `TestpressSDK` and `TestpressPlayer` wrappers.
+- Fixed native compilation and stability issues.
