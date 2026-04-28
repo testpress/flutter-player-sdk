@@ -118,8 +118,9 @@ class NativePlayerView(
                 return
             }
         } else if (accessToken.isNullOrEmpty() && !hasCompletedDownload) {
-            notifyFlutterPlayerInitialized("Missing accessToken")
-            return
+            // For Testpress, accessToken is optional if authToken was provided during initialization.
+            // We'll pass an empty string and let the SDK handle it.
+            Log.d("NativePlayerView", "AccessToken is empty, relying on global authToken if available")
         }
 
         val showDownloadOption = creationParams?.get("showDownloadOption") as? Boolean ?: false
@@ -164,7 +165,8 @@ class NativePlayerView(
             return
         }
 
-        playerView = TPStreamsPlayerView(context)
+        val themedContext = android.view.ContextThemeWrapper(activity, androidx.appcompat.R.style.Theme_AppCompat_NoActionBar)
+        playerView = TPStreamsPlayerView(themedContext)
         playerView?.layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT

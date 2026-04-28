@@ -17,6 +17,7 @@ class TPStreamsSDK {
   static void initialize({
     PROVIDER provider = PROVIDER.tpstreams,
     required String orgCode,
+    String? authToken,
   }) {
     if (orgCode.isEmpty) {
       throw Exception("Given OrgCode is empty, please pass a valid orgCode");
@@ -26,7 +27,7 @@ class TPStreamsSDK {
     _provider = provider;
 
     WidgetsFlutterBinding.ensureInitialized();
-    _nativeSdkApi.initialize(provider, orgCode);
+    _nativeSdkApi.initialize(provider, orgCode, authToken);
   }
 
   static String get orgCode {
@@ -40,4 +41,17 @@ class TPStreamsSDK {
   static bool get isInitialized => _orgCode != null;
 
   static PROVIDER? get provider => _provider;
+}
+
+class TestpressSDK {
+  static void initialize({
+    required String subdomain,
+    String? authToken,
+  }) {
+    TPStreamsSDK.initialize(
+      provider: PROVIDER.testpress,
+      orgCode: subdomain,
+      authToken: authToken,
+    );
+  }
 }

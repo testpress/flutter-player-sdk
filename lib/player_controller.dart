@@ -221,3 +221,5 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     super.dispose();
   }
 }
+
+typedef TestpressPlayerController = TPStreamsPlayerController;

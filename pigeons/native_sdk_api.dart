@@ -17,5 +17,5 @@ enum PROVIDER {
 
 @HostApi()
 abstract class NativeSDKApi {
-  void initialize(PROVIDER provider, String orgCode);
+  void initialize(PROVIDER provider, String orgCode, String? authToken);
 } 

@@ -80,7 +80,7 @@ private open class NativeSDKApiPigeonCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface NativeSDKApi {
-  fun initialize(provider: PROVIDER, orgCode: String)
+  fun initialize(provider: PROVIDER, orgCode: String, authToken: String?)
 
   companion object {
     /** The codec used by NativeSDKApi. */
@@ -98,8 +98,9 @@ interface NativeSDKApi {
             val args = message as List<Any?>
             val providerArg = args[0] as PROVIDER
             val orgCodeArg = args[1] as String
+            val authTokenArg = args[2] as String?
             val wrapped: List<Any?> = try {
-              api.initialize(providerArg, orgCodeArg)
+              api.initialize(providerArg, orgCodeArg, authTokenArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)
