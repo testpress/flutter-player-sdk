@@ -16,7 +16,7 @@ class TPStreamsDownloadManager {
     return _downloadsStream;
   }
 
-  Future<void> startDownload(String assetId, {String? accessToken, Map<String, String>? metadata}) {
+  Future<void> startDownload(String assetId, String? accessToken, [Map<String, String>? metadata]) {
     return _downloadManagerApi.startDownload(assetId, accessToken, metadata);
   }
 
