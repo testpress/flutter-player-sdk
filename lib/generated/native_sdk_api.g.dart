@@ -61,7 +61,7 @@ class NativeSDKApi {
 
   final String pigeonVar_messageChannelSuffix;
 
-  Future<void> initialize(PROVIDER provider, String orgCode) async {
+  Future<void> initialize(PROVIDER provider, String orgCode, String? authToken) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeSDKApi.initialize$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -69,7 +69,7 @@ class NativeSDKApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[provider, orgCode]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[provider, orgCode, authToken]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
