@@ -70,5 +70,5 @@ android {
 }
 
 dependencies {
-    implementation "com.github.testpress:TPStreamsAndroidPlayer:1.1.13"
+    implementation "com.github.testpress:TPStreamsAndroidPlayer:1.1.14"
 }
