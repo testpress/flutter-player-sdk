@@ -136,3 +136,11 @@
 ## 2.2.17
 - Added the missing Start Download API implementation on iOS.
 - Fixed an audio leak issue occurring after player disposal on iOS.
+
+## 2.2.18
+- Added global JWT-based authentication to simplify integration for Testpress users.
+- Kept playback and download APIs backward compatible while safely handling optional authentication parameters.
+
+## 2.2.19
+- Added support for pre-selected resolution in `startDownload` to skip the quality picker.
+- Updated Android native SDK dependency to 1.1.14.
