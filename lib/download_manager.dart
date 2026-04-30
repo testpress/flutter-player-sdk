@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:tpstreams_player_sdk/generated/native_download_manager_api.g.dart' as native_api;
+import 'package:tpstreams_player_sdk/generated/native_download_manager_api.g.dart'
+    as native_api;
 
 class TPStreamsDownloadManager {
   final _downloadManagerApi = native_api.NativeDownloadManagerApi();
-  final Stream<List<native_api.DownloadAsset>> _downloadsStream =
-      native_api.getDownloadsStream().map((event) => event.downloads).asBroadcastStream();
+  final Stream<List<native_api.DownloadAsset>> _downloadsStream = native_api
+      .getDownloadsStream()
+      .map((event) => event.downloads)
+      .asBroadcastStream();
 
   Future<List<native_api.DownloadAsset>> getAllDownloads() {
     return _downloadManagerApi.getAllDownloads();
@@ -16,8 +19,14 @@ class TPStreamsDownloadManager {
     return _downloadsStream;
   }
 
-  Future<void> startDownload(String assetId, {String? accessToken, Map<String, String>? metadata}) {
-    return _downloadManagerApi.startDownload(assetId, accessToken, metadata);
+  Future<void> startDownload(
+    String assetId,
+    String accessToken, [
+    Map<String, String>? metadata,
+    String? resolution,
+  ]) {
+    return _downloadManagerApi.startDownload(
+        assetId, accessToken, metadata, resolution);
   }
 
   Future<void> pauseDownload(native_api.DownloadAsset asset) {
