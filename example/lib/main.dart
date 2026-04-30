@@ -43,12 +43,15 @@ class _HomePageState extends State<HomePage> {
       (
         title: 'Watch Video 1',
         assetId: '57gHcHDBxKX',
-        accessToken: '5e28479d-69d8-41c7-9664-79b7eb8f1f95'
+        accessToken: '5e28479d-69d8-41c7-9664-79b7eb8f1f95',
+        resolution: '260p',
+
       ),
       (
         title: 'Watch Video 2', 
         assetId: '4P3nJXp2xFT',
-        accessToken: 'cde2c1a6-434d-4fd1-99f4-9e2024bf2576'
+        accessToken: 'cde2c1a6-434d-4fd1-99f4-9e2024bf2576',
+        resolution: '720p',
       ),
     ];
 
@@ -101,8 +104,10 @@ class _HomePageState extends State<HomePage> {
               onPressed: () {
                 final downloadManager = TPStreamsDownloadManager();
                 downloadManager.startDownload(
-                videos[0].assetId,
-                videos[0].accessToken,
+                  videos[0].assetId,
+                  videos[0].accessToken,
+                  null,
+                  videos[0].resolution,
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

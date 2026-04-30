@@ -165,7 +165,7 @@ var nativeDownloadManagerApiPigeonMethodCodec = FlutterStandardMethodCodec(reade
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol NativeDownloadManagerApi {
   func getAllDownloads() throws -> [DownloadAsset]
-  func startDownload(assetId: String, accessToken: String?, metadata: [String: String]?) throws
+  func startDownload(assetId: String, accessToken: String?, metadata: [String: String]?, resolution: String?) throws
   func cancelDownload(asset: DownloadAsset) throws
   func resumeDownload(asset: DownloadAsset) throws
   func deleteDownload(asset: DownloadAsset) throws
@@ -200,8 +200,9 @@ class NativeDownloadManagerApiSetup {
         let assetIdArg = args[0] as! String
         let accessTokenArg: String? = nilOrValue(args[1])
         let metadataArg: [String: String]? = nilOrValue(args[2])
+        let resolutionArg: String? = nilOrValue(args[3])
         do {
-          try api.startDownload(assetId: assetIdArg, accessToken: accessTokenArg, metadata: metadataArg)
+          try api.startDownload(assetId: assetIdArg, accessToken: accessTokenArg, metadata: metadataArg, resolution: resolutionArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))

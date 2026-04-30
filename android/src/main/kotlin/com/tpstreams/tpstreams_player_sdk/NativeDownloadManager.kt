@@ -99,8 +99,8 @@ class NativeDownloadManager(
         return currentDownloads + legacyDownloads
     }
 
-    override fun startDownload(assetId: String, accessToken: String?, metadata: Map<String, String>?) {
-        downloadClient.startDownload(activity, assetId, accessToken ?: "", null, metadata ?: emptyMap())
+    override fun startDownload(assetId: String, accessToken: String?, metadata: Map<String, String>?, resolution: String?) {
+        downloadClient.startDownload(activity, assetId, accessToken ?: "", resolution, metadata)
         notifyDownloadsChange()
     }
 

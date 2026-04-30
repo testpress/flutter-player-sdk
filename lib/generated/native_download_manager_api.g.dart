@@ -165,7 +165,7 @@ class NativeDownloadManagerApi {
     }
   }
 
-  Future<void> startDownload(String assetId, String? accessToken, Map<String, String>? metadata) async {
+  Future<void> startDownload(String assetId, String? accessToken, Map<String, String>? metadata, String? resolution) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -173,7 +173,7 @@ class NativeDownloadManagerApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[assetId, accessToken, metadata]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[assetId, accessToken, metadata, resolution]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
