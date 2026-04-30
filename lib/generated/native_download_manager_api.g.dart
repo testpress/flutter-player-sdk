@@ -85,6 +85,7 @@ class DownloadsUpdateEvent {
   }
 }
 
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -92,13 +93,13 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is DownloadState) {
+    }    else if (value is DownloadState) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is DownloadAsset) {
+    }    else if (value is DownloadAsset) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    } else if (value is DownloadsUpdateEvent) {
+    }    else if (value is DownloadsUpdateEvent) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
     } else {
@@ -109,12 +110,12 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 129:
+      case 129: 
         final int? value = readValue(buffer) as int?;
         return value == null ? null : DownloadState.values[value];
-      case 130:
+      case 130: 
         return DownloadAsset.decode(readValue(buffer)!);
-      case 131:
+      case 131: 
         return DownloadsUpdateEvent.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -122,18 +123,15 @@ class _PigeonCodec extends StandardMessageCodec {
   }
 }
 
-const StandardMethodCodec pigeonMethodCodec =
-    StandardMethodCodec(_PigeonCodec());
+const StandardMethodCodec pigeonMethodCodec = StandardMethodCodec(_PigeonCodec());
 
 class NativeDownloadManagerApi {
   /// Constructor for [NativeDownloadManagerApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  NativeDownloadManagerApi(
-      {BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+  NativeDownloadManagerApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
       : pigeonVar_binaryMessenger = binaryMessenger,
-        pigeonVar_messageChannelSuffix =
-            messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -141,10 +139,8 @@ class NativeDownloadManagerApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<List<DownloadAsset>> getAllDownloads() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.getAllDownloads$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.getAllDownloads$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -169,19 +165,15 @@ class NativeDownloadManagerApi {
     }
   }
 
-  Future<void> startDownload(String assetId, String accessToken,
-      Map<String, String>? metadata, String? resolution) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+  Future<void> startDownload(String assetId, String accessToken, Map<String, String>? metadata, String? resolution) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.startDownload$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final List<Object?>? pigeonVar_replyList = await pigeonVar_channel
-            .send(<Object?>[assetId, accessToken, metadata, resolution])
-        as List<Object?>?;
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[assetId, accessToken, metadata, resolution]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
@@ -196,10 +188,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> cancelDownload(DownloadAsset asset) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.cancelDownload$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.cancelDownload$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -220,10 +210,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> resumeDownload(DownloadAsset asset) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.resumeDownload$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.resumeDownload$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -244,10 +232,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> deleteDownload(DownloadAsset asset) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteDownload$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteDownload$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -268,10 +254,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> pauseDownload(DownloadAsset asset) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.pauseDownload$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.pauseDownload$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -292,10 +276,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> deleteAllDownloads() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteAllDownloads$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.deleteAllDownloads$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -316,10 +298,8 @@ class NativeDownloadManagerApi {
   }
 
   Future<void> dispose() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.dispose$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativeDownloadManagerApi.dispose$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -340,16 +320,14 @@ class NativeDownloadManagerApi {
   }
 }
 
-Stream<DownloadsUpdateEvent> getDownloadsStream({String instanceName = ''}) {
+Stream<DownloadsUpdateEvent> getDownloadsStream( {String instanceName = ''}) {
   if (instanceName.isNotEmpty) {
     instanceName = '.$instanceName';
   }
-  final EventChannel getDownloadsStreamChannel = EventChannel(
-      'dev.flutter.pigeon.tpstreams_player_sdk.DownloadStreamApi.getDownloadsStream$instanceName',
-      pigeonMethodCodec);
-  return getDownloadsStreamChannel
-      .receiveBroadcastStream()
-      .map((dynamic event) {
+  final EventChannel getDownloadsStreamChannel =
+      EventChannel('dev.flutter.pigeon.tpstreams_player_sdk.DownloadStreamApi.getDownloadsStream$instanceName', pigeonMethodCodec);
+  return getDownloadsStreamChannel.receiveBroadcastStream().map((dynamic event) {
     return event as DownloadsUpdateEvent;
   });
 }
+    
