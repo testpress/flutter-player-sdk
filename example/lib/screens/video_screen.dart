@@ -150,4 +150,4 @@ class _VideoScreenState extends State<VideoScreen> {
     _controller.removeListener(_onPlayerValueChanged);
     super.dispose();
   }
-} 
+}

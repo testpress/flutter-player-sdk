@@ -107,7 +107,7 @@ class _HomePageState extends State<HomePage> {
                   videos[0].assetId,
                   videos[0].accessToken,
                   null,
-                  videos[0].resolution
+                  videos[0].resolution,
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

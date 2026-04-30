@@ -15,8 +15,8 @@ class TPStreamsDownloadManager {
     return _downloadsStream;
   }
 
-  Future<void> startDownload(String assetId, {String? accessToken, Map<String, String>? metadata, String? resolution}) {
-    return _downloadManagerApi.startDownload( assetId, accessToken ?? '', metadata, resolution);
+  Future<void> startDownload(String assetId, [String? accessToken, Map<String, String>? metadata, String? resolution]) {
+    return _downloadManagerApi.startDownload(assetId, accessToken, metadata, resolution);
   }
 
   Future<void> pauseDownload(native_api.DownloadAsset asset) {

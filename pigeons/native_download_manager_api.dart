@@ -47,7 +47,7 @@ class DownloadsUpdateEvent {
 @HostApi()
 abstract class NativeDownloadManagerApi {
   List<DownloadAsset> getAllDownloads();
-  void startDownload(String assetId, String accessToken,
+  void startDownload(String assetId, String? accessToken,
       Map<String, String>? metadata, String? resolution);
   void cancelDownload(DownloadAsset asset);
   void resumeDownload(DownloadAsset asset);
