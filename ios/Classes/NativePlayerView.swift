@@ -56,6 +56,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
         configurePlayerViewController(args: args)
         
+        if let player = player, player.currentItem != nil && !isInitialized {
+            isInitialized = true
+            initializationListener.onNativePlayerCreated(platformViewId: viewId, completion: handleFlutterCallResult)
+        }
         self.observePlayerStatusChange()
         self.observeCurrentItemChanges()
     }
@@ -107,9 +111,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
  
      private func observeCurrentItemChanges(){
-         // We're asynchronously setting the `currentItem` in the TPAVPlayer once the asset is fetched via network.
-         // So we adding observers on `currentItem` once it has been set.
-         
+         // Register KVO to detect currentItem changes (for async online playback)
          currentItemChangeObservation = player.observe(\.currentItem, options: [.new]) { [weak self] (player, _) in
              guard let self = self else { return }
              self.observePlayerBufferingStatusChange()
@@ -117,11 +119,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                  self.initializationListener.onNativePlayerCreated(platformViewId: self.viewId, completion: self.handleFlutterCallResult)
                  self.isInitialized = true
              }
-         }
-         if player.currentItem != nil && !isInitialized {
-             observePlayerBufferingStatusChange()
-             isInitialized = true
-             initializationListener.onNativePlayerCreated(platformViewId: viewId, completion: handleFlutterCallResult)
          }
      }
      
