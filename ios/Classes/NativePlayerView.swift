@@ -119,6 +119,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
              }
          }
          if player.currentItem != nil && !isInitialized {
+             observePlayerBufferingStatusChange()
              isInitialized = true
              initializationListener.onNativePlayerCreated(platformViewId: viewId, completion: handleFlutterCallResult)
          }
