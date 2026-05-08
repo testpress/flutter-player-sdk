@@ -144,3 +144,6 @@
 ## 2.2.19
 - Added support for pre-selected resolution in `startDownload` to skip the quality picker.
 - Updated Android native SDK dependency to 1.1.14.
+
+## 2.2.20
+- Fixed an issue on iOS where the onPlayerCreated callback was not triggered for offline playback when currentItem was initialized before KVO observer registration.
