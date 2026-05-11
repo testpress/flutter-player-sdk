@@ -147,3 +147,6 @@
 
 ## 2.2.20
 - Fixed an issue on iOS where the onPlayerCreated callback was not triggered for offline playback when currentItem was initialized before KVO observer registration.
+
+## 2.2.21
+- Update TPStreams Android Player to 1.1.16 for improved fullscreen playback stability.
