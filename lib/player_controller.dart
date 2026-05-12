@@ -113,7 +113,9 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Exit fullscreen mode
   Future<void> exitFullScreen() => _nativeApi.exitFullScreen();
 
-  /// This setting is per-player instance and can be changed at any time during playback.
+  /// Enables or disables automatic fullscreen mode when the device is rotated.
+  /// Android: When enabled, the player will automatically enter fullscreen on landscape rotation and exit on portrait rotation.
+  /// iOS: Currently a no-op (the setting is ignored).
   Future<void> setAutoFullscreenOnRotateEnabled(bool enabled) =>
       _nativeApi.setAutoFullscreenOnRotateEnabled(enabled);
 
