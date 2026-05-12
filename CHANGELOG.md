@@ -150,3 +150,7 @@
 
 ## 2.2.21
 - Update TPStreams Android Player to 1.1.16 for improved fullscreen playback stability.
+
+## 2.2.22
+- Fix layout gaps and rotation issues by removing the internal SafeArea handling
+- Add public API to control auto fullscreen on device rotation
