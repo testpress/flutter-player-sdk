@@ -48,7 +48,7 @@ class _VideoScreenState extends State<VideoScreen> {
               onPlayerCreated: (controller) {
                 _controller = controller;
                 _controller.setMaxResolution(240);
-                _controller.setAutoFullscreenOnRotateEnabled(true);
+                _controller.enableAutoFullscreenOnRotate();
                 _controller.onBeforeFullScreenEnter = () {
                   print('Will enter fullscreen');
                 };

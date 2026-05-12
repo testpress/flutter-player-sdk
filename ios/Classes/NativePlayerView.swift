@@ -237,9 +237,14 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         playerViewController?.exitFullScreen()
     }
 
-    func setAutoFullscreenOnRotateEnabled(enabled: Bool) throws {
-        // No-op: iOS SDK uses viewWillTransition which doesn't fire in Flutter's texture
-        NSLog("setAutoFullscreenOnRotateEnabled is currently not supported on iOS and will be ignored.")
+    func enableAutoFullscreenOnRotate() throws {
+        // No-op: iOS SDK handles auto fullscreen internally
+        NSLog("enableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
+    }
+
+    func disableAutoFullscreenOnRotate() throws {
+        // No-op: iOS SDK handles auto fullscreen internally
+        NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
     }
 
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {

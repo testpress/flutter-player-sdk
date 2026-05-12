@@ -79,7 +79,8 @@ protocol NativePlayerApi {
   func setMaxResolution(resolution: Int64) throws
   func enterFullScreen() throws
   func exitFullScreen() throws
-  func setAutoFullscreenOnRotateEnabled(enabled: Bool) throws
+  func enableAutoFullscreenOnRotate() throws
+  func disableAutoFullscreenOnRotate() throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -239,20 +240,31 @@ class NativePlayerApiSetup {
     } else {
       exitFullScreenChannel.setMessageHandler(nil)
     }
-    let setAutoFullscreenOnRotateEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setAutoFullscreenOnRotateEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let enableAutoFullscreenOnRotateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.enableAutoFullscreenOnRotate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      setAutoFullscreenOnRotateEnabledChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let enabledArg = args[0] as! Bool
+      enableAutoFullscreenOnRotateChannel.setMessageHandler { _, reply in
         do {
-          try api.setAutoFullscreenOnRotateEnabled(enabled: enabledArg)
+          try api.enableAutoFullscreenOnRotate()
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      setAutoFullscreenOnRotateEnabledChannel.setMessageHandler(nil)
+      enableAutoFullscreenOnRotateChannel.setMessageHandler(nil)
+    }
+    let disableAutoFullscreenOnRotateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.disableAutoFullscreenOnRotate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      disableAutoFullscreenOnRotateChannel.setMessageHandler { _, reply in
+        do {
+          try api.disableAutoFullscreenOnRotate()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      disableAutoFullscreenOnRotateChannel.setMessageHandler(nil)
     }
   }
 }
