@@ -87,13 +87,11 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
         }
         return true;
       },
-      child: SafeArea(
-        child: Container(
-          color: Colors.black,
-          child: AspectRatio(
-            aspectRatio: widget.aspectRatio,
-            child: _buildPlatformView(),
-          ),
+      child: Container(
+        color: Colors.black,
+        child: AspectRatio(
+          aspectRatio: widget.aspectRatio,
+          child: _buildPlatformView(),
         ),
       ),
     );
