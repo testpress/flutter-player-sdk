@@ -113,6 +113,17 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Exit fullscreen mode
   Future<void> exitFullScreen() => _nativeApi.exitFullScreen();
 
+  /// Enables or disables automatic fullscreen mode when the device is rotated to landscape.
+  /// Android: Player will automatically enter fullscreen on landscape rotation and exit on portrait rotation.
+  /// iOS: Currently a no-op.
+  Future<void> enableAutoFullscreenOnRotate() =>
+      _nativeApi.enableAutoFullscreenOnRotate();
+
+  /// Disables automatic fullscreen mode on device rotation.
+  /// iOS: Currently a no-op.
+  Future<void> disableAutoFullscreenOnRotate() =>
+      _nativeApi.disableAutoFullscreenOnRotate();
+
   /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();

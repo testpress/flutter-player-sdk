@@ -55,6 +55,8 @@ interface NativePlayerApi {
   fun setMaxResolution(resolution: Long)
   fun enterFullScreen()
   fun exitFullScreen()
+  fun enableAutoFullscreenOnRotate()
+  fun disableAutoFullscreenOnRotate()
 
   companion object {
     /** The codec used by NativePlayerApi. */
@@ -237,6 +239,38 @@ interface NativePlayerApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.exitFullScreen()
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.enableAutoFullscreenOnRotate$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.enableAutoFullscreenOnRotate()
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.disableAutoFullscreenOnRotate$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.disableAutoFullscreenOnRotate()
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

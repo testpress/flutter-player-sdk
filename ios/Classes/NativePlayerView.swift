@@ -237,6 +237,16 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         playerViewController?.exitFullScreen()
     }
 
+    func enableAutoFullscreenOnRotate() throws {
+        // No-op: iOS SDK handles auto fullscreen internally
+        NSLog("enableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
+    }
+
+    func disableAutoFullscreenOnRotate() throws {
+        // No-op: iOS SDK handles auto fullscreen internally
+        NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
+    }
+
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
             playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)

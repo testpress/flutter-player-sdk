@@ -28,4 +28,6 @@ abstract class NativePlayerApi {
   void setMaxResolution(int resolution);
   void enterFullScreen();
   void exitFullScreen();
-} 
+  void enableAutoFullscreenOnRotate();
+  void disableAutoFullscreenOnRotate();
+}

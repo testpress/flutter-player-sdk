@@ -263,6 +263,14 @@ class NativePlayerView(
         }
     }
 
+    override fun enableAutoFullscreenOnRotate() {
+        playerView?.setAutoFullscreenOnRotateEnabled(true)
+    }
+
+    override fun disableAutoFullscreenOnRotate() {
+        playerView?.setAutoFullscreenOnRotateEnabled(false)
+    }
+
     override fun resolveAccessToken(newAccessToken: String) {
         pendingTokenCallback?.invoke(newAccessToken)
         pendingTokenCallback = null
