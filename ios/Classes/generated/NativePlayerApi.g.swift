@@ -79,6 +79,7 @@ protocol NativePlayerApi {
   func setMaxResolution(resolution: Int64) throws
   func enterFullScreen() throws
   func exitFullScreen() throws
+  func setAutoFullscreenOnRotateEnabled(enabled: Bool) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -237,6 +238,21 @@ class NativePlayerApiSetup {
       }
     } else {
       exitFullScreenChannel.setMessageHandler(nil)
+    }
+    let setAutoFullscreenOnRotateEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setAutoFullscreenOnRotateEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setAutoFullscreenOnRotateEnabledChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let enabledArg = args[0] as! Bool
+        do {
+          try api.setAutoFullscreenOnRotateEnabled(enabled: enabledArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setAutoFullscreenOnRotateEnabledChannel.setMessageHandler(nil)
     }
   }
 }

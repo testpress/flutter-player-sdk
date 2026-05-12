@@ -113,6 +113,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Exit fullscreen mode
   Future<void> exitFullScreen() => _nativeApi.exitFullScreen();
 
+  /// This setting is per-player instance and can be changed at any time during playback.
+  Future<void> setAutoFullscreenOnRotateEnabled(bool enabled) =>
+      _nativeApi.setAutoFullscreenOnRotateEnabled(enabled);
+
   /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();
