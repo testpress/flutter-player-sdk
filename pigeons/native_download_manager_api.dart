@@ -25,6 +25,9 @@ class DownloadAsset {
   final String? title;
   final DownloadState state;
   final double progress;
+  final int totalSize;
+  final int downloadedSize;
+  final String? thumbnailUrl;
   final Map<String, String>? metadata;
 
   DownloadAsset({
@@ -32,6 +35,9 @@ class DownloadAsset {
     this.title,
     required this.state,
     required this.progress,
+    required this.totalSize,
+    required this.downloadedSize,
+    this.thumbnailUrl,
     this.metadata,
   });
 }

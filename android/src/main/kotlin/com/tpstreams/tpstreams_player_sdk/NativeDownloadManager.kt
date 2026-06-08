@@ -92,6 +92,9 @@ class NativeDownloadManager(
                     title = legacyRecord.title,
                     state = legacyRecord.state,
                     progress = legacyRecord.progress,
+                    totalSize = 0L,
+                    downloadedSize = 0L,
+                    thumbnailUrl = null,
                     metadata = legacyRecord.metadata
                 )
             }
@@ -180,6 +183,10 @@ class NativeDownloadManager(
         val metadataWithMigrationState = parsedMetadata.toMutableMap()
         var title = parseRequestTitle(requestJsonObject)
 
+        val totalSize = item.contentLength.coerceAtLeast(0L)
+        val downloadedSize = item.bytesDownloaded.coerceAtLeast(0L)
+        val thumbnailUrl = requestJsonObject?.optString("thumbnailUrl", null)?.takeIf { it.isNotEmpty() }
+
         if (legacyRecord != null) {
             metadataWithMigrationState.putAll(legacyRecord.metadata)
             if (migrationOrchestrator.isLegacyCandidate(title, metadataWithMigrationState)) {
@@ -192,6 +199,9 @@ class NativeDownloadManager(
             title = title,
             state = mapDownloadState(item.state),
             progress = computedProgress,
+            totalSize = totalSize,
+            downloadedSize = downloadedSize,
+            thumbnailUrl = thumbnailUrl,
             metadata = metadataWithMigrationState
         )
     }
