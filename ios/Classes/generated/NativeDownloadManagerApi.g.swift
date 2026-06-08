@@ -60,6 +60,9 @@ struct DownloadAsset {
   var title: String? = nil
   var state: DownloadState
   var progress: Double
+  var totalSize: Int64
+  var downloadedSize: Int64
+  var thumbnailUrl: String? = nil
   var metadata: [String: String]? = nil
 
 
@@ -69,13 +72,19 @@ struct DownloadAsset {
     let title: String? = nilOrValue(pigeonVar_list[1])
     let state = pigeonVar_list[2] as! DownloadState
     let progress = pigeonVar_list[3] as! Double
-    let metadata: [String: String]? = nilOrValue(pigeonVar_list[4])
+    let totalSize = pigeonVar_list[4] as! Int64
+    let downloadedSize = pigeonVar_list[5] as! Int64
+    let thumbnailUrl: String? = nilOrValue(pigeonVar_list[6])
+    let metadata: [String: String]? = nilOrValue(pigeonVar_list[7])
 
     return DownloadAsset(
       assetId: assetId,
       title: title,
       state: state,
       progress: progress,
+      totalSize: totalSize,
+      downloadedSize: downloadedSize,
+      thumbnailUrl: thumbnailUrl,
       metadata: metadata
     )
   }
@@ -85,6 +94,9 @@ struct DownloadAsset {
       title,
       state,
       progress,
+      totalSize,
+      downloadedSize,
+      thumbnailUrl,
       metadata,
     ]
   }

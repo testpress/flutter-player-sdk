@@ -29,6 +29,9 @@ class DownloadAsset {
     this.title,
     required this.state,
     required this.progress,
+    required this.totalSize,
+    required this.downloadedSize,
+    this.thumbnailUrl,
     this.metadata,
   });
 
@@ -40,6 +43,12 @@ class DownloadAsset {
 
   double progress;
 
+  int totalSize;
+
+  int downloadedSize;
+
+  String? thumbnailUrl;
+
   Map<String, String>? metadata;
 
   Object encode() {
@@ -48,6 +57,9 @@ class DownloadAsset {
       title,
       state,
       progress,
+      totalSize,
+      downloadedSize,
+      thumbnailUrl,
       metadata,
     ];
   }
@@ -59,7 +71,10 @@ class DownloadAsset {
       title: result[1] as String?,
       state: result[2]! as DownloadState,
       progress: result[3]! as double,
-      metadata: (result[4] as Map<Object?, Object?>?)?.cast<String, String>(),
+      totalSize: result[4]! as int,
+      downloadedSize: result[5]! as int,
+      thumbnailUrl: result[6] as String?,
+      metadata: (result[7] as Map<Object?, Object?>?)?.cast<String, String>(),
     );
   }
 }

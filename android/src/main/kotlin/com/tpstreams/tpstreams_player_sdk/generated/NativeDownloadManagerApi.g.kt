@@ -54,6 +54,9 @@ data class DownloadAsset (
   val title: String? = null,
   val state: DownloadState,
   val progress: Double,
+  val totalSize: Long,
+  val downloadedSize: Long,
+  val thumbnailUrl: String? = null,
   val metadata: Map<String, String>? = null
 )
  {
@@ -63,8 +66,11 @@ data class DownloadAsset (
       val title = pigeonVar_list[1] as String?
       val state = pigeonVar_list[2] as DownloadState
       val progress = pigeonVar_list[3] as Double
-      val metadata = pigeonVar_list[4] as Map<String, String>?
-      return DownloadAsset(assetId, title, state, progress, metadata)
+      val totalSize = pigeonVar_list[4] as Long
+      val downloadedSize = pigeonVar_list[5] as Long
+      val thumbnailUrl = pigeonVar_list[6] as String?
+      val metadata = pigeonVar_list[7] as Map<String, String>?
+      return DownloadAsset(assetId, title, state, progress, totalSize, downloadedSize, thumbnailUrl, metadata)
     }
   }
   fun toList(): List<Any?> {
@@ -73,6 +79,9 @@ data class DownloadAsset (
       title,
       state,
       progress,
+      totalSize,
+      downloadedSize,
+      thumbnailUrl,
       metadata,
     )
   }

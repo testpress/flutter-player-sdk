@@ -88,11 +88,19 @@ class NativeDownloadManager: GetDownloadsStreamStreamHandler, NativeDownloadMana
             return value as? String
         }
         
+        let sizeDouble = Double(asset.size)
+        let totalSize = sizeDouble.isFinite ? Int64(sizeDouble) : 0
+        let progress = asset.percentageCompleted.isFinite ? asset.percentageCompleted : 0.0
+        let downloadedSize = (sizeDouble.isFinite && progress.isFinite) ? Int64(sizeDouble * progress / 100.0) : 0
+        
         return DownloadAsset(
             assetId: asset.assetId,
             title: asset.title,
             state: mapDownloadState(Status(rawValue: asset.status)!),
-            progress: asset.percentageCompleted,
+            progress: progress,
+            totalSize: totalSize,
+            downloadedSize: downloadedSize,
+            thumbnailUrl: asset.thumbnailURL,
             metadata: metadata
         )
     }
