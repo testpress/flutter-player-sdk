@@ -154,3 +154,7 @@
 ## 2.2.22
 - Fix layout gaps and rotation issues by removing the internal SafeArea handling
 - Add public API to control auto fullscreen on device rotation
+
+## 2.2.23
+- Added totalSize and downloadedSize to DownloadAsset to support download progress calculation.
+- Added thumbnailUrl to DownloadAsset to support displaying asset thumbnails.
