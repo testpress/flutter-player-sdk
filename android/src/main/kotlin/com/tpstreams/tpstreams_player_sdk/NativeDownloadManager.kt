@@ -175,7 +175,8 @@ class NativeDownloadManager(
         val computedProgress = if (item.contentLength > 0L) {
             ((item.bytesDownloaded.toDouble() / item.contentLength.toDouble()) * 100.0).coerceIn(0.0, 100.0)
         } else {
-            item.percentDownloaded.toDouble().coerceIn(0.0, 100.0)
+            val percent = item.percentDownloaded.toDouble()
+            if (percent.isNaN() || percent.isInfinite()) 0.0 else percent.coerceIn(0.0, 100.0)
         }
 
         val requestJsonObject = parseRequestJsonObject(item)
@@ -185,7 +186,7 @@ class NativeDownloadManager(
 
         val totalSize = item.contentLength.coerceAtLeast(0L)
         val downloadedSize = item.bytesDownloaded.coerceAtLeast(0L)
-        val thumbnailUrl = requestJsonObject?.optString("thumbnailUrl", null)?.takeIf { it.isNotEmpty() }
+        val thumbnailUrl = requestJsonObject?.optString("thumbnailUrl")?.takeIf { it.isNotEmpty() && it != "null" }
 
         if (legacyRecord != null) {
             metadataWithMigrationState.putAll(legacyRecord.metadata)
