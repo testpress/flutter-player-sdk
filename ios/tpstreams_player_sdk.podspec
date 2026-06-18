@@ -13,7 +13,7 @@ A new Flutter plugin project.
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
+  s.source_files = 'tpstreams_player_sdk/Sources/tpstreams_player_sdk/**/*'
   s.dependency 'Flutter'
   s.dependency 'TPStreamsSDK', '1.2.29'
   s.platform = :ios, '12.0'

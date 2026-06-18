@@ -9,7 +9,7 @@ import 'package:pigeon/pigeon.dart';
     package: 'com.tpstreams.tpstreams_player_sdk',
     includeErrorClass: false,
   ),
-  swiftOut: 'ios/Classes/generated/NativeDownloadManagerApi.g.swift',
+  swiftOut: 'ios/tpstreams_player_sdk/Sources/tpstreams_player_sdk/generated/NativeDownloadManagerApi.g.swift',
   swiftOptions: SwiftOptions(includeErrorClass: false),
 ))
 enum DownloadState {
