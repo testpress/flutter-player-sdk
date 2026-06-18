@@ -49,3 +49,12 @@ build/
 *.swp
 
 coverage
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Flutter generated SPM framework (build artifact)
+/ios/FlutterFramework/
+Package.resolved
+

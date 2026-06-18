@@ -6,7 +6,7 @@ import 'package:pigeon/pigeon.dart';
   kotlinOptions: KotlinOptions(
     package: 'com.tpstreams.tpstreams_player_sdk',
   ),
-  swiftOut: 'ios/Classes/generated/NativeSDKApi.g.swift',
+  swiftOut: 'ios/tpstreams_player_sdk/Sources/tpstreams_player_sdk/generated/NativeSDKApi.g.swift',
   swiftOptions: SwiftOptions(),
 ))
 
