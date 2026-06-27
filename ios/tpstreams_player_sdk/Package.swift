@@ -8,7 +8,7 @@ let package = Package(
         .iOS("13.0")
     ],
     products: [
-        .library(name: "tpstreams_player_sdk", targets: ["tpstreams_player_sdk"])
+        .library(name: "tpstreams-player-sdk", targets: ["tpstreams_player_sdk"])
     ],
     dependencies: [
         .package(path: "../FlutterFramework"),
