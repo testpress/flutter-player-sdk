@@ -158,3 +158,9 @@
 ## 2.2.23
 - Added totalSize and downloadedSize to DownloadAsset to support download progress calculation.
 - Added thumbnailUrl to DownloadAsset to support displaying asset thumbnails.
+
+## 2.2.24
+
+- Migrated iOS dependency management from CocoaPods to Swift Package Manager (SPM) for faster and more reliable builds.
+- Updated iOS Player SDK to 1.2.34 with fixes for CocoaPods resource loading, initialization handling, and invalid playback URL reporting.
+
