@@ -2,7 +2,6 @@ group 'com.tpstreams.tpstreams_player_sdk'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
     repositories {
         google()
         mavenCentral()
@@ -10,24 +9,19 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:7.3.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
+
+apply plugin: 'com.android.library'
 
 rootProject.allprojects {
     repositories {
         mavenCentral()
         google()
         maven { url 'https://jitpack.io' }
-
-        maven {
-            url "https://github.com/testpress/maven/raw/main/repo"
-        }
+        maven { url "https://github.com/testpress/maven/raw/main/repo" }
     }
 }
-
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 android {
     namespace "com.tpstreams.tpstreams_player_sdk"
