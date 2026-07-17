@@ -46,10 +46,114 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   return value as! T?
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct WatermarkConfig {
+  var text: String? = nil
+  var textColor: Int64? = nil
+  var textSize: Double? = nil
+  var position: String? = nil
+  var xFraction: Double? = nil
+  var yFraction: Double? = nil
+  var margins: Double? = nil
+  var marginsLeft: Double? = nil
+  var marginsTop: Double? = nil
+  var marginsRight: Double? = nil
+  var marginsBottom: Double? = nil
+  var opacity: Double? = nil
+  var visibleDuringAds: Bool? = nil
+  var visibleWhenPaused: Bool? = nil
+  var elevation: Double? = nil
+  var pingPongFrom: String? = nil
+  var pingPongTo: String? = nil
+  var pingPongDurationMs: Int64? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> WatermarkConfig? {
+    let text: String? = nilOrValue(pigeonVar_list[0])
+    let textColor: Int64? = nilOrValue(pigeonVar_list[1])
+    let textSize: Double? = nilOrValue(pigeonVar_list[2])
+    let position: String? = nilOrValue(pigeonVar_list[3])
+    let xFraction: Double? = nilOrValue(pigeonVar_list[4])
+    let yFraction: Double? = nilOrValue(pigeonVar_list[5])
+    let margins: Double? = nilOrValue(pigeonVar_list[6])
+    let marginsLeft: Double? = nilOrValue(pigeonVar_list[7])
+    let marginsTop: Double? = nilOrValue(pigeonVar_list[8])
+    let marginsRight: Double? = nilOrValue(pigeonVar_list[9])
+    let marginsBottom: Double? = nilOrValue(pigeonVar_list[10])
+    let opacity: Double? = nilOrValue(pigeonVar_list[11])
+    let visibleDuringAds: Bool? = nilOrValue(pigeonVar_list[12])
+    let visibleWhenPaused: Bool? = nilOrValue(pigeonVar_list[13])
+    let elevation: Double? = nilOrValue(pigeonVar_list[14])
+    let pingPongFrom: String? = nilOrValue(pigeonVar_list[15])
+    let pingPongTo: String? = nilOrValue(pigeonVar_list[16])
+    let pingPongDurationMs: Int64? = nilOrValue(pigeonVar_list[17])
+
+    return WatermarkConfig(
+      text: text,
+      textColor: textColor,
+      textSize: textSize,
+      position: position,
+      xFraction: xFraction,
+      yFraction: yFraction,
+      margins: margins,
+      marginsLeft: marginsLeft,
+      marginsTop: marginsTop,
+      marginsRight: marginsRight,
+      marginsBottom: marginsBottom,
+      opacity: opacity,
+      visibleDuringAds: visibleDuringAds,
+      visibleWhenPaused: visibleWhenPaused,
+      elevation: elevation,
+      pingPongFrom: pingPongFrom,
+      pingPongTo: pingPongTo,
+      pingPongDurationMs: pingPongDurationMs
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      text,
+      textColor,
+      textSize,
+      position,
+      xFraction,
+      yFraction,
+      margins,
+      marginsLeft,
+      marginsTop,
+      marginsRight,
+      marginsBottom,
+      opacity,
+      visibleDuringAds,
+      visibleWhenPaused,
+      elevation,
+      pingPongFrom,
+      pingPongTo,
+      pingPongDurationMs,
+    ]
+  }
+}
+
 private class NativePlayerApiPigeonCodecReader: FlutterStandardReader {
+  override func readValue(ofType type: UInt8) -> Any? {
+    switch type {
+    case 129:
+      return WatermarkConfig.fromList(self.readValue() as! [Any?])
+    default:
+      return super.readValue(ofType: type)
+    }
+  }
 }
 
 private class NativePlayerApiPigeonCodecWriter: FlutterStandardWriter {
+  override func writeValue(_ value: Any) {
+    if let value = value as? WatermarkConfig {
+      super.writeByte(129)
+      super.writeValue(value.toList())
+    } else {
+      super.writeValue(value)
+    }
+  }
 }
 
 private class NativePlayerApiPigeonCodecReaderWriter: FlutterStandardReaderWriter {
@@ -81,6 +185,11 @@ protocol NativePlayerApi {
   func exitFullScreen() throws
   func enableAutoFullscreenOnRotate() throws
   func disableAutoFullscreenOnRotate() throws
+  func setWatermark(config: WatermarkConfig?) throws
+  func showWatermark() throws
+  func hideWatermark() throws
+  func removeWatermark() throws
+  func updateWatermarkPosition(xFraction: Double, yFraction: Double) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -265,6 +374,76 @@ class NativePlayerApiSetup {
       }
     } else {
       disableAutoFullscreenOnRotateChannel.setMessageHandler(nil)
+    }
+    let setWatermarkChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermark\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setWatermarkChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let configArg: WatermarkConfig? = nilOrValue(args[0])
+        do {
+          try api.setWatermark(config: configArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setWatermarkChannel.setMessageHandler(nil)
+    }
+    let showWatermarkChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.showWatermark\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      showWatermarkChannel.setMessageHandler { _, reply in
+        do {
+          try api.showWatermark()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      showWatermarkChannel.setMessageHandler(nil)
+    }
+    let hideWatermarkChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.hideWatermark\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      hideWatermarkChannel.setMessageHandler { _, reply in
+        do {
+          try api.hideWatermark()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      hideWatermarkChannel.setMessageHandler(nil)
+    }
+    let removeWatermarkChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.removeWatermark\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeWatermarkChannel.setMessageHandler { _, reply in
+        do {
+          try api.removeWatermark()
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      removeWatermarkChannel.setMessageHandler(nil)
+    }
+    let updateWatermarkPositionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.updateWatermarkPosition\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      updateWatermarkPositionChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let xFractionArg = args[0] as! Double
+        let yFractionArg = args[1] as! Double
+        do {
+          try api.updateWatermarkPosition(xFraction: xFractionArg, yFraction: yFractionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      updateWatermarkPositionChannel.setMessageHandler(nil)
     }
   }
 }

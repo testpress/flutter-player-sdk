@@ -101,10 +101,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Set the playback speed of the video
   Future<void> setPlaybackSpeed(double speed) => _nativeApi.setPlaybackSpeed(speed);
 
-/// Sets the maximum resolution for video playback.
-/// The [resolution] parameter defines the maximum video height in pixels (for example, 720 for 720p).
-/// Android: Limits playback to video tracks whose resolution is less than or equal to the specified value. Higher-resolution tracks will not be selected.
-/// iOS: Currently a no-op (the setting is ignored).
+  /// Sets the maximum resolution for video playback.
+  /// The [resolution] parameter defines the maximum video height in pixels (for example, 720 for 720p).
+  /// Android: Limits playback to video tracks whose resolution is less than or equal to the specified value. Higher-resolution tracks will not be selected.
+  /// iOS: Currently a no-op (the setting is ignored).
   Future<void> setMaxResolution(int resolution) => _nativeApi.setMaxResolution(resolution);
 
   /// Enter fullscreen mode
@@ -123,6 +123,48 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// iOS: Currently a no-op.
   Future<void> disableAutoFullscreenOnRotate() =>
       _nativeApi.disableAutoFullscreenOnRotate();
+
+  /// Sets a watermark overlay on the player.
+  ///
+  /// Use [WatermarkConfig] to configure the watermark. Key fields:
+  /// - `text` — Watermark text content.
+  /// - `textColor` — Text color as ARGB integer.
+  /// - `textSize` — Text size in SP.
+  /// - `position` — A gravity name: `TOP_LEFT`, `TOP_CENTER`,
+  ///   `TOP_RIGHT`, `CENTER_LEFT`, `CENTER`, `CENTER_RIGHT`, `BOTTOM_LEFT`,
+  ///   `BOTTOM_CENTER`, `BOTTOM_RIGHT`.
+  /// - `xFraction` / `yFraction` — Dynamic position (0.0–1.0), used instead of `position`.
+  /// - `margins` — Uniform margin in DP.
+  /// - `marginsLeft` / `marginsTop` / `marginsRight` / `marginsBottom` — Individual margins.
+  /// - `opacity` — 0.0 (invisible) to 1.0 (fully opaque).
+  /// - `visibleDuringAds` — Show watermark during ads.
+  /// - `visibleWhenPaused` — Show watermark when paused.
+  /// - `elevation` — Elevation in DP.
+  /// - `pingPongFrom` / `pingPongTo` — Gravity names for ping-pong animation.
+  /// - `pingPongDurationMs` — Ping-pong animation duration in milliseconds.
+  ///
+  /// Pass `null` to remove the watermark.
+  /// iOS: Currently a no-op.
+  Future<void> setWatermark(WatermarkConfig? config) =>
+      _nativeApi.setWatermark(config);
+
+  /// Makes the current watermark visible.
+  /// iOS: Currently a no-op.
+  Future<void> showWatermark() => _nativeApi.showWatermark();
+
+  /// Hides the current watermark.
+  /// iOS: Currently a no-op.
+  Future<void> hideWatermark() => _nativeApi.hideWatermark();
+
+  /// Removes the watermark entirely.
+  /// iOS: Currently a no-op.
+  Future<void> removeWatermark() => _nativeApi.removeWatermark();
+
+  /// Updates the watermark position using dynamic fractional coordinates.
+  /// [xFraction] and [yFraction] range from 0.0 to 1.0.
+  /// iOS: Currently a no-op.
+  Future<void> updateWatermarkPosition(double xFraction, double yFraction) =>
+      _nativeApi.updateWatermarkPosition(xFraction, yFraction);
 
   /// Get the total duration of the video
   Future<Duration> getDuration() async {

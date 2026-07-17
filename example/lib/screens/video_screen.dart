@@ -27,6 +27,7 @@ class _VideoScreenState extends State<VideoScreen> {
   late TPStreamsPlayerController _controller;
   bool _isPlaying = false;
   bool _isFullScreen = false;
+  bool _pingPongEnabled = false;
   final _downloadManager = TPStreamsDownloadManager();
 
   @override
@@ -65,6 +66,18 @@ class _VideoScreenState extends State<VideoScreen> {
                 _controller.onReplay = () {
                   Fluttertoast.showToast(msg: 'Replay button clicked');
                 };
+
+                // Set up a static watermark in center-left
+                _controller.setWatermark(WatermarkConfig(
+                  text: 'Tpstreams',
+                  textColor: 0xFFFFFFFF,
+                  textSize: 14.0,
+                  position: 'CENTER_LEFT',
+                  opacity: 0.6,
+                  margins: 16.0,
+                  visibleDuringAds: true,
+                  visibleWhenPaused: true,
+                ));
 
                 // Listen to player value changes
                 _controller.addListener(_onPlayerValueChanged);
@@ -112,6 +125,41 @@ class _VideoScreenState extends State<VideoScreen> {
                   child: const Text('Enter Fullscreen'),
                 ),
               ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Ping Pong'),
+              const SizedBox(width: 8),
+              Switch(
+                value: _pingPongEnabled,
+                onChanged: (enabled) {
+                  setState(() => _pingPongEnabled = enabled);
+                  if (enabled) {
+                    _controller.setWatermark(WatermarkConfig(
+                      text: 'Tpstreams',
+                      textColor: 0xFFFFFFFF,
+                      textSize: 14.0,
+                      opacity: 0.6,
+                      margins: 16.0,
+                      pingPongFrom: 'CENTER_LEFT',
+                      pingPongTo: 'CENTER_RIGHT',
+                      pingPongDurationMs: 3000,
+                    ));
+                  } else {
+                    _controller.setWatermark(WatermarkConfig(
+                      text: 'Tpstreams',
+                      textColor: 0xFFFFFFFF,
+                      textSize: 14.0,
+                      position: 'CENTER_LEFT',
+                      opacity: 0.6,
+                      margins: 16.0,
+                    ));
+                  }
+                },
+              ),
             ],
           ),
         ],

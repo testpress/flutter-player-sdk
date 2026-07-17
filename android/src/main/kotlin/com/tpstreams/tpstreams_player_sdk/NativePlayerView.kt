@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
 import com.tpstreams.player.TPStreamsPlayer
 import com.tpstreams.player.TPStreamsPlayerView
+import com.tpstreams.player.WatermarkGravity
 import com.tpstreams.player.constants.PlaybackError
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
@@ -238,7 +239,7 @@ class NativePlayerView(
     }
 
     override fun setMaxResolution(resolution: Long) {
-        player?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
+        playerView?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getDuration(): Long {
@@ -269,6 +270,82 @@ class NativePlayerView(
 
     override fun disableAutoFullscreenOnRotate() {
         playerView?.setAutoFullscreenOnRotateEnabled(false)
+    }
+
+    override fun setWatermark(config: WatermarkConfig?) {
+        if (config == null) {
+            playerView?.setWatermark(null)
+            return
+        }
+        playerView?.setWatermark(buildWatermarkConfig(config))
+    }
+
+    override fun showWatermark() {
+        playerView?.showWatermark()
+    }
+
+    override fun hideWatermark() {
+        playerView?.hideWatermark()
+    }
+
+    override fun removeWatermark() {
+        playerView?.removeWatermark()
+    }
+
+    override fun updateWatermarkPosition(xFraction: Double, yFraction: Double) {
+        playerView?.updateWatermarkPosition(xFraction.toFloat(), yFraction.toFloat())
+    }
+
+    private fun buildWatermarkConfig(config: WatermarkConfig): com.tpstreams.player.WatermarkConfig {
+        val builder = com.tpstreams.player.WatermarkConfig.Builder()
+
+        config.text?.let { builder.text(it) }
+        config.textColor?.let { builder.textColor(it.toInt()) }
+        config.textSize?.let { builder.textSize(it.toFloat()) }
+
+        config.position?.let { gravity ->
+            safeGetGravity(gravity)?.let { builder.position(it) }
+        }
+
+        if (config.xFraction != null && config.yFraction != null) {
+            builder.position(config.xFraction.toFloat(), config.yFraction.toFloat())
+        }
+
+        if (config.margins != null) {
+            builder.margins(config.margins.toFloat())
+        } else if (config.marginsLeft != null || config.marginsTop != null || config.marginsRight != null || config.marginsBottom != null) {
+            builder.margins(
+                (config.marginsLeft ?: 0.0).toFloat(),
+                (config.marginsTop ?: 0.0).toFloat(),
+                (config.marginsRight ?: 0.0).toFloat(),
+                (config.marginsBottom ?: 0.0).toFloat()
+            )
+        }
+
+        config.opacity?.let { builder.opacity(it.toFloat()) }
+        config.visibleDuringAds?.let { builder.visibleDuringAds(it) }
+        config.visibleWhenPaused?.let { builder.visibleWhenPaused(it) }
+        config.elevation?.let { builder.elevation(it.toFloat()) }
+
+        if (config.pingPongFrom != null && config.pingPongTo != null) {
+            val fromGravity = safeGetGravity(config.pingPongFrom)
+            val toGravity = safeGetGravity(config.pingPongTo)
+            if (fromGravity != null && toGravity != null) {
+                val duration = config.pingPongDurationMs?.toLong() ?: 3000L
+                builder.pingPong(fromGravity, toGravity, duration)
+            }
+        }
+
+        return builder.build()
+    }
+
+    private fun safeGetGravity(name: String): WatermarkGravity? {
+        return try {
+            WatermarkGravity.valueOf(name)
+        } catch (e: IllegalArgumentException) {
+            Log.w("NativePlayerView", "Invalid watermark gravity: $name")
+            null
+        }
     }
 
     override fun resolveAccessToken(newAccessToken: String) {

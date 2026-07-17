@@ -15,6 +15,48 @@ import 'package:pigeon/pigeon.dart';
   ),
 ))
 
+class WatermarkConfig {
+  final String? text;
+  final int? textColor;
+  final double? textSize;
+  final String? position;
+  final double? xFraction;
+  final double? yFraction;
+  final double? margins;
+  final double? marginsLeft;
+  final double? marginsTop;
+  final double? marginsRight;
+  final double? marginsBottom;
+  final double? opacity;
+  final bool? visibleDuringAds;
+  final bool? visibleWhenPaused;
+  final double? elevation;
+  final String? pingPongFrom;
+  final String? pingPongTo;
+  final int? pingPongDurationMs;
+
+  WatermarkConfig({
+    this.text,
+    this.textColor,
+    this.textSize,
+    this.position,
+    this.xFraction,
+    this.yFraction,
+    this.margins,
+    this.marginsLeft,
+    this.marginsTop,
+    this.marginsRight,
+    this.marginsBottom,
+    this.opacity,
+    this.visibleDuringAds,
+    this.visibleWhenPaused,
+    this.elevation,
+    this.pingPongFrom,
+    this.pingPongTo,
+    this.pingPongDurationMs,
+  });
+}
+
 @HostApi()
 abstract class NativePlayerApi {
   void play();
@@ -30,4 +72,9 @@ abstract class NativePlayerApi {
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
   void disableAutoFullscreenOnRotate();
+  void setWatermark(WatermarkConfig? config);
+  void showWatermark();
+  void hideWatermark();
+  void removeWatermark();
+  void updateWatermarkPosition(double xFraction, double yFraction);
 }

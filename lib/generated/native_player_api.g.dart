@@ -15,6 +15,112 @@ PlatformException _createConnectionError(String channelName) {
   );
 }
 
+class WatermarkConfig {
+  WatermarkConfig({
+    this.text,
+    this.textColor,
+    this.textSize,
+    this.position,
+    this.xFraction,
+    this.yFraction,
+    this.margins,
+    this.marginsLeft,
+    this.marginsTop,
+    this.marginsRight,
+    this.marginsBottom,
+    this.opacity,
+    this.visibleDuringAds,
+    this.visibleWhenPaused,
+    this.elevation,
+    this.pingPongFrom,
+    this.pingPongTo,
+    this.pingPongDurationMs,
+  });
+
+  String? text;
+
+  int? textColor;
+
+  double? textSize;
+
+  String? position;
+
+  double? xFraction;
+
+  double? yFraction;
+
+  double? margins;
+
+  double? marginsLeft;
+
+  double? marginsTop;
+
+  double? marginsRight;
+
+  double? marginsBottom;
+
+  double? opacity;
+
+  bool? visibleDuringAds;
+
+  bool? visibleWhenPaused;
+
+  double? elevation;
+
+  String? pingPongFrom;
+
+  String? pingPongTo;
+
+  int? pingPongDurationMs;
+
+  Object encode() {
+    return <Object?>[
+      text,
+      textColor,
+      textSize,
+      position,
+      xFraction,
+      yFraction,
+      margins,
+      marginsLeft,
+      marginsTop,
+      marginsRight,
+      marginsBottom,
+      opacity,
+      visibleDuringAds,
+      visibleWhenPaused,
+      elevation,
+      pingPongFrom,
+      pingPongTo,
+      pingPongDurationMs,
+    ];
+  }
+
+  static WatermarkConfig decode(Object result) {
+    result as List<Object?>;
+    return WatermarkConfig(
+      text: result[0] as String?,
+      textColor: result[1] as int?,
+      textSize: result[2] as double?,
+      position: result[3] as String?,
+      xFraction: result[4] as double?,
+      yFraction: result[5] as double?,
+      margins: result[6] as double?,
+      marginsLeft: result[7] as double?,
+      marginsTop: result[8] as double?,
+      marginsRight: result[9] as double?,
+      marginsBottom: result[10] as double?,
+      opacity: result[11] as double?,
+      visibleDuringAds: result[12] as bool?,
+      visibleWhenPaused: result[13] as bool?,
+      elevation: result[14] as double?,
+      pingPongFrom: result[15] as String?,
+      pingPongTo: result[16] as String?,
+      pingPongDurationMs: result[17] as int?,
+    );
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -23,6 +129,9 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
+    }    else if (value is WatermarkConfig) {
+      buffer.putUint8(129);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -31,6 +140,8 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
+      case 129: 
+        return WatermarkConfig.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -333,6 +444,116 @@ class NativePlayerApi {
     );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> setWatermark(WatermarkConfig? config) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermark$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[config]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> showWatermark() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.showWatermark$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> hideWatermark() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.hideWatermark$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> removeWatermark() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.removeWatermark$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> updateWatermarkPosition(double xFraction, double yFraction) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.updateWatermarkPosition$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[xFraction, yFraction]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
