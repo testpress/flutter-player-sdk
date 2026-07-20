@@ -238,7 +238,7 @@ class NativePlayerView(
     }
 
     override fun setMaxResolution(resolution: Long) {
-        player?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
+        playerView?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getDuration(): Long {
