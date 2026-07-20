@@ -159,6 +159,11 @@
 - Added totalSize and downloadedSize to DownloadAsset to support download progress calculation.
 - Added thumbnailUrl to DownloadAsset to support displaying asset thumbnails.
 
+## 2.2.25
+
+- Upgraded Android Player SDK to 1.2.3 for improved stability and performance.
+- Fixed an issue where setting maximum video resolution would fail silently on Android.
+
 ## 2.2.24
 
 - Migrated iOS dependency management from CocoaPods to Swift Package Manager (SPM) for faster and more reliable builds.
