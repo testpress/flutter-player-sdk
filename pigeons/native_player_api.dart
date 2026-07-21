@@ -26,6 +26,8 @@ class WatermarkAnimation {
   });
 
   final WatermarkAnimationType type;
+
+  /// Duration in milliseconds. Minimum 100ms.
   final int duration;
 }
 
