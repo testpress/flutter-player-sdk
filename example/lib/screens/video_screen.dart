@@ -51,7 +51,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 _controller.enableAutoFullscreenOnRotate();
                 _controller.setWatermarks([
                   WatermarkConfig(
-                    text: '© testpresws',
+                    text: '© testpress',
                     x: 100,
                     y: 50,
                     opacity: 0.9,

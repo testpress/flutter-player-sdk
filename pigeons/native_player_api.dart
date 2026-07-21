@@ -64,6 +64,6 @@ abstract class NativePlayerApi {
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
   void disableAutoFullscreenOnRotate();
-  void setWatermarks(List<WatermarkConfig?> configs);
+  void setWatermarks(List<WatermarkConfig> configs);
   void clearWatermarks();
 }

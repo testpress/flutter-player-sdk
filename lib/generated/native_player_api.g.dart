@@ -443,7 +443,7 @@ class NativePlayerApi {
     }
   }
 
-  Future<void> setWatermarks(List<WatermarkConfig?> configs) async {
+  Future<void> setWatermarks(List<WatermarkConfig> configs) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermarks$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,

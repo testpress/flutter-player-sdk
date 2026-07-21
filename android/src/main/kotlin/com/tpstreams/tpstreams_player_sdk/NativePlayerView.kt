@@ -274,7 +274,7 @@ class NativePlayerView(
         playerView?.setAutoFullscreenOnRotateEnabled(false)
     }
 
-    override fun setWatermarks(configs: List<WatermarkConfig?>) {
+    override fun setWatermarks(configs: List<WatermarkConfig>) {
         val view = playerView ?: throw IllegalStateException("Player not initialized")
         val nativeConfigs = configs.mapNotNull { config ->
             config?.let {

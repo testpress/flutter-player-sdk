@@ -129,6 +129,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// Pass an empty list to clear all watermarks. Each [WatermarkConfig]
   /// creates an independent watermark overlay.
   ///
+  /// iOS: Currently a no-op.
+  ///
   /// Supported fields:
   /// - [text]: Watermark text (required).
   /// - [x]: Horizontal position as 0–100 percent (default: 0).
@@ -138,10 +140,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// - [opacity]: 0.0 (invisible) to 1.0 (fully opaque) (default: 0.3).
   /// - [animation]: Optional animation (e.g., [WatermarkAnimation] with
   ///   [WatermarkAnimationType.pingPong] for a sweep effect).
-  Future<void> setWatermarks(List<WatermarkConfig?> configs) =>
+  Future<void> setWatermarks(List<WatermarkConfig> configs) =>
       _nativeApi.setWatermarks(configs);
 
   /// Removes all watermarks and frees resources.
+  ///
+  /// iOS: Currently a no-op.
   Future<void> clearWatermarks() => _nativeApi.clearWatermarks();
 
   /// Get the total duration of the video

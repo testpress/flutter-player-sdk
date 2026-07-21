@@ -155,7 +155,7 @@ interface NativePlayerApi {
   fun exitFullScreen()
   fun enableAutoFullscreenOnRotate()
   fun disableAutoFullscreenOnRotate()
-  fun setWatermarks(configs: List<WatermarkConfig?>)
+  fun setWatermarks(configs: List<WatermarkConfig>)
   fun clearWatermarks()
 
   companion object {
@@ -386,7 +386,7 @@ interface NativePlayerApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val configsArg = args[0] as List<WatermarkConfig?>
+            val configsArg = args[0] as List<WatermarkConfig>
             val wrapped: List<Any?> = try {
               api.setWatermarks(configsArg)
               listOf(null)

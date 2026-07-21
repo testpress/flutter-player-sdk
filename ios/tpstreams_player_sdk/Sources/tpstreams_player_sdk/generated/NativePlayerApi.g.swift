@@ -183,7 +183,7 @@ protocol NativePlayerApi {
   func exitFullScreen() throws
   func enableAutoFullscreenOnRotate() throws
   func disableAutoFullscreenOnRotate() throws
-  func setWatermarks(configs: [WatermarkConfig?]) throws
+  func setWatermarks(configs: [WatermarkConfig]) throws
   func clearWatermarks() throws
 }
 
@@ -374,7 +374,7 @@ class NativePlayerApiSetup {
     if let api = api {
       setWatermarksChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let configsArg = args[0] as! [WatermarkConfig?]
+        let configsArg = args[0] as! [WatermarkConfig]
         do {
           try api.setWatermarks(configs: configsArg)
           reply(wrapResult(nil))
