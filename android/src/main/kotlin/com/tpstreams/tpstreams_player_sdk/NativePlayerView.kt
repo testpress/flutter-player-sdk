@@ -11,6 +11,9 @@ import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
 import com.tpstreams.player.TPStreamsPlayer
 import com.tpstreams.player.TPStreamsPlayerView
+import com.tpstreams.player.WatermarkAnimation as NativeWatermarkAnimation
+import com.tpstreams.player.WatermarkAnimationType as NativeWatermarkAnimationType
+import com.tpstreams.player.WatermarkConfig as NativeWatermarkConfig
 import com.tpstreams.player.constants.PlaybackError
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
@@ -271,6 +274,37 @@ class NativePlayerView(
         playerView?.setAutoFullscreenOnRotateEnabled(false)
     }
 
+    override fun setWatermarks(configs: List<WatermarkConfig?>) {
+        val view = playerView ?: throw IllegalStateException("Player not initialized")
+        val nativeConfigs = configs.mapNotNull { config ->
+            config?.let {
+                NativeWatermarkConfig(
+                    text = it.text,
+                    x = it.x.toInt(),
+                    y = it.y.toInt(),
+                    color = it.color.toInt(),
+                    textSize = it.textSize.toFloat(),
+                    opacity = it.opacity.toFloat(),
+                    animation = it.animation?.let { anim ->
+                        NativeWatermarkAnimation(
+                            type = mapAnimationType(anim.type),
+                            duration = anim.duration,
+                        )
+                    },
+                )
+            }
+        }
+        view.setWatermarks(nativeConfigs)
+    }
+
+    override fun clearWatermarks() {
+        playerView?.clearWatermarks() ?: throw IllegalStateException("Player not initialized")
+    }
+
+    private fun mapAnimationType(type: WatermarkAnimationType): NativeWatermarkAnimationType = when (type) {
+        WatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
+    }
+
     override fun resolveAccessToken(newAccessToken: String) {
         pendingTokenCallback?.invoke(newAccessToken)
         pendingTokenCallback = null
@@ -281,6 +315,7 @@ class NativePlayerView(
         player?.removeListener(playbackListener)
         player?.release()
         legacyDownloadStoreReader.dispose()
+        playerView?.clearWatermarks()
         playerView?.let {
             try {
                 playerRootView.removeView(it)
