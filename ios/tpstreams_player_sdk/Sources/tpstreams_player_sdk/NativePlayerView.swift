@@ -247,7 +247,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
     }
 
-    func setWatermarks(configs: [WatermarkConfig?]) throws {
+    func setWatermarks(configs: [WatermarkConfig]) throws {
         NSLog("setWatermarks is currently not supported on iOS and will be ignored.")
     }
 

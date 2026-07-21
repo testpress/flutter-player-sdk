@@ -276,23 +276,21 @@ class NativePlayerView(
 
     override fun setWatermarks(configs: List<WatermarkConfig>) {
         val view = playerView ?: throw IllegalStateException("Player not initialized")
-        val nativeConfigs = configs.mapNotNull { config ->
-            config?.let {
-                NativeWatermarkConfig(
-                    text = it.text,
-                    x = it.x.toInt(),
-                    y = it.y.toInt(),
-                    color = it.color.toInt(),
-                    textSize = it.textSize.toFloat(),
-                    opacity = it.opacity.toFloat(),
-                    animation = it.animation?.let { anim ->
-                        NativeWatermarkAnimation(
-                            type = mapAnimationType(anim.type),
-                            duration = anim.duration,
-                        )
-                    },
-                )
-            }
+        val nativeConfigs = configs.map {
+            NativeWatermarkConfig(
+                text = it.text,
+                x = it.x.toInt(),
+                y = it.y.toInt(),
+                color = it.color.toInt(),
+                textSize = it.textSize.toFloat(),
+                opacity = it.opacity.toFloat(),
+                animation = it.animation?.let { anim ->
+                    NativeWatermarkAnimation(
+                        type = mapAnimationType(anim.type),
+                        duration = anim.duration,
+                    )
+                },
+            )
         }
         view.setWatermarks(nativeConfigs)
     }
