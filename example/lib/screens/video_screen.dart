@@ -49,6 +49,28 @@ class _VideoScreenState extends State<VideoScreen> {
                 _controller = controller;
                 _controller.setMaxResolution(240);
                 _controller.enableAutoFullscreenOnRotate();
+                _controller.setWatermarks([
+                  WatermarkConfig(
+                    text: '© testpress',
+                    x: 100,
+                    y: 50,
+                    opacity: 0.9,
+                    animation: WatermarkAnimation(
+                      type: WatermarkAnimationType.pingPong,
+                      duration: 1000,
+                    ),
+                  ),
+                  WatermarkConfig(
+                    text: '© TPStreams',
+                    x: 0,
+                    y: 50,
+                    opacity: 0.3,
+                    animation: WatermarkAnimation(
+                      type: WatermarkAnimationType.pingPong,
+                      duration: 5000,
+                    ),
+                  ),
+                ]);
                 _controller.onBeforeFullScreenEnter = () {
                   print('Will enter fullscreen');
                 };

@@ -33,12 +33,110 @@ private fun wrapError(exception: Throwable): List<Any?> {
     )
   }
 }
+
+enum class WatermarkAnimationType(val raw: Int) {
+  PING_PONG(0);
+
+  companion object {
+    fun ofRaw(raw: Int): WatermarkAnimationType? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class WatermarkAnimation (
+  val type: WatermarkAnimationType,
+  val duration: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): WatermarkAnimation {
+      val type = pigeonVar_list[0] as WatermarkAnimationType
+      val duration = pigeonVar_list[1] as Long
+      return WatermarkAnimation(type, duration)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      type,
+      duration,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class WatermarkConfig (
+  val text: String,
+  val x: Long,
+  val y: Long,
+  val color: Long,
+  val textSize: Double,
+  val opacity: Double,
+  val animation: WatermarkAnimation? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): WatermarkConfig {
+      val text = pigeonVar_list[0] as String
+      val x = pigeonVar_list[1] as Long
+      val y = pigeonVar_list[2] as Long
+      val color = pigeonVar_list[3] as Long
+      val textSize = pigeonVar_list[4] as Double
+      val opacity = pigeonVar_list[5] as Double
+      val animation = pigeonVar_list[6] as WatermarkAnimation?
+      return WatermarkConfig(text, x, y, color, textSize, opacity, animation)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      text,
+      x,
+      y,
+      color,
+      textSize,
+      opacity,
+      animation,
+    )
+  }
+}
 private open class NativePlayerApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
-    return     super.readValueOfType(type, buffer)
+    return when (type) {
+      129.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          WatermarkAnimationType.ofRaw(it.toInt())
+        }
+      }
+      130.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          WatermarkAnimation.fromList(it)
+        }
+      }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          WatermarkConfig.fromList(it)
+        }
+      }
+      else -> super.readValueOfType(type, buffer)
+    }
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
-    super.writeValue(stream, value)
+    when (value) {
+      is WatermarkAnimationType -> {
+        stream.write(129)
+        writeValue(stream, value.raw)
+      }
+      is WatermarkAnimation -> {
+        stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is WatermarkConfig -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      else -> super.writeValue(stream, value)
+    }
   }
 }
 
@@ -57,6 +155,8 @@ interface NativePlayerApi {
   fun exitFullScreen()
   fun enableAutoFullscreenOnRotate()
   fun disableAutoFullscreenOnRotate()
+  fun setWatermarks(configs: List<WatermarkConfig>)
+  fun clearWatermarks()
 
   companion object {
     /** The codec used by NativePlayerApi. */
@@ -271,6 +371,40 @@ interface NativePlayerApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.disableAutoFullscreenOnRotate()
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermarks$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val configsArg = args[0] as List<WatermarkConfig>
+            val wrapped: List<Any?> = try {
+              api.setWatermarks(configsArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.clearWatermarks$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              api.clearWatermarks()
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

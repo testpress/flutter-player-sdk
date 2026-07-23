@@ -124,6 +124,30 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   Future<void> disableAutoFullscreenOnRotate() =>
       _nativeApi.disableAutoFullscreenOnRotate();
 
+  /// Applies text watermark overlays on the video player.
+  ///
+  /// Pass an empty list to clear all watermarks. Each [WatermarkConfig]
+  /// creates an independent watermark overlay.
+  ///
+  /// iOS: Currently a no-op.
+  ///
+  /// Supported fields:
+  /// - [text]: Watermark text (required).
+  /// - [x]: Horizontal position as 0–100 percent (default: 0).
+  /// - [y]: Vertical position as 0–100 percent (default: 0).
+  /// - [color]: Text color as ARGB int (default: white).
+  /// - [textSize]: Text size in SP (default: 14).
+  /// - [opacity]: 0.0 (invisible) to 1.0 (fully opaque) (default: 0.3).
+  /// - [animation]: Optional animation (e.g., [WatermarkAnimation] with
+  ///   [WatermarkAnimationType.pingPong] for a sweep effect).
+  Future<void> setWatermarks(List<WatermarkConfig> configs) =>
+      _nativeApi.setWatermarks(configs);
+
+  /// Removes all watermarks and frees resources.
+  ///
+  /// iOS: Currently a no-op.
+  Future<void> clearWatermarks() => _nativeApi.clearWatermarks();
+
   /// Get the total duration of the video
   Future<Duration> getDuration() async {
     final durationInMilliseconds = await _nativeApi.getDuration();

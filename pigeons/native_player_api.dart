@@ -15,6 +15,42 @@ import 'package:pigeon/pigeon.dart';
   ),
 ))
 
+enum WatermarkAnimationType {
+  pingPong,
+}
+
+class WatermarkAnimation {
+  WatermarkAnimation({
+    required this.type,
+    this.duration = 10000,
+  });
+
+  final WatermarkAnimationType type;
+
+  /// Duration in milliseconds. Minimum 100ms.
+  final int duration;
+}
+
+class WatermarkConfig {
+  WatermarkConfig({
+    required this.text,
+    this.x = 0,
+    this.y = 0,
+    this.color = 0xFFFFFFFF,
+    this.textSize = 14.0,
+    this.opacity = 0.3,
+    this.animation,
+  });
+
+  final String text;
+  final int x;
+  final int y;
+  final int color;
+  final double textSize;
+  final double opacity;
+  final WatermarkAnimation? animation;
+}
+
 @HostApi()
 abstract class NativePlayerApi {
   void play();
@@ -30,4 +66,6 @@ abstract class NativePlayerApi {
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
   void disableAutoFullscreenOnRotate();
+  void setWatermarks(List<WatermarkConfig> configs);
+  void clearWatermarks();
 }
