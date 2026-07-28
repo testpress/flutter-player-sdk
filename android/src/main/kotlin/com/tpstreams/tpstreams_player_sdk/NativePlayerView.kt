@@ -212,7 +212,6 @@ class NativePlayerView(
 
         val resolution = creationParams?.get("resolution") as? Int
         if (resolution != null) {
-            player?.setMaxResolution(resolution)
             playerView?.setVideoResolution(resolution)
         }
 

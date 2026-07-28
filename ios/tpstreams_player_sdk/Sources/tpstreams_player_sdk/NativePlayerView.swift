@@ -48,6 +48,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                     guard let self = self, error == nil, let resolution = resolution else { return }
                     if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
                         self.player?.changeVideoQuality(to: quality)
+                    } else {
+                        NSLog("TPStreamsPlayerSDK: resolution \(resolution)p not available, using default quality")
                     }
                 }
             }

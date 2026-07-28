@@ -60,8 +60,8 @@ class TPStreamPlayer extends StatefulWidget {
        startInFullscreen = false,
        offlineLicenseExpireDays = 15,
        _isOfflinePlayback = true,
-        metadata = metadata,
-        resolution = null,
+       metadata = metadata,
+       resolution = null,
        preferences = TPStreamsPlayerPreferences(
            enableFullscreen: true,
            enablePlaybackSpeed: true,
