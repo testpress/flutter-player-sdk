@@ -107,6 +107,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 /// iOS: Currently a no-op (the setting is ignored).
   Future<void> setMaxResolution(int resolution) => _nativeApi.setMaxResolution(resolution);
 
+  /// Sets the video resolution preference.
+  /// The [resolution] parameter defines the desired video height in pixels (for example, 720 for 720p).
+  /// Android: Sets the preferred maximum video height. The player will adaptively select tracks up to this height.
+  /// iOS: Selects the matching quality from available options.
+  Future<void> setVideoResolution(int resolution) => _nativeApi.setVideoResolution(resolution);
+
   /// Enter fullscreen mode
   Future<void> enterFullScreen() => _nativeApi.enterFullScreen();
 

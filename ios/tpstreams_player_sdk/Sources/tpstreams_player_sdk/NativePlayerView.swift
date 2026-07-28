@@ -239,6 +239,15 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
     }
 
+    func setVideoResolution(resolution: Int64) throws {
+        let target = "\(resolution)p"
+        if let quality = player?.availableVideoQualities.first(where: { $0.resolution == target }) {
+            player?.changeVideoQuality(to: quality)
+        } else {
+            NSLog("TPStreamsPlayerSDK: resolution \(resolution)p not available, using default quality")
+        }
+    }
+
     func enterFullScreen() {
         playerViewController?.enterFullScreen()
     }

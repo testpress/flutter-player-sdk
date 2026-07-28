@@ -53,6 +53,7 @@ enum WatermarkAnimationType: Int {
 /// Generated class from Pigeon that represents data sent in messages.
 struct WatermarkAnimation {
   var type: WatermarkAnimationType
+  /// Duration in milliseconds. Minimum 100ms.
   var duration: Int64
 
 
@@ -179,6 +180,7 @@ protocol NativePlayerApi {
   func dispose() throws
   func resolveAccessToken(newAccessToken: String) throws
   func setMaxResolution(resolution: Int64) throws
+  func setVideoResolution(resolution: Int64) throws
   func enterFullScreen() throws
   func exitFullScreen() throws
   func enableAutoFullscreenOnRotate() throws
@@ -317,6 +319,21 @@ class NativePlayerApiSetup {
       }
     } else {
       setMaxResolutionChannel.setMessageHandler(nil)
+    }
+    let setVideoResolutionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setVideoResolution\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setVideoResolutionChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let resolutionArg = args[0] as! Int64
+        do {
+          try api.setVideoResolution(resolution: resolutionArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setVideoResolutionChannel.setMessageHandler(nil)
     }
     let enterFullScreenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.enterFullScreen\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
