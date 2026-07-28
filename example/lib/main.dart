@@ -75,6 +75,14 @@ class _HomePageState extends State<HomePage> {
                         accessToken: video.accessToken,
                         showDownloadOption: true,
                         resolution: int.tryParse(video.resolution.replaceAll('p', '')),
+                        preferences: TPStreamsPlayerPreferences(
+                          enableFullscreen: false,
+                          enablePlaybackSpeed: false,
+                          enableCaptions: false,
+                          showResolutionOptions: false,
+                          enableSeekButtons: false,
+                          seekBarColor: Colors.blue.value,
+                        ),
                       ),
                     ),
                   );
