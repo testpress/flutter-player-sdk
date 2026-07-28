@@ -47,6 +47,7 @@ enum class WatermarkAnimationType(val raw: Int) {
 /** Generated class from Pigeon that represents data sent in messages. */
 data class WatermarkAnimation (
   val type: WatermarkAnimationType,
+  /** Duration in milliseconds. Minimum 100ms. */
   val duration: Long
 )
  {
@@ -151,6 +152,7 @@ interface NativePlayerApi {
   fun dispose()
   fun resolveAccessToken(newAccessToken: String)
   fun setMaxResolution(resolution: Long)
+  fun setVideoResolution(resolution: Long)
   fun enterFullScreen()
   fun exitFullScreen()
   fun enableAutoFullscreenOnRotate()
@@ -307,6 +309,24 @@ interface NativePlayerApi {
             val resolutionArg = args[0] as Long
             val wrapped: List<Any?> = try {
               api.setMaxResolution(resolutionArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setVideoResolution$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val resolutionArg = args[0] as Long
+            val wrapped: List<Any?> = try {
+              api.setVideoResolution(resolutionArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

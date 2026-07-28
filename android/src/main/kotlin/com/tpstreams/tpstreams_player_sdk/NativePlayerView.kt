@@ -210,6 +210,11 @@ class NativePlayerView(
 
         notifyFlutterPlayerInitialized()
 
+        val resolution = creationParams?.get("resolution") as? Int
+        if (resolution != null) {
+            playerView?.setVideoResolution(resolution)
+        }
+
         if (startInFullscreen) {
             enterFullScreen()
         }
@@ -241,7 +246,13 @@ class NativePlayerView(
     }
 
     override fun setMaxResolution(resolution: Long) {
-        playerView?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
+        val res = resolution.toInt()
+        player?.setMaxResolution(res) ?: throw IllegalStateException("Player not initialized")
+        playerView?.setVideoResolution(res)
+    }
+
+    override fun setVideoResolution(resolution: Long) {
+        playerView?.setVideoResolution(resolution.toInt())
     }
 
     override fun getDuration(): Long {

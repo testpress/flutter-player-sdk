@@ -7,6 +7,7 @@ class VideoScreen extends StatefulWidget {
   final String accessToken;
   final bool showDownloadOption;
   final bool autoPlay;
+  final int? resolution;
 
   const VideoScreen({
     super.key,
@@ -14,6 +15,7 @@ class VideoScreen extends StatefulWidget {
     required this.accessToken,
     this.showDownloadOption = false,
     this.autoPlay = true,
+    this.resolution,
     this.preferences,
   });
 
@@ -47,7 +49,7 @@ class _VideoScreenState extends State<VideoScreen> {
               preferences: widget.preferences,
               onPlayerCreated: (controller) {
                 _controller = controller;
-                _controller.setMaxResolution(240);
+                _controller.setVideoResolution(widget.resolution!);
                 _controller.enableAutoFullscreenOnRotate();
                 _controller.setWatermarks([
                   WatermarkConfig(

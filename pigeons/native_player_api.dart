@@ -62,6 +62,7 @@ abstract class NativePlayerApi {
   void dispose();
   void resolveAccessToken(String newAccessToken);
   void setMaxResolution(int resolution);
+  void setVideoResolution(int resolution);
   void enterFullScreen();
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
