@@ -182,6 +182,12 @@ class NativePlayerView(
             }
         }
 
+        val resolution = creationParams?.get("resolution") as? Int
+        if (resolution != null) {
+            player?.setMaxResolution(resolution)
+            playerView?.setVideoResolution(resolution)
+        }
+
         playerView?.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             private var wasPlayingBeforeDetach = false
 
@@ -241,7 +247,9 @@ class NativePlayerView(
     }
 
     override fun setMaxResolution(resolution: Long) {
-        playerView?.setVideoResolution(resolution.toInt()) ?: throw IllegalStateException("Player not initialized")
+        val res = resolution.toInt()
+        player?.setMaxResolution(res) ?: throw IllegalStateException("Player not initialized")
+        playerView?.setVideoResolution(res)
     }
 
     override fun getDuration(): Long {

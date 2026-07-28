@@ -49,9 +49,9 @@ class _HomePageState extends State<HomePage> {
       ),
       (
         title: 'Watch Video 2', 
-        assetId: '4P3nJXp2xFT',
-        accessToken: 'cde2c1a6-434d-4fd1-99f4-9e2024bf2576',
-        resolution: '720p',
+        assetId: '7xbZeQzR36h',
+        accessToken: '3d9838f3-db51-4fc3-8472-075ab5e40b64',
+        resolution: '240p',
       ),
     ];
 
@@ -74,14 +74,7 @@ class _HomePageState extends State<HomePage> {
                         assetId: video.assetId,
                         accessToken: video.accessToken,
                         showDownloadOption: true,
-                        preferences: TPStreamsPlayerPreferences(
-                          enableFullscreen: false,
-                          enablePlaybackSpeed: false,
-                          enableCaptions: false,
-                          showResolutionOptions: false,
-                          enableSeekButtons: false,
-                          seekBarColor: Colors.blue.value,
-                        ),
+                        resolution: int.tryParse(video.resolution.replaceAll('p', '')),
                       ),
                     ),
                   );

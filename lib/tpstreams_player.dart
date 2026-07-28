@@ -23,6 +23,7 @@ class TPStreamPlayer extends StatefulWidget {
   final Map<String, String>? metadata;
   final TPStreamsPlayerPreferences preferences;
   final bool autoPlay;
+  final int? resolution;
 
   TPStreamPlayer({
     super.key,
@@ -35,6 +36,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.offlineLicenseExpireDays = 15,
     this.metadata,
     this.autoPlay = true,
+    this.resolution,
     TPStreamsPlayerPreferences? preferences,
   }) : _isOfflinePlayback = false,
        preferences = preferences ?? TPStreamsPlayerPreferences(
@@ -58,7 +60,8 @@ class TPStreamPlayer extends StatefulWidget {
        startInFullscreen = false,
        offlineLicenseExpireDays = 15,
        _isOfflinePlayback = true,
-       metadata = metadata,
+        metadata = metadata,
+        resolution = null,
        preferences = TPStreamsPlayerPreferences(
            enableFullscreen: true,
            enablePlaybackSpeed: true,
@@ -149,6 +152,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     "autoPlay": widget.autoPlay,
     if (widget.metadata != null) "metadata": widget.metadata,
+    if (widget.resolution != null) "resolution": widget.resolution,
     "playerPreferences": widget.preferences.encode(),
   };
 

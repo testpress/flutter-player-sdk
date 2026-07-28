@@ -29,6 +29,12 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
 
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
+        self.viewId = viewId
+        initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
+        playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
+        
+        super.init()
+
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
             let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
             let autoPlay = args["autoPlay"] as? Bool ?? true
@@ -37,7 +43,13 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                 player = TPAVPlayer(offlineAssetId: assetId)
             } else {
                 let accessToken = args["accessToken"] as? String
-                player = TPAVPlayer(assetID: assetId, accessToken: accessToken)
+                let resolution = args["resolution"] as? Int
+                player = TPAVPlayer(assetID: assetId, accessToken: accessToken) { [weak self] error in
+                    guard let self = self, error == nil, let resolution = resolution else { return }
+                    if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
+                        self.player?.changeVideoQuality(to: quality)
+                    }
+                }
             }
             
             playerViewController = TPStreamPlayerViewController()
@@ -47,13 +59,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                 player.play()
             }
         }
-        self.viewId = viewId
-        initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
-        playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         
-        super.init()
-
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
+        
         configurePlayerViewController(args: args)
         
         self.observePlayerStatusChange()

@@ -7,6 +7,7 @@ class VideoScreen extends StatefulWidget {
   final String accessToken;
   final bool showDownloadOption;
   final bool autoPlay;
+  final int? resolution;
 
   const VideoScreen({
     super.key,
@@ -14,6 +15,7 @@ class VideoScreen extends StatefulWidget {
     required this.accessToken,
     this.showDownloadOption = false,
     this.autoPlay = true,
+    this.resolution,
     this.preferences,
   });
 
@@ -39,15 +41,15 @@ class _VideoScreenState extends State<VideoScreen> {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: TPStreamPlayer(
+              child: TPStreamPlayer(
               assetId: widget.assetId,
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
               autoPlay: widget.autoPlay,
               preferences: widget.preferences,
+              resolution: widget.resolution,
               onPlayerCreated: (controller) {
                 _controller = controller;
-                _controller.setMaxResolution(240);
                 _controller.enableAutoFullscreenOnRotate();
                 _controller.setWatermarks([
                   WatermarkConfig(
