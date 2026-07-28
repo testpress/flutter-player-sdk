@@ -182,12 +182,6 @@ class NativePlayerView(
             }
         }
 
-        val resolution = creationParams?.get("resolution") as? Int
-        if (resolution != null) {
-            player?.setMaxResolution(resolution)
-            playerView?.setVideoResolution(resolution)
-        }
-
         playerView?.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             private var wasPlayingBeforeDetach = false
 
@@ -215,6 +209,12 @@ class NativePlayerView(
         playerRootView.addView(playerView)
 
         notifyFlutterPlayerInitialized()
+
+        val resolution = creationParams?.get("resolution") as? Int
+        if (resolution != null) {
+            player?.setMaxResolution(resolution)
+            playerView?.setVideoResolution(resolution)
+        }
 
         if (startInFullscreen) {
             enterFullScreen()

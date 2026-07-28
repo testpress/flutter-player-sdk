@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         title: 'Watch Video 1',
         assetId: '57gHcHDBxKX',
         accessToken: '5e28479d-69d8-41c7-9664-79b7eb8f1f95',
-        resolution: '260p',
+        resolution: '1080p',
 
       ),
       (
