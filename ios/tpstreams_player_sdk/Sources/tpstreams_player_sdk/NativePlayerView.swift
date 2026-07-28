@@ -48,8 +48,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                     guard let self = self, error == nil, let resolution = resolution else { return }
                     if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
                         self.player?.changeVideoQuality(to: quality)
-                    } else {
-                        NSLog("TPStreamsPlayerSDK: resolution \(resolution)p not available, using default quality")
                     }
                 }
             }
@@ -63,9 +61,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         }
         
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
-        
         configurePlayerViewController(args: args)
-        
         self.observePlayerStatusChange()
         
         if let player = player, player.currentItem != nil {
@@ -243,8 +239,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         let target = "\(resolution)p"
         if let quality = player?.availableVideoQualities.first(where: { $0.resolution == target }) {
             player?.changeVideoQuality(to: quality)
-        } else {
-            NSLog("TPStreamsPlayerSDK: resolution \(resolution)p not available, using default quality")
         }
     }
 

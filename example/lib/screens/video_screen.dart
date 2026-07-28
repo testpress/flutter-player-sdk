@@ -41,15 +41,15 @@ class _VideoScreenState extends State<VideoScreen> {
         children: [
           AspectRatio(
             aspectRatio: 16 / 9,
-              child: TPStreamPlayer(
+            child: TPStreamPlayer(
               assetId: widget.assetId,
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
               autoPlay: widget.autoPlay,
               preferences: widget.preferences,
-              resolution: widget.resolution,
               onPlayerCreated: (controller) {
                 _controller = controller;
+                _controller.setVideoResolution(widget.resolution!);
                 _controller.enableAutoFullscreenOnRotate();
                 _controller.setWatermarks([
                   WatermarkConfig(
