@@ -7,7 +7,6 @@ class VideoScreen extends StatefulWidget {
   final String accessToken;
   final bool showDownloadOption;
   final bool autoPlay;
-  final int? resolution;
 
   const VideoScreen({
     super.key,
@@ -15,7 +14,6 @@ class VideoScreen extends StatefulWidget {
     required this.accessToken,
     this.showDownloadOption = false,
     this.autoPlay = true,
-    this.resolution,
     this.preferences,
   });
 
@@ -46,10 +44,10 @@ class _VideoScreenState extends State<VideoScreen> {
               accessToken: widget.accessToken,
               showDownloadOption: widget.showDownloadOption,
               autoPlay: widget.autoPlay,
+              resolution: 720,
               preferences: widget.preferences,
               onPlayerCreated: (controller) {
                 _controller = controller;
-                _controller.setVideoResolution(widget.resolution!);
                 _controller.enableAutoFullscreenOnRotate();
                 _controller.setWatermarks([
                   WatermarkConfig(
@@ -152,12 +150,12 @@ class _VideoScreenState extends State<VideoScreen> {
         _isPlaying = newIsPlaying;
       });
     }
-    
+
     if (newIsFullScreen != _isFullScreen) {
       setState(() {
         _isFullScreen = newIsFullScreen;
       });
-      
+
       if (newIsFullScreen) {
         Fluttertoast.showToast(
           msg: "Entering Fullscreen",
