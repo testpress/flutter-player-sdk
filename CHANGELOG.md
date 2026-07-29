@@ -159,18 +159,23 @@
 - Added totalSize and downloadedSize to DownloadAsset to support download progress calculation.
 - Added thumbnailUrl to DownloadAsset to support displaying asset thumbnails.
 
-## 2.2.25
-
-- Upgraded Android Player SDK to 1.2.3 for improved stability and performance.
-- Fixed an issue where setting maximum video resolution would fail silently on Android.
-
 ## 2.2.24
 
 - Migrated iOS dependency management from CocoaPods to Swift Package Manager (SPM) for faster and more reliable builds.
 - Updated iOS Player SDK to 1.2.34 with fixes for CocoaPods resource loading, initialization handling, and invalid playback URL reporting.
 
+## 2.2.25
+
+- Upgraded Android Player SDK to 1.2.3 for improved stability and performance.
+- Fixed an issue where setting maximum video resolution would fail silently on Android.
+
 ## 2.2.26
 
 - Upgraded Android Player SDK to 1.2.4 for improved stability and performance.
 - Added `setWatermarks` and `clearWatermarks` APIs to display text watermark overlays on video with configurable positioning, styling, opacity, and animation.
+
+## 2.2.27
+
+- Added `resolution` parameter to `TPStreamPlayer` to set the initial playback quality for online videos on Android and iOS.
+- Updated iOS Player SDK to 1.2.35.
 
