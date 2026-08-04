@@ -179,3 +179,17 @@
 - Added `resolution` parameter to `TPStreamPlayer` to set the initial playback quality for online videos on Android and iOS.
 - Updated iOS Player SDK to 1.2.35.
 
+## 2.2.28
+
+**iOS**
+
+- Use a per-player AVContentKeySession for offline DRM, ensuring expired licenses are validated on every playback instead of being bypassed by cached content keys from a shared session (#153)
+- Migrate RealmSwift from 10.54.2 to 20.0.4 (#154)
+- Make offline asset deletion thread-safe by carrying only plain asset and content ids across threads, and running encryption-key cleanup on the content key delegate queue (#155)
+
+**Android**
+
+- Upgrade `androidx.media3` from 1.7.1 to 1.8.1, the last release line that supports minSdk 21 (1.9+ raises the minimum to 23) (#117)
+- 1.8.1 includes playback fixes: VP9 Widevine playback on some devices, an extended detached-surface workaround for Lenovo/Motorola/realme devices, Bluetooth A/V sync after pause-resume, and several DASH/HLS fixes
+- Adapt download preparation to the updated `DownloadHelper.Callback.onPrepared` callback signature in 1.8.0 (#117)
+
