@@ -130,6 +130,7 @@ class NativePlayerView(
         val startInFullscreen = creationParams?.get("startInFullscreen") as? Boolean ?: false
         val offlineLicenseExpireDays = creationParams?.get("offlineLicenseExpireDays") as? Int ?: 15
         val autoPlay = creationParams?.get("autoPlay") as? Boolean ?: true
+        val userId = creationParams?.get("userId") as? String
         @Suppress("UNCHECKED_CAST")
         val metadata = creationParams?.get("metadata") as? Map<String, String> ?: emptyMap()
         val playbackAccessToken = if (shouldPreferOfflinePlayback) "" else (accessToken ?: "")
@@ -153,7 +154,8 @@ class NativePlayerView(
                 false,
                 startInFullscreen,
                 metadata,
-                offlineLicenseExpireSeconds
+                offlineLicenseExpireSeconds,
+                userId = userId
             )
 
             player?.listener = sdkListener

@@ -77,10 +77,11 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         let showDownloadOption = (args["showDownloadOption"] as? Bool) ?? false
         let startInFullscreen = (args["startInFullscreen"] as? Bool) ?? false
         let metadata = args["metadata"] as? [String: String]
+        let userId = args["userId"] as? String
         
         let playerPreferences = args["playerPreferences"] as? [Any]
         
-        if showDownloadOption || metadata != nil || startInFullscreen || playerPreferences != nil {
+        if showDownloadOption || metadata != nil || startInFullscreen || playerPreferences != nil || userId != nil {
             let configBuilder = TPStreamPlayerConfigurationBuilder()
             
             if showDownloadOption {
@@ -94,6 +95,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             if let metadata = metadata {
                 let metadataAny = metadata as [String: Any]
                 configBuilder.setDownloadMetadata(metadataAny)
+            }
+            
+            if let userId = userId {
+                configBuilder.setUserId(userId)
             }
             
             if let prefsList = playerPreferences,
@@ -222,7 +227,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         guard player != nil else { return }
         player.pause()
         removeObservers()
-        player.replaceCurrentItem(with: nil)
         player = nil
     }
     
