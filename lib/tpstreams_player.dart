@@ -24,6 +24,7 @@ class TPStreamPlayer extends StatefulWidget {
   final TPStreamsPlayerPreferences preferences;
   final bool autoPlay;
   final int? resolution;
+  final String? userId;
 
   TPStreamPlayer({
     super.key,
@@ -37,6 +38,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.metadata,
     this.autoPlay = true,
     this.resolution,
+    this.userId,
     TPStreamsPlayerPreferences? preferences,
   }) : _isOfflinePlayback = false,
        preferences = preferences ?? TPStreamsPlayerPreferences(
@@ -53,6 +55,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.aspectRatio = 16 / 9,
     this.onPlayerCreated,
     this.autoPlay = true,
+    this.userId,
     Map<String, String>? metadata,
   }) : assetId = assetId,
        accessToken = null,
@@ -153,6 +156,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "autoPlay": widget.autoPlay,
     if (widget.metadata != null) "metadata": widget.metadata,
     if (widget.resolution != null) "resolution": widget.resolution,
+    if (widget.userId != null) "userId": widget.userId,
     "playerPreferences": widget.preferences.encode(),
   };
 

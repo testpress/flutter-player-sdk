@@ -45,6 +45,7 @@ class _VideoScreenState extends State<VideoScreen> {
               showDownloadOption: widget.showDownloadOption,
               autoPlay: widget.autoPlay,
               resolution: 720,
+              userId: "example-user",
               preferences: widget.preferences,
               onPlayerCreated: (controller) {
                 _controller = controller;
