@@ -1,3 +1,9 @@
+## 2.2.29
+
+- Added auto-resume support: playback now restores to the last watched position for signed-in viewers on both platforms.
+  - `TPStreamPlayer` now accepts a `userId` parameter to identify the viewer.
+- Upgraded iOS Player SDK to 1.2.38 and Android Player SDK to 1.2.7.
+
 ## 2.0.0
 
 - Integrate our Native player SDKs for secure playback with support to play Non-DRM, DRM and AES encrypted videos.
