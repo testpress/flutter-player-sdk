@@ -12,6 +12,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         }
     }
     var playerViewController: TPStreamPlayerViewController?
+    private var configBuilder = TPStreamPlayerConfigurationBuilder()
     private var playerState: PlayerState = .unknown {
         didSet {
             playerListener.onPlaybackStateChanged(state:playerState.rawValue, completion: handleFlutterCallResult)
@@ -82,8 +83,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         let playerPreferences = args["playerPreferences"] as? [Any]
         
         if showDownloadOption || metadata != nil || startInFullscreen || playerPreferences != nil || userId != nil {
-            let configBuilder = TPStreamPlayerConfigurationBuilder()
-            
             if showDownloadOption {
                 configBuilder.showDownloadOption()
             }
@@ -265,11 +264,35 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
 
     func setWatermarks(configs: [WatermarkConfig]) throws {
-        NSLog("setWatermarks is currently not supported on iOS and will be ignored.")
+        configBuilder.setWatermarks(configs.map { config in
+            if let pigeonAnimation = config.animation {
+                return .init(
+                    text: config.text,
+                    x: config.x,
+                    y: config.y,
+                    color: config.color,
+                    textSize: config.textSize,
+                    opacity: config.opacity,
+                    animation: .init(type: pigeonAnimation.type == .pingPong ? .pingPong : .pingPong, duration: pigeonAnimation.duration)
+                )
+            } else {
+                return .init(
+                    text: config.text,
+                    x: config.x,
+                    y: config.y,
+                    color: config.color,
+                    textSize: config.textSize,
+                    opacity: config.opacity
+                )
+            }
+        })
+        
+        playerViewController?.config = configBuilder.build()
     }
 
     func clearWatermarks() throws {
-        NSLog("clearWatermarks is currently not supported on iOS and will be ignored.")
+        configBuilder.setWatermarks([])
+        playerViewController?.config = configBuilder.build()
     }
 
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
