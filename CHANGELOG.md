@@ -1,3 +1,11 @@
+## 2.2.30
+
+**iOS**
+
+- Added watermark support on iOS: `setWatermarks` and `clearWatermarks` now apply a player config instead of being ignored (#55).
+- The player config is now always built and applied consistently across player initialization and watermark updates (#55).
+- Upgraded TPStreamsSDK to 1.2.39 in the podspec and Package.swift.
+
 ## 2.2.29
 
 - Added auto-resume support: playback now restores to the last watched position for signed-in viewers on both platforms.
