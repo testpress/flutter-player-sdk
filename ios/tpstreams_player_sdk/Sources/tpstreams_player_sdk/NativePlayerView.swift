@@ -273,7 +273,15 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                     color: config.color,
                     textSize: config.textSize,
                     opacity: config.opacity,
-                    animation: .init(type: pigeonAnimation.type == .pingPong ? .pingPong : .pingPong, duration: pigeonAnimation.duration)
+                    animation: .init(
+                        type: {
+                            switch pigeonAnimation.type {
+                            case .pingPong:
+                                return .pingPong
+                            }
+                        }(),
+                        duration: pigeonAnimation.duration
+                    )
                 )
             } else {
                 return .init(
