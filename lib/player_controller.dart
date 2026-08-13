@@ -150,8 +150,6 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
       _nativeApi.setWatermarks(configs);
 
   /// Removes all watermarks and frees resources.
-  ///
-  /// iOS: Currently a no-op.
   Future<void> clearWatermarks() => _nativeApi.clearWatermarks();
 
   /// Get the total duration of the video
