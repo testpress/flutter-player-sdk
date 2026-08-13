@@ -264,6 +264,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
 
     func setWatermarks(configs: [WatermarkConfig]) throws {
+        guard let playerViewController else {
+            throw PigeonError(code: "player-not-initialized", message: "Player not initialized", details: nil)
+        }
+
         configBuilder.setWatermarks(configs.map { config in
             if let pigeonAnimation = config.animation {
                 return .init(
@@ -294,13 +298,17 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                 )
             }
         })
-        
-        playerViewController?.config = configBuilder.build()
+
+        playerViewController.config = configBuilder.build()
     }
 
     func clearWatermarks() throws {
+        guard let playerViewController else {
+            throw PigeonError(code: "player-not-initialized", message: "Player not initialized", details: nil)
+        }
+
         configBuilder.setWatermarks([])
-        playerViewController?.config = configBuilder.build()
+        playerViewController.config = configBuilder.build()
     }
 
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
