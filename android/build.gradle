@@ -70,5 +70,10 @@ android {
 }
 
 dependencies {
+    // TODO: bump once the presence-heartbeat PR (TPStreamsAndroidPlayer
+    // feat/presence-sdk-integration) merges and releases — this pinned
+    // version predates TPStreamsPlayer.Listener.onPresenceTokenExpired and
+    // BaseApiService.assetInfoUrl's viewerId param, so resolvePresenceToken
+    // in NativePlayerView.kt will not compile until then.
     implementation "com.github.testpress:TPStreamsAndroidPlayer:1.2.7"
 }

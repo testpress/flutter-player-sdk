@@ -27,5 +27,10 @@ abstract class NativePlayerListener {
   void beforeFullScreenEnter();
   void beforeFullScreenExit();
   void handleAccessTokenExpiration(String videoId);
+  // A 401 from the presence heartbeat loop — an expired token and a device-
+  // binding mismatch look identical from here, and both are resolved the
+  // same way: fetch a fresh playback config and resolve it via
+  // NativePlayerApi.resolvePresenceToken.
+  void handlePresenceTokenExpiration(String videoId);
   void notifyReplay();
 }
