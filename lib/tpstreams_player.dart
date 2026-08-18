@@ -167,7 +167,13 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     };
   }
 
+  bool _isDisposed = false;
+
   void setUpNativePlayerInitializationListener(int id) {
+    if (_isDisposed) {
+      NativePlayerApi(messageChannelSuffix: id.toString()).dispose();
+      return;
+    }
     _platformViewId = id;
     _nativeApi = NativePlayerApi(messageChannelSuffix: id.toString());
     NativePlayerInitializationListener.setUp(this, messageChannelSuffix: id.toString());
@@ -182,8 +188,10 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
 
   @override
   void dispose() {
+    _isDisposed = true;
     final viewId = _platformViewId;
     if (viewId != null) {
+      NativePlayerInitializationListener.setUp(null, messageChannelSuffix: viewId.toString());
       if (_isPlayerCreated) {
         _controller!.dispose();
       } else {
