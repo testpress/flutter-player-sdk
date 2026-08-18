@@ -1,3 +1,10 @@
+## 2.2.31
+
+**iOS**
+
+- Fixed an issue where audio continued playing after the Flutter widget was disposed due to retain cycles in Pigeon channel handlers (#57).
+- Added weak-reference proxies and explicit channel/delegate cleanup to ensure proper deallocation during disposal and teardown.
+
 ## 2.2.30
 
 **iOS**

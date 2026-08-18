@@ -1,11 +1,11 @@
 name: tpstreams_player_sdk
 description: TPStreams Player SDK makes it easy to play our DRM-protected and non-DRM content.
-version: 2.2.30
+version: 2.2.31
 homepage: https://tpstreams.com/
 documentation: https://developer.tpstreams.com/
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: ">=3.0.6 <4.0.0"
   flutter: ">=3.3.0"
 
 dependencies:
