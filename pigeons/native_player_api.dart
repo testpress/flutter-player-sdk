@@ -61,6 +61,11 @@ abstract class NativePlayerApi {
   int getCurrentTime();
   void dispose();
   void resolveAccessToken(String newAccessToken);
+  /// [newPresenceToken] is empty when the app's onPresenceTokenExpired
+  /// callback (or no such callback at all) could not produce a fresh token —
+  /// the native side treats that as "back off and try again later", the same
+  /// as it does for an empty resolveAccessToken.
+  void resolvePresenceToken(String newPresenceToken);
   void setMaxResolution(int resolution);
   void setVideoResolution(int resolution);
   void enterFullScreen();

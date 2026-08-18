@@ -84,6 +84,15 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   Future<String> Function(String videoId)? onAccessTokenExpired;
 
+  /// Called on a 401 from the presence heartbeat loop — an expired token and
+  /// a device-binding mismatch look identical from here, and both are
+  /// resolved the same way: fetch a fresh playback config and return its
+  /// presence token. Optional: presence is still rollout-gated to a handful
+  /// of organizations, and leaving this unset simply means the heartbeat loop
+  /// quietly stops after a 401 instead of resuming, the same as if presence
+  /// were disabled.
+  Future<String> Function(String videoId)? onPresenceTokenExpired;
+
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue(isLoading: true)) {
     _nativeApi = NativePlayerApi(messageChannelSuffix: platformViewId.toString());
     NativePlayerListener.setUp(this, messageChannelSuffix: platformViewId.toString());
@@ -226,6 +235,19 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     if (onAccessTokenExpired != null) {
       final newToken = await onAccessTokenExpired!(videoId);
       _nativeApi.resolveAccessToken(newToken);
+    }
+  }
+
+  @override
+  void handlePresenceTokenExpiration(String videoId) async {
+    if (onPresenceTokenExpired != null) {
+      final newToken = await onPresenceTokenExpired!(videoId);
+      _nativeApi.resolvePresenceToken(newToken);
+    } else {
+      // Matches the native side's own default: nothing set means presence
+      // isn't wired up, so back off rather than wait on a callback that will
+      // never fire.
+      _nativeApi.resolvePresenceToken('');
     }
   }
 

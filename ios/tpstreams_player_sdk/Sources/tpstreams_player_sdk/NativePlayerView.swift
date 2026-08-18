@@ -24,6 +24,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private var currentItemChangeObservation: NSKeyValueObservation!
     private var observedItem: AVPlayerItem?
     private var isInitialized = false
+    private var pendingPresenceTokenCallback: ((String?) -> Void)?
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -233,6 +234,11 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
     }
 
+    func resolvePresenceToken(newPresenceToken: String) {
+        pendingPresenceTokenCallback?(newPresenceToken.isEmpty ? nil : newPresenceToken)
+        pendingPresenceTokenCallback = nil
+    }
+
     func setMaxResolution(resolution: Int64) {
         // No-op: iOS does not currently support setMaxResolution
         NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
@@ -380,5 +386,10 @@ extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
 
     func didTapReplay() {
         playerListener.notifyReplay(completion: handleFlutterCallResult)
+    }
+
+    func presenceTokenExpired(forVideo videoId: String, completion: @escaping (String?) -> Void) {
+        pendingPresenceTokenCallback = completion
+        playerListener.handlePresenceTokenExpiration(videoId: videoId, completion: handleFlutterCallResult)
     }
 }

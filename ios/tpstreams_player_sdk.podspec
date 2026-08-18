@@ -15,6 +15,10 @@ A new Flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'tpstreams_player_sdk/Sources/tpstreams_player_sdk/**/*'
   s.dependency 'Flutter'
+  # TODO: bump once the presence-heartbeat PR (iOSPlayerSDK
+  # feat/presence-sdk-integration) merges and releases — this pinned version
+  # predates TPStreamPlayerViewControllerDelegate.presenceTokenExpired, so
+  # NativePlayerView.swift's conformance to it will not compile until then.
   s.dependency 'TPStreamsSDK', '1.2.39'
   s.platform = :ios, '12.0'
 

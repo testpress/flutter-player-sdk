@@ -32,6 +32,7 @@ class NativePlayerView(
     private var playerView: TPStreamsPlayerView? = null
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
+    private var pendingPresenceTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
     private var isDisposed = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
@@ -43,6 +44,11 @@ class NativePlayerView(
         override fun onAccessTokenExpired(videoId: String, callback: (String) -> Unit) {
             pendingTokenCallback = callback
             playerListener.handleAccessTokenExpiration(videoId, ::handleFlutterCallResult)
+        }
+
+        override fun onPresenceTokenExpired(videoId: String, callback: (String) -> Unit) {
+            pendingPresenceTokenCallback = callback
+            playerListener.handlePresenceTokenExpiration(videoId, ::handleFlutterCallResult)
         }
 
         override fun onError(error: PlaybackError, errorMessage: String) {
@@ -319,6 +325,11 @@ class NativePlayerView(
     override fun resolveAccessToken(newAccessToken: String) {
         pendingTokenCallback?.invoke(newAccessToken)
         pendingTokenCallback = null
+    }
+
+    override fun resolvePresenceToken(newPresenceToken: String) {
+        pendingPresenceTokenCallback?.invoke(newPresenceToken)
+        pendingPresenceTokenCallback = null
     }
 
     override fun dispose() {
