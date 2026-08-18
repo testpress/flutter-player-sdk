@@ -12,6 +12,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         }
     }
     var playerViewController: TPStreamPlayerViewController?
+    private var delegateProxy: TPStreamPlayerViewControllerDelegateProxy!
     private var configBuilder = TPStreamPlayerConfigurationBuilder()
     private var playerState: PlayerState = .unknown {
         didSet {
@@ -24,6 +25,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private var currentItemChangeObservation: NSKeyValueObservation!
     private var observedItem: AVPlayerItem?
     private var isInitialized = false
+    private let messenger: FlutterBinaryMessenger
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -31,6 +33,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
 
     init(frame: CGRect, viewIdentifier viewId: Int64, arguments args: Any?, binaryMessenger messenger: FlutterBinaryMessenger) {
         self.viewId = viewId
+        self.messenger = messenger
         initializationListener = NativePlayerInitializationListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         playerListener = NativePlayerListener(binaryMessenger: messenger, messageChannelSuffix: "\(viewId)")
         
@@ -61,7 +64,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             }
         }
         
-        NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: self, messageChannelSuffix: "\(viewId)")
+        let apiWrapper = NativePlayerApiWrapper(target: self)
+        NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: apiWrapper, messageChannelSuffix: "\(viewId)")
         configurePlayerViewController(args: args)
         self.observePlayerStatusChange()
         
@@ -118,7 +122,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
             
             playerViewController?.config = configBuilder.build()
         }
-        playerViewController?.delegate = self
+        delegateProxy = TPStreamPlayerViewControllerDelegateProxy(target: self)
+        playerViewController?.delegate = delegateProxy
     }
  
      private func observeCurrentItemChanges(){
@@ -223,6 +228,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func dispose() throws {
+        NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: nil, messageChannelSuffix: "\(viewId)")
+        playerViewController?.delegate = nil
+        
         guard player != nil else { return }
         player.pause()
         removeObservers()
@@ -318,6 +326,10 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     deinit {
+        // Only runs if dispose() was never called (e.g. view removed without Flutter teardown).
+        // If dispose() already ran, player is nil and these are harmless no-ops.
+        player?.pause()
+        player?.replaceCurrentItem(with: nil)
         removeObservers()
     }
     
@@ -361,7 +373,7 @@ private enum PlayerState : String{
 }
 
 
-extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
+extension NativePlayerView {
     func didEnterFullScreenMode() {
         onFullScreenChanged(isFullScreen: true)
     }
@@ -381,4 +393,44 @@ extension NativePlayerView: TPStreamPlayerViewControllerDelegate {
     func didTapReplay() {
         playerListener.notifyReplay(completion: handleFlutterCallResult)
     }
+}
+
+class TPStreamPlayerViewControllerDelegateProxy: NSObject, TPStreamPlayerViewControllerDelegate {
+    weak var target: NativePlayerView?
+    init(target: NativePlayerView) {
+        self.target = target
+    }
+    func didEnterFullScreenMode() { target?.didEnterFullScreenMode() }
+    func didExitFullScreenMode() { target?.didExitFullScreenMode() }
+    func willEnterFullScreenMode() { target?.willEnterFullScreenMode() }
+    func willExitFullScreenMode() { target?.willExitFullScreenMode() }
+    func didTapReplay() { target?.didTapReplay() }
+}
+
+class NativePlayerApiWrapper: NativePlayerApi {
+    weak var target: NativePlayerView?
+    init(target: NativePlayerView) { self.target = target }
+    
+    func play() throws { try target?.play() }
+    func pause() throws { try target?.pause() }
+    func seek(position: Int64) throws { try target?.seek(position: position) }
+    func setPlaybackSpeed(speed: Double) throws { try target?.setPlaybackSpeed(speed: speed) }
+    func getDuration() throws -> Int64 {
+        guard let target else { throw PigeonError(code: "player-disposed", message: "Player view has been disposed", details: nil) }
+        return try target.getDuration()
+    }
+    func getCurrentTime() throws -> Int64 {
+        guard let target else { throw PigeonError(code: "player-disposed", message: "Player view has been disposed", details: nil) }
+        return try target.getCurrentTime()
+    }
+    func dispose() throws { try target?.dispose() }
+    func resolveAccessToken(newAccessToken: String) { target?.resolveAccessToken(newAccessToken: newAccessToken) }
+    func setMaxResolution(resolution: Int64) { target?.setMaxResolution(resolution: resolution) }
+    func setVideoResolution(resolution: Int64) throws { try target?.setVideoResolution(resolution: resolution) }
+    func enterFullScreen() { target?.enterFullScreen() }
+    func exitFullScreen() { target?.exitFullScreen() }
+    func enableAutoFullscreenOnRotate() throws { try target?.enableAutoFullscreenOnRotate() }
+    func disableAutoFullscreenOnRotate() throws { try target?.disableAutoFullscreenOnRotate() }
+    func setWatermarks(configs: [WatermarkConfig]) throws { try target?.setWatermarks(configs: configs) }
+    func clearWatermarks() throws { try target?.clearWatermarks() }
 }
