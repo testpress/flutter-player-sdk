@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
 import 'generated/native_player_api.g.dart';
@@ -235,7 +236,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
         if (duration.inSeconds > 0) {
           value = value.copyWith(duration: duration);
         }
-      }).catchError((_) {});
+      }).catchError((e) {
+        if (e is PlatformException && e.code == 'player-disposed') return;
+        throw e;
+      });
     }
   }
 
@@ -244,7 +248,10 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
       getCurrentTime().then((currentTime) {
         value = value.copyWith(position: currentTime);
-      }).catchError((_) {});
+      }).catchError((e) {
+        if (e is PlatformException && e.code == 'player-disposed') return;
+        throw e;
+      });
     });
   }
 
