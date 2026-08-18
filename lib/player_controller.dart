@@ -235,7 +235,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
         if (duration.inSeconds > 0) {
           value = value.copyWith(duration: duration);
         }
-      });
+      }).catchError((_) {});
     }
   }
 
@@ -244,7 +244,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
       getCurrentTime().then((currentTime) {
         value = value.copyWith(position: currentTime);
-      });
+      }).catchError((_) {});
     });
   }
 

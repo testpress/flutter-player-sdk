@@ -408,29 +408,30 @@ class TPStreamPlayerViewControllerDelegateProxy: NSObject, TPStreamPlayerViewCon
 }
 
 class NativePlayerApiWrapper: NativePlayerApi {
+    private static let disposedError = PigeonError(code: "player-disposed", message: "Player view has been disposed", details: nil)
+
     weak var target: NativePlayerView?
     init(target: NativePlayerView) { self.target = target }
-    
-    func play() throws { try target?.play() }
-    func pause() throws { try target?.pause() }
-    func seek(position: Int64) throws { try target?.seek(position: position) }
-    func setPlaybackSpeed(speed: Double) throws { try target?.setPlaybackSpeed(speed: speed) }
-    func getDuration() throws -> Int64 {
-        guard let target else { throw PigeonError(code: "player-disposed", message: "Player view has been disposed", details: nil) }
-        return try target.getDuration()
+
+    private func requirePlayer() throws -> NativePlayerView {
+        guard let target, target.player != nil else { throw Self.disposedError }
+        return target
     }
-    func getCurrentTime() throws -> Int64 {
-        guard let target else { throw PigeonError(code: "player-disposed", message: "Player view has been disposed", details: nil) }
-        return try target.getCurrentTime()
-    }
+
+    func play() throws { try requirePlayer().play() }
+    func pause() throws { try requirePlayer().pause() }
+    func seek(position: Int64) throws { try requirePlayer().seek(position: position) }
+    func setPlaybackSpeed(speed: Double) throws { try requirePlayer().setPlaybackSpeed(speed: speed) }
+    func getDuration() throws -> Int64 { return try requirePlayer().getDuration() }
+    func getCurrentTime() throws -> Int64 { return try requirePlayer().getCurrentTime() }
     func dispose() throws { try target?.dispose() }
     func resolveAccessToken(newAccessToken: String) { target?.resolveAccessToken(newAccessToken: newAccessToken) }
     func setMaxResolution(resolution: Int64) { target?.setMaxResolution(resolution: resolution) }
-    func setVideoResolution(resolution: Int64) throws { try target?.setVideoResolution(resolution: resolution) }
+    func setVideoResolution(resolution: Int64) throws { try requirePlayer().setVideoResolution(resolution: resolution) }
     func enterFullScreen() { target?.enterFullScreen() }
     func exitFullScreen() { target?.exitFullScreen() }
-    func enableAutoFullscreenOnRotate() throws { try target?.enableAutoFullscreenOnRotate() }
-    func disableAutoFullscreenOnRotate() throws { try target?.disableAutoFullscreenOnRotate() }
-    func setWatermarks(configs: [WatermarkConfig]) throws { try target?.setWatermarks(configs: configs) }
-    func clearWatermarks() throws { try target?.clearWatermarks() }
+    func enableAutoFullscreenOnRotate() throws { try requirePlayer().enableAutoFullscreenOnRotate() }
+    func disableAutoFullscreenOnRotate() throws { try requirePlayer().disableAutoFullscreenOnRotate() }
+    func setWatermarks(configs: [WatermarkConfig]) throws { try requirePlayer().setWatermarks(configs: configs) }
+    func clearWatermarks() throws { try requirePlayer().clearWatermarks() }
 }
