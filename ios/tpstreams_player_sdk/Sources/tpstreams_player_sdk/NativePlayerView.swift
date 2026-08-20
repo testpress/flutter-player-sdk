@@ -26,6 +26,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private var observedItem: AVPlayerItem?
     private var isInitialized = false
     private let messenger: FlutterBinaryMessenger
+    private var storedArgs: [String: Any]?
+    private var isRefreshingToken = false
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -40,26 +42,13 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         super.init()
 
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
-            let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
-            let autoPlay = args["autoPlay"] as? Bool ?? true
-            
-            if isOfflinePlayback {
-                player = TPAVPlayer(offlineAssetId: assetId)
-            } else {
-                let accessToken = args["accessToken"] as? String
-                let resolution = args["resolution"] as? Int
-                player = TPAVPlayer(assetID: assetId, accessToken: accessToken) { [weak self] error in
-                    guard let self = self, error == nil, let resolution = resolution else { return }
-                    if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
-                        self.player?.changeVideoQuality(to: quality)
-                    }
-                }
-            }
+            self.storedArgs = args
+            createPlayer(from: args)
             
             playerViewController = TPStreamPlayerViewController()
             playerViewController!.player = player
             
-            if autoPlay {
+            if (args["autoPlay"] as? Bool) ?? true {
                 player.play()
             }
         }
@@ -238,7 +227,28 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func resolveAccessToken(newAccessToken: String) {
-        // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
+        guard isRefreshingToken else { return }
+        isRefreshingToken = false
+
+        guard let args = storedArgs else { return }
+
+        removeObservers()
+        playerViewController?.delegate = nil
+        player?.pause()
+        player = nil
+
+        createPlayer(from: args, accessToken: newAccessToken)
+
+        playerViewController!.player = player
+        delegateProxy = TPStreamPlayerViewControllerDelegateProxy(target: self)
+        playerViewController?.delegate = delegateProxy
+        self.observePlayerStatusChange()
+
+        if let player = player, player.currentItem != nil {
+            notifyPlayerCreated()
+        } else {
+            self.observeCurrentItemChanges()
+        }
     }
 
     func setMaxResolution(resolution: Int64) {
@@ -319,9 +329,33 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         playerViewController.config = configBuilder.build()
     }
 
+    private func createPlayer(from args: [String: Any], accessToken: String? = nil) {
+        guard let assetId = args["assetId"] as? String else { return }
+        let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
+
+        if isOfflinePlayback {
+            player = TPAVPlayer(offlineAssetId: assetId)
+        } else {
+            let token = accessToken ?? args["accessToken"] as? String
+            let resolution = args["resolution"] as? Int
+            player = TPAVPlayer(assetID: assetId, accessToken: token) { [weak self] error in
+                guard let self = self, error == nil, let resolution = resolution else { return }
+                if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
+                    self.player?.changeVideoQuality(to: quality)
+                }
+            }
+        }
+    }
+
     func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
         if let tpStreamPlayerError = error as? TPStreamPlayerError {
             playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)
+
+            if tpStreamPlayerError == .unauthorizedAccess && !isRefreshingToken {
+                isRefreshingToken = true
+                let videoId = storedArgs?["assetId"] as? String ?? ""
+                playerListener.handleAccessTokenExpiration(videoId: videoId, completion: handleFlutterCallResult)
+            }
         }
     }
     
