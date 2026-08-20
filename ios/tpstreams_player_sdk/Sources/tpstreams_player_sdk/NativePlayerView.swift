@@ -8,7 +8,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     var player: TPAVPlayer! {
         didSet {
             guard let player = player else { return }
-            player.onError = sendPlayerErrorEvent
+            player.onError = { [weak self] error, sentryIssueId in
+                self?.handlePlayerError(error)
+            }
         }
     }
     var playerViewController: TPStreamPlayerViewController?
@@ -26,6 +28,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private var observedItem: AVPlayerItem?
     private var isInitialized = false
     private let messenger: FlutterBinaryMessenger
+    private var pendingTokenCallback: ((String) -> Void)?
+    private var currentAssetId: String?
+    private var creationArgs: [String: Any]?
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -42,6 +47,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
             let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
             let autoPlay = args["autoPlay"] as? Bool ?? true
+            currentAssetId = assetId
+            creationArgs = args
             
             if isOfflinePlayback {
                 player = TPAVPlayer(offlineAssetId: assetId)
@@ -238,12 +245,12 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func resolveAccessToken(newAccessToken: String) {
-        // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
+        pendingTokenCallback?(newAccessToken)
+        pendingTokenCallback = nil
     }
 
     func setMaxResolution(resolution: Int64) {
-        // No-op: iOS does not currently support setMaxResolution
-        NSLog("setMaxResolution is currently not supported on iOS and will be ignored.")
+        player?.limitAvailableVideoQualities(byMaxHeight: Int(resolution))
     }
 
     func setVideoResolution(resolution: Int64) throws {
@@ -318,12 +325,6 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         configBuilder.setWatermarks([])
         playerViewController.config = configBuilder.build()
     }
-
-    func sendPlayerErrorEvent(_ error: Error, sentryIssueId: String?) {
-        if let tpStreamPlayerError = error as? TPStreamPlayerError {
-            playerListener.onPlayerError(error:tpStreamPlayerError.message, completion: handleFlutterCallResult)
-        }
-    }
     
     deinit {
         // Only runs if dispose() was never called (e.g. view removed without Flutter teardown).
@@ -361,6 +362,53 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         if !isInitialized {
             initializationListener.onNativePlayerCreated(platformViewId: viewId, completion: handleFlutterCallResult)
             isInitialized = true
+        }
+    }
+
+    private func handlePlayerError(_ error: Error) {
+        if let tpStreamPlayerError = error as? TPStreamPlayerError {
+            if tpStreamPlayerError == .unauthorizedAccess, let assetId = currentAssetId {
+                pendingTokenCallback = { [weak self] newToken in
+                    self?.recreatePlayerWithToken(newToken)
+                }
+                playerListener.handleAccessTokenExpiration(videoId: assetId, completion: handleFlutterCallResult)
+            } else {
+                playerListener.onPlayerError(error: tpStreamPlayerError.message, completion: handleFlutterCallResult)
+            }
+        }
+    }
+
+    private func recreatePlayerWithToken(_ newToken: String) {
+        guard let args = creationArgs, let assetId = args["assetId"] as? String else {
+            return
+        }
+        
+        let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
+        let autoPlay = args["autoPlay"] as? Bool ?? true
+        
+        // Remove old player
+        player.pause()
+        removeObservers()
+        player = nil
+        
+        // Create new player with fresh token
+        if isOfflinePlayback {
+            player = TPAVPlayer(offlineAssetId: assetId)
+        } else {
+            let resolution = args["resolution"] as? Int
+            player = TPAVPlayer(assetID: assetId, accessToken: newToken) { [weak self] error in
+                guard let self = self, error == nil, let resolution = resolution else { return }
+                if let quality = self.player?.availableVideoQualities.first(where: { $0.resolution == "\(resolution)p" }) {
+                    self.player?.changeVideoQuality(to: quality)
+                }
+            }
+        }
+        
+        playerViewController?.player = player
+        observePlayerStatusChange()
+        
+        if autoPlay {
+            player.play()
         }
     }
 }

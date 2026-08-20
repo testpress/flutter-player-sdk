@@ -4,7 +4,11 @@ import 'screens/downloads_screen.dart';
 import 'screens/video_screen.dart';
 
 void main() {
-  TPStreamsSDK.initialize(provider: PROVIDER.tpstreams, orgCode: "9q94nm");
+  TPStreamsSDK.initialize(
+    provider: PROVIDER.tpstreams,
+    orgCode: "9q94nm",
+    allowFallbackToL3: true,
+  );
 
   runApp(MyApp());
 }
