@@ -1,3 +1,19 @@
+## 2.2.32
+
+**Android**
+
+- Upgraded TPStreamsAndroidPlayer to 1.2.8.
+- Bridged `allowFallbackToL3` parameter: enables automatic fallback to software decryption when hardware-secured DRM decryption fails, preventing complete playback failure on unsupported devices.
+- Watermarks now render within the video content area instead of the full player view.
+- Live streams now continue playback when the live feed ends before the VOD recording is ready.
+- HTTP 401/403/404 errors from media CDN are correctly classified instead of being treated as network failures.
+
+**iOS**
+
+- Upgraded TPStreamsSDK to 1.2.40.
+- Watermarks now anchor to the video content rect instead of the full player view.
+- Live video playback now works while transcoding is in progress.
+
 ## 2.2.31
 
 **iOS**
@@ -213,4 +229,3 @@
 - Upgrade `androidx.media3` from 1.7.1 to 1.8.1, the last release line that supports minSdk 21 (1.9+ raises the minimum to 23) (#117)
 - 1.8.1 includes playback fixes: VP9 Widevine playback on some devices, an extended detached-surface workaround for Lenovo/Motorola/realme devices, Bluetooth A/V sync after pause-resume, and several DASH/HLS fixes
 - Adapt download preparation to the updated `DownloadHelper.Callback.onPrepared` callback signature in 1.8.0 (#117)
-
