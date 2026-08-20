@@ -13,7 +13,7 @@ public class TpstreamsPlayerSdkPlugin: NSObject, FlutterPlugin, NativeSDKApi {
     NativeDownloadManagerApiSetup.setUp(binaryMessenger: registrar.messenger(), api: downloadManager)
   }
 
-  func initialize(provider: PROVIDER, orgCode: String, authToken: String?) throws {
+  func initialize(provider: PROVIDER, orgCode: String, authToken: String?, allowFallbackToL3: Bool) throws {
     let sdkProvider = provider == .testpress ? Provider.testpress : Provider.tpstreams
     TPStreamsSDK.initialize(for: sdkProvider, withOrgCode: orgCode, usingAuthToken: authToken)
   }

@@ -20,6 +20,7 @@ class TPStreamsSDK {
     PROVIDER provider = PROVIDER.tpstreams,
     required String orgCode,
     String? authToken,
+    bool allowFallbackToL3 = false,
   }) {
     if (orgCode.isEmpty) {
       throw Exception("Given OrgCode is empty, please pass a valid orgCode");
@@ -29,7 +30,7 @@ class TPStreamsSDK {
     _provider = provider;
 
     WidgetsFlutterBinding.ensureInitialized();
-    _nativeSdkApi.initialize(provider, orgCode, authToken);
+    _nativeSdkApi.initialize(provider, orgCode, authToken, allowFallbackToL3);
   }
 
   static String get orgCode {
@@ -49,11 +50,13 @@ class TestpressSDK {
   static void initialize({
     required String subdomain,
     String? authToken,
+    bool allowFallbackToL3 = false,
   }) {
     TPStreamsSDK.initialize(
       provider: PROVIDER.testpress,
       orgCode: subdomain,
       authToken: authToken,
+      allowFallbackToL3: allowFallbackToL3,
     );
   }
 }

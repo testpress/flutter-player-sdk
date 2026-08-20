@@ -28,12 +28,12 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
     NativeSDKApi.setUp(flutterPluginBinding.binaryMessenger, this)
   }
 
-  override fun initialize(provider: PROVIDER, orgCode: String, authToken: String?) {
+  override fun initialize(provider: PROVIDER, orgCode: String, authToken: String?, allowFallbackToL3: Boolean) {
     val sdkProvider = when (provider) {
       PROVIDER.TESTPRESS -> TPStreamsSDK.Provider.TestPress
       PROVIDER.TPSTREAMS -> TPStreamsSDK.Provider.TPStreams
     }
-    TPStreamsSDK.init(orgCode, sdkProvider, authToken)
+    TPStreamsSDK.init(orgCode, sdkProvider, authToken, allowFallbackToL3)
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
