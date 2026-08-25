@@ -17,6 +17,7 @@ PlatformException _createConnectionError(String channelName) {
 
 enum WatermarkAnimationType {
   pingPong,
+  random,
 }
 
 class WatermarkAnimation {

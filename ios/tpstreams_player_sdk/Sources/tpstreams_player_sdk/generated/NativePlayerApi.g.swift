@@ -48,6 +48,7 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
 
 enum WatermarkAnimationType: Int {
   case pingPong = 0
+  case random = 1
 }
 
 /// Generated class from Pigeon that represents data sent in messages.

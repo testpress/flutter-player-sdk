@@ -290,6 +290,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
                             switch pigeonAnimation.type {
                             case .pingPong:
                                 return .pingPong
+                            case .random:
+                                return .random
                             }
                         }(),
                         duration: pigeonAnimation.duration

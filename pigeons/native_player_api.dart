@@ -17,6 +17,7 @@ import 'package:pigeon/pigeon.dart';
 
 enum WatermarkAnimationType {
   pingPong,
+  random,
 }
 
 class WatermarkAnimation {

@@ -35,7 +35,8 @@ private fun wrapError(exception: Throwable): List<Any?> {
 }
 
 enum class WatermarkAnimationType(val raw: Int) {
-  PING_PONG(0);
+  PING_PONG(0),
+  RANDOM(1);
 
   companion object {
     fun ofRaw(raw: Int): WatermarkAnimationType? {
