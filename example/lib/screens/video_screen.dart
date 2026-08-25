@@ -65,10 +65,10 @@ class _VideoScreenState extends State<VideoScreen> {
                     text: '© TPStreams',
                     x: 0,
                     y: 50,
-                    opacity: 0.3,
+                    opacity: 0.9,
                     animation: WatermarkAnimation(
-                      type: WatermarkAnimationType.pingPong,
-                      duration: 5000,
+                      type: WatermarkAnimationType.random,
+                      duration: 3000,
                     ),
                   ),
                 ]);

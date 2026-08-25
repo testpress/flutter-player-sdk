@@ -146,7 +146,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   /// - [textSize]: Text size in SP (default: 14).
   /// - [opacity]: 0.0 (invisible) to 1.0 (fully opaque) (default: 0.3).
   /// - [animation]: Optional animation (e.g., [WatermarkAnimation] with
-  ///   [WatermarkAnimationType.pingPong] for a sweep effect).
+  ///   [WatermarkAnimationType.pingPong] or [WatermarkAnimationType.random]).
   Future<void> setWatermarks(List<WatermarkConfig> configs) =>
       _nativeApi.setWatermarks(configs);
 

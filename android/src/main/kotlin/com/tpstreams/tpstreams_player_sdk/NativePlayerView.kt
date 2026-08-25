@@ -314,6 +314,7 @@ class NativePlayerView(
 
     private fun mapAnimationType(type: WatermarkAnimationType): NativeWatermarkAnimationType = when (type) {
         WatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
+        WatermarkAnimationType.RANDOM -> NativeWatermarkAnimationType.RANDOM
     }
 
     override fun resolveAccessToken(newAccessToken: String) {
