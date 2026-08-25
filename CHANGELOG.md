@@ -1,3 +1,9 @@
+## 2.2.33
+
+- Added `random` watermark animation type support (`WatermarkAnimationType.random`) across Android and iOS.
+- Upgraded `TPStreamsAndroidPlayer` to 1.2.9 on Android.
+- Upgraded `TPStreamsSDK` to 1.2.41 on iOS.
+
 ## 2.2.32
 
 **Android**
