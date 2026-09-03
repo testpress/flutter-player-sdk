@@ -271,44 +271,12 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
     }
 
-    func setWatermarks(configs: [WatermarkConfig]) throws {
+    func setWatermarks(watermarks: [BaseWatermarkConfig]) throws {
         guard let playerViewController else {
             throw PigeonError(code: "player-not-initialized", message: "Player not initialized", details: nil)
         }
 
-        configBuilder.setWatermarks(configs.map { config in
-            if let pigeonAnimation = config.animation {
-                return .init(
-                    text: config.text,
-                    x: config.x,
-                    y: config.y,
-                    color: config.color,
-                    textSize: config.textSize,
-                    opacity: config.opacity,
-                    animation: .init(
-                        type: {
-                            switch pigeonAnimation.type {
-                            case .pingPong:
-                                return .pingPong
-                            case .random:
-                                return .random
-                            }
-                        }(),
-                        duration: pigeonAnimation.duration
-                    )
-                )
-            } else {
-                return .init(
-                    text: config.text,
-                    x: config.x,
-                    y: config.y,
-                    color: config.color,
-                    textSize: config.textSize,
-                    opacity: config.opacity
-                )
-            }
-        })
-
+        configBuilder.setWatermarks(watermarks.compactMap { $0.toNative() })
         playerViewController.config = configBuilder.build()
     }
 
@@ -434,6 +402,50 @@ class NativePlayerApiWrapper: NativePlayerApi {
     func exitFullScreen() { target?.exitFullScreen() }
     func enableAutoFullscreenOnRotate() throws { try requirePlayer().enableAutoFullscreenOnRotate() }
     func disableAutoFullscreenOnRotate() throws { try requirePlayer().disableAutoFullscreenOnRotate() }
-    func setWatermarks(configs: [WatermarkConfig]) throws { try requirePlayer().setWatermarks(configs: configs) }
+    func setWatermarks(watermarks: [BaseWatermarkConfig]) throws { try requirePlayer().setWatermarks(watermarks: watermarks) }
     func clearWatermarks() throws { try requirePlayer().clearWatermarks() }
 }
+
+// MARK: - Watermark Converters
+private extension BaseWatermarkConfig {
+    func toNative() -> TPStreamsSDK.BaseWatermarkConfig? {
+        text?.toNative() ?? image?.toNative()
+    }
+}
+
+private extension TextWatermarkConfig {
+    func toNative() -> TPStreamsSDK.TextWatermarkConfig {
+        TPStreamsSDK.TextWatermarkConfig(
+            text: text,
+            x: x,
+            y: y,
+            color: color,
+            textSize: textSize,
+            opacity: opacity,
+            animation: animation?.toNative()
+        )
+    }
+}
+
+private extension ImageWatermarkConfig {
+    func toNative() -> TPStreamsSDK.ImageWatermarkConfig {
+        TPStreamsSDK.ImageWatermarkConfig(
+            imageUrl: imageUrl,
+            width: Double(width),
+            height: Double(height),
+            x: x,
+            y: y,
+            opacity: opacity
+        )
+    }
+}
+
+private extension WatermarkAnimation {
+    func toNative() -> TPStreamsSDK.WatermarkAnimation {
+        TPStreamsSDK.WatermarkAnimation(
+            type: type == .pingPong ? .pingPong : .random,
+            duration: duration
+        )
+    }
+}
+

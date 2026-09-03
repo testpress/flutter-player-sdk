@@ -77,7 +77,7 @@ struct WatermarkAnimation {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
-struct WatermarkConfig {
+struct TextWatermarkConfig {
   var text: String
   var x: Int64
   var y: Int64
@@ -88,7 +88,7 @@ struct WatermarkConfig {
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> WatermarkConfig? {
+  static func fromList(_ pigeonVar_list: [Any?]) -> TextWatermarkConfig? {
     let text = pigeonVar_list[0] as! String
     let x = pigeonVar_list[1] as! Int64
     let y = pigeonVar_list[2] as! Int64
@@ -97,7 +97,7 @@ struct WatermarkConfig {
     let opacity = pigeonVar_list[5] as! Double
     let animation: WatermarkAnimation? = nilOrValue(pigeonVar_list[6])
 
-    return WatermarkConfig(
+    return TextWatermarkConfig(
       text: text,
       x: x,
       y: y,
@@ -120,6 +120,70 @@ struct WatermarkConfig {
   }
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct ImageWatermarkConfig {
+  var imageUrl: String
+  var width: Int64
+  var height: Int64
+  var x: Int64
+  var y: Int64
+  var opacity: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> ImageWatermarkConfig? {
+    let imageUrl = pigeonVar_list[0] as! String
+    let width = pigeonVar_list[1] as! Int64
+    let height = pigeonVar_list[2] as! Int64
+    let x = pigeonVar_list[3] as! Int64
+    let y = pigeonVar_list[4] as! Int64
+    let opacity = pigeonVar_list[5] as! Double
+
+    return ImageWatermarkConfig(
+      imageUrl: imageUrl,
+      width: width,
+      height: height,
+      x: x,
+      y: y,
+      opacity: opacity
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      imageUrl,
+      width,
+      height,
+      x,
+      y,
+      opacity,
+    ]
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BaseWatermarkConfig {
+  var text: TextWatermarkConfig? = nil
+  var image: ImageWatermarkConfig? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> BaseWatermarkConfig? {
+    let text: TextWatermarkConfig? = nilOrValue(pigeonVar_list[0])
+    let image: ImageWatermarkConfig? = nilOrValue(pigeonVar_list[1])
+
+    return BaseWatermarkConfig(
+      text: text,
+      image: image
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      text,
+      image,
+    ]
+  }
+}
+
 private class NativePlayerApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -132,7 +196,11 @@ private class NativePlayerApiPigeonCodecReader: FlutterStandardReader {
     case 130:
       return WatermarkAnimation.fromList(self.readValue() as! [Any?])
     case 131:
-      return WatermarkConfig.fromList(self.readValue() as! [Any?])
+      return TextWatermarkConfig.fromList(self.readValue() as! [Any?])
+    case 132:
+      return ImageWatermarkConfig.fromList(self.readValue() as! [Any?])
+    case 133:
+      return BaseWatermarkConfig.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -147,8 +215,14 @@ private class NativePlayerApiPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? WatermarkAnimation {
       super.writeByte(130)
       super.writeValue(value.toList())
-    } else if let value = value as? WatermarkConfig {
+    } else if let value = value as? TextWatermarkConfig {
       super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? ImageWatermarkConfig {
+      super.writeByte(132)
+      super.writeValue(value.toList())
+    } else if let value = value as? BaseWatermarkConfig {
+      super.writeByte(133)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -186,7 +260,7 @@ protocol NativePlayerApi {
   func exitFullScreen() throws
   func enableAutoFullscreenOnRotate() throws
   func disableAutoFullscreenOnRotate() throws
-  func setWatermarks(configs: [WatermarkConfig]) throws
+  func setWatermarks(watermarks: [BaseWatermarkConfig]) throws
   func clearWatermarks() throws
 }
 
@@ -392,9 +466,9 @@ class NativePlayerApiSetup {
     if let api = api {
       setWatermarksChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let configsArg = args[0] as! [WatermarkConfig]
+        let watermarksArg = args[0] as! [BaseWatermarkConfig]
         do {
-          try api.setWatermarks(configs: configsArg)
+          try api.setWatermarks(watermarks: watermarksArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))

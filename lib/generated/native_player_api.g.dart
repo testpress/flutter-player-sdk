@@ -47,8 +47,8 @@ class WatermarkAnimation {
   }
 }
 
-class WatermarkConfig {
-  WatermarkConfig({
+class TextWatermarkConfig {
+  TextWatermarkConfig({
     required this.text,
     this.x = 0,
     this.y = 0,
@@ -84,9 +84,9 @@ class WatermarkConfig {
     ];
   }
 
-  static WatermarkConfig decode(Object result) {
+  static TextWatermarkConfig decode(Object result) {
     result as List<Object?>;
-    return WatermarkConfig(
+    return TextWatermarkConfig(
       text: result[0]! as String,
       x: result[1]! as int,
       y: result[2]! as int,
@@ -94,6 +94,78 @@ class WatermarkConfig {
       textSize: result[4]! as double,
       opacity: result[5]! as double,
       animation: result[6] as WatermarkAnimation?,
+    );
+  }
+}
+
+class ImageWatermarkConfig {
+  ImageWatermarkConfig({
+    required this.imageUrl,
+    this.width = 48,
+    this.height = 48,
+    this.x = 92,
+    this.y = 88,
+    this.opacity = 1.0,
+  });
+
+  String imageUrl;
+
+  int width;
+
+  int height;
+
+  int x;
+
+  int y;
+
+  double opacity;
+
+  Object encode() {
+    return <Object?>[
+      imageUrl,
+      width,
+      height,
+      x,
+      y,
+      opacity,
+    ];
+  }
+
+  static ImageWatermarkConfig decode(Object result) {
+    result as List<Object?>;
+    return ImageWatermarkConfig(
+      imageUrl: result[0]! as String,
+      width: result[1]! as int,
+      height: result[2]! as int,
+      x: result[3]! as int,
+      y: result[4]! as int,
+      opacity: result[5]! as double,
+    );
+  }
+}
+
+class BaseWatermarkConfig {
+  BaseWatermarkConfig({
+    this.text,
+    this.image,
+  });
+
+  TextWatermarkConfig? text;
+
+  ImageWatermarkConfig? image;
+
+  Object encode() {
+    return <Object?>[
+      text,
+      image,
+    ];
+  }
+
+  static BaseWatermarkConfig decode(Object result) {
+    result as List<Object?>;
+    return BaseWatermarkConfig(
+      text: result[0] as TextWatermarkConfig?,
+      image: result[1] as ImageWatermarkConfig?,
     );
   }
 }
@@ -112,8 +184,14 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is WatermarkAnimation) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is WatermarkConfig) {
+    }    else if (value is TextWatermarkConfig) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is ImageWatermarkConfig) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
+    }    else if (value is BaseWatermarkConfig) {
+      buffer.putUint8(133);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -129,7 +207,11 @@ class _PigeonCodec extends StandardMessageCodec {
       case 130: 
         return WatermarkAnimation.decode(readValue(buffer)!);
       case 131: 
-        return WatermarkConfig.decode(readValue(buffer)!);
+        return TextWatermarkConfig.decode(readValue(buffer)!);
+      case 132: 
+        return ImageWatermarkConfig.decode(readValue(buffer)!);
+      case 133: 
+        return BaseWatermarkConfig.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -467,7 +549,7 @@ class NativePlayerApi {
     }
   }
 
-  Future<void> setWatermarks(List<WatermarkConfig> configs) async {
+  Future<void> setWatermarks(List<BaseWatermarkConfig> watermarks) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermarks$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -475,7 +557,7 @@ class NativePlayerApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[configs]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[watermarks]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

@@ -32,8 +32,8 @@ class WatermarkAnimation {
   final int duration;
 }
 
-class WatermarkConfig {
-  WatermarkConfig({
+class TextWatermarkConfig {
+  TextWatermarkConfig({
     required this.text,
     this.x = 0,
     this.y = 0,
@@ -52,6 +52,34 @@ class WatermarkConfig {
   final WatermarkAnimation? animation;
 }
 
+class ImageWatermarkConfig {
+  ImageWatermarkConfig({
+    required this.imageUrl,
+    this.width = 48,
+    this.height = 48,
+    this.x = 92,
+    this.y = 88,
+    this.opacity = 1.0,
+  });
+
+  final String imageUrl;
+  final int width;
+  final int height;
+  final int x;
+  final int y;
+  final double opacity;
+}
+
+class BaseWatermarkConfig {
+  BaseWatermarkConfig({
+    this.text,
+    this.image,
+  });
+
+  final TextWatermarkConfig? text;
+  final ImageWatermarkConfig? image;
+}
+
 @HostApi()
 abstract class NativePlayerApi {
   void play();
@@ -68,6 +96,6 @@ abstract class NativePlayerApi {
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
   void disableAutoFullscreenOnRotate();
-  void setWatermarks(List<WatermarkConfig> configs);
+  void setWatermarks(List<BaseWatermarkConfig> watermarks);
   void clearWatermarks();
 }
