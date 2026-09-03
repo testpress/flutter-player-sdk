@@ -61,7 +61,7 @@ class _VideoScreenState extends State<VideoScreen> {
                       duration: 1000,
                     ),
                   ),
-                  WatermarkConfig(
+                  TextWatermarkConfig(
                     text: '© TPStreams',
                     x: 0,
                     y: 50,
@@ -70,6 +70,14 @@ class _VideoScreenState extends State<VideoScreen> {
                       type: WatermarkAnimationType.random,
                       duration: 3000,
                     ),
+                  ),
+                  ImageWatermarkConfig(
+                    imageUrl: "https://avatars.githubusercontent.com/u/10137",
+                    width: 50,
+                    height: 50,
+                    x: 100, 
+                    y: 100,
+                    opacity: 0.9,
                   ),
                 ]);
                 _controller.onBeforeFullScreenEnter = () {

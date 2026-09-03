@@ -11,9 +11,11 @@ import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
 import com.tpstreams.player.TPStreamsPlayer
 import com.tpstreams.player.TPStreamsPlayerView
+import com.tpstreams.player.BaseWatermarkConfig as NativeBaseWatermarkConfig
+import com.tpstreams.player.TextWatermarkConfig as NativeTextWatermarkConfig
+import com.tpstreams.player.ImageWatermarkConfig as NativeImageWatermarkConfig
 import com.tpstreams.player.WatermarkAnimation as NativeWatermarkAnimation
 import com.tpstreams.player.WatermarkAnimationType as NativeWatermarkAnimationType
-import com.tpstreams.player.WatermarkConfig as NativeWatermarkConfig
 import com.tpstreams.player.constants.PlaybackError
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
@@ -287,35 +289,47 @@ class NativePlayerView(
         playerView?.setAutoFullscreenOnRotateEnabled(false)
     }
 
-    override fun setWatermarks(configs: List<WatermarkConfig>) {
+    override fun setWatermarks(configs: List<BaseWatermarkConfig>) {
         val view = playerView ?: throw IllegalStateException("Player not initialized")
-        val nativeConfigs = configs.map {
-            NativeWatermarkConfig(
-                text = it.text,
-                x = it.x.toInt(),
-                y = it.y.toInt(),
-                color = it.color.toInt(),
-                textSize = it.textSize.toFloat(),
-                opacity = it.opacity.toFloat(),
-                animation = it.animation?.let { anim ->
-                    NativeWatermarkAnimation(
-                        type = mapAnimationType(anim.type),
-                        duration = anim.duration,
-                    )
-                },
-            )
-        }
-        view.setWatermarks(nativeConfigs)
+        view.setWatermarks(configs.mapNotNull { it.toNative() })
     }
 
     override fun clearWatermarks() {
         playerView?.clearWatermarks() ?: throw IllegalStateException("Player not initialized")
     }
 
-    private fun mapAnimationType(type: WatermarkAnimationType): NativeWatermarkAnimationType = when (type) {
-        WatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
-        WatermarkAnimationType.RANDOM -> NativeWatermarkAnimationType.RANDOM
-    }
+    private fun BaseWatermarkConfig.toNative(): NativeBaseWatermarkConfig? =
+        text?.toNative() ?: image?.toNative()
+
+    private fun TextWatermarkConfig.toNative(): NativeTextWatermarkConfig =
+        NativeTextWatermarkConfig(
+            text = text,
+            x = x.toInt(),
+            y = y.toInt(),
+            color = color.toInt(),
+            textSize = textSize.toFloat(),
+            opacity = opacity.toFloat(),
+            animation = animation?.toNative(),
+        )
+
+    private fun ImageWatermarkConfig.toNative(): NativeImageWatermarkConfig =
+        NativeImageWatermarkConfig(
+            imageUrl = imageUrl,
+            width = width.toInt(),
+            height = height.toInt(),
+            x = x.toInt(),
+            y = y.toInt(),
+            opacity = opacity.toFloat(),
+        )
+
+    private fun WatermarkAnimation.toNative(): NativeWatermarkAnimation =
+        NativeWatermarkAnimation(
+            type = when (type) {
+                WatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
+                WatermarkAnimationType.RANDOM -> NativeWatermarkAnimationType.RANDOM
+            },
+            duration = duration,
+        )
 
     override fun resolveAccessToken(newAccessToken: String) {
         pendingTokenCallback?.invoke(newAccessToken)

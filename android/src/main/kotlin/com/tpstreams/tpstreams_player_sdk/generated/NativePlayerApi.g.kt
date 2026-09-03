@@ -68,7 +68,7 @@ data class WatermarkAnimation (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class WatermarkConfig (
+data class TextWatermarkConfig (
   val text: String,
   val x: Long,
   val y: Long,
@@ -79,7 +79,7 @@ data class WatermarkConfig (
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): WatermarkConfig {
+    fun fromList(pigeonVar_list: List<Any?>): TextWatermarkConfig {
       val text = pigeonVar_list[0] as String
       val x = pigeonVar_list[1] as Long
       val y = pigeonVar_list[2] as Long
@@ -87,7 +87,7 @@ data class WatermarkConfig (
       val textSize = pigeonVar_list[4] as Double
       val opacity = pigeonVar_list[5] as Double
       val animation = pigeonVar_list[6] as WatermarkAnimation?
-      return WatermarkConfig(text, x, y, color, textSize, opacity, animation)
+      return TextWatermarkConfig(text, x, y, color, textSize, opacity, animation)
     }
   }
   fun toList(): List<Any?> {
@@ -99,6 +99,60 @@ data class WatermarkConfig (
       textSize,
       opacity,
       animation,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class ImageWatermarkConfig (
+  val imageUrl: String,
+  val width: Long,
+  val height: Long,
+  val x: Long,
+  val y: Long,
+  val opacity: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ImageWatermarkConfig {
+      val imageUrl = pigeonVar_list[0] as String
+      val width = pigeonVar_list[1] as Long
+      val height = pigeonVar_list[2] as Long
+      val x = pigeonVar_list[3] as Long
+      val y = pigeonVar_list[4] as Long
+      val opacity = pigeonVar_list[5] as Double
+      return ImageWatermarkConfig(imageUrl, width, height, x, y, opacity)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      imageUrl,
+      width,
+      height,
+      x,
+      y,
+      opacity,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class BaseWatermarkConfig (
+  val text: TextWatermarkConfig? = null,
+  val image: ImageWatermarkConfig? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): BaseWatermarkConfig {
+      val text = pigeonVar_list[0] as TextWatermarkConfig?
+      val image = pigeonVar_list[1] as ImageWatermarkConfig?
+      return BaseWatermarkConfig(text, image)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      text,
+      image,
     )
   }
 }
@@ -117,7 +171,17 @@ private open class NativePlayerApiPigeonCodec : StandardMessageCodec() {
       }
       131.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          WatermarkConfig.fromList(it)
+          TextWatermarkConfig.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ImageWatermarkConfig.fromList(it)
+        }
+      }
+      133.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          BaseWatermarkConfig.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -133,8 +197,16 @@ private open class NativePlayerApiPigeonCodec : StandardMessageCodec() {
         stream.write(130)
         writeValue(stream, value.toList())
       }
-      is WatermarkConfig -> {
+      is TextWatermarkConfig -> {
         stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is ImageWatermarkConfig -> {
+        stream.write(132)
+        writeValue(stream, value.toList())
+      }
+      is BaseWatermarkConfig -> {
+        stream.write(133)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -158,7 +230,7 @@ interface NativePlayerApi {
   fun exitFullScreen()
   fun enableAutoFullscreenOnRotate()
   fun disableAutoFullscreenOnRotate()
-  fun setWatermarks(configs: List<WatermarkConfig>)
+  fun setWatermarks(watermarks: List<BaseWatermarkConfig>)
   fun clearWatermarks()
 
   companion object {
@@ -407,9 +479,9 @@ interface NativePlayerApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val configsArg = args[0] as List<WatermarkConfig>
+            val watermarksArg = args[0] as List<BaseWatermarkConfig>
             val wrapped: List<Any?> = try {
-              api.setWatermarks(configsArg)
+              api.setWatermarks(watermarksArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)

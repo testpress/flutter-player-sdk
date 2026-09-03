@@ -4,8 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
-import 'generated/native_player_api.g.dart';
+import 'generated/native_player_api.g.dart'
+    hide BaseWatermarkConfig, TextWatermarkConfig, ImageWatermarkConfig;
 import 'generated/native_player_listeners.g.dart';
+import 'watermark_config.dart';
 
 /// Represents the state of a streams player.
 class TPStreamsPlayerValue {
@@ -131,24 +133,31 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   Future<void> disableAutoFullscreenOnRotate() =>
       _nativeApi.disableAutoFullscreenOnRotate();
 
-  /// Applies text watermark overlays on the video player.
+  /// Applies watermark overlays (text and/or image) on the video player.
   ///
-  /// Pass an empty list to clear all watermarks. Each [WatermarkConfig]
+  /// Pass an empty list to clear all watermarks. Each [BaseWatermarkConfig]
+  /// ([TextWatermarkConfig] / [WatermarkConfig] or [ImageWatermarkConfig])
   /// creates an independent watermark overlay.
   ///
-  /// iOS: Currently a no-op.
-  ///
-  /// Supported fields:
-  /// - [text]: Watermark text (required).
-  /// - [x]: Horizontal position as 0–100 percent (default: 0).
-  /// - [y]: Vertical position as 0–100 percent (default: 0).
-  /// - [color]: Text color as ARGB int (default: white).
-  /// - [textSize]: Text size in SP (default: 14).
-  /// - [opacity]: 0.0 (invisible) to 1.0 (fully opaque) (default: 0.3).
-  /// - [animation]: Optional animation (e.g., [WatermarkAnimation] with
-  ///   [WatermarkAnimationType.pingPong] or [WatermarkAnimationType.random]).
-  Future<void> setWatermarks(List<WatermarkConfig> configs) =>
-      _nativeApi.setWatermarks(configs);
+  /// Supported configurations:
+  /// - [TextWatermarkConfig] (or [WatermarkConfig]):
+  ///   - `text`: Watermark text (required).
+  ///   - `x`: Horizontal position as 0–100 percent (default: 0).
+  ///   - `y`: Vertical position as 0–100 percent (default: 0).
+  ///   - `color`: Text color as ARGB int (default: white).
+  ///   - `textSize`: Text size in SP (default: 14).
+  ///   - `opacity`: 0.0 (invisible) to 1.0 (fully opaque) (default: 0.3).
+  ///   - `animation`: Optional animation (e.g., [WatermarkAnimation] with
+  ///     [WatermarkAnimationType.pingPong] or [WatermarkAnimationType.random]).
+  /// - [ImageWatermarkConfig]:
+  ///   - `imageUrl`: HTTPS URL of the watermark image (required).
+  ///   - `width`: Width in logical pixels / dp (default: 48).
+  ///   - `height`: Height in logical pixels / dp (default: 48).
+  ///   - `x`: Horizontal position as 0–100 percent (default: 92).
+  ///   - `y`: Vertical position as 0–100 percent (default: 88).
+  ///   - `opacity`: 0.0 (invisible) to 1.0 (fully opaque) (default: 1.0).
+  Future<void> setWatermarks(List<BaseWatermarkConfig> configs) =>
+      _nativeApi.setWatermarks(configs.map((c) => c.toPigeon()).toList());
 
   /// Removes all watermarks and frees resources.
   Future<void> clearWatermarks() => _nativeApi.clearWatermarks();
