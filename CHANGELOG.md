@@ -1,3 +1,8 @@
+## 2.2.34
+
+- Added image watermark support (`ImageWatermarkConfig`) for rendering image/logo watermark overlays on video playback across Android and iOS (#60).
+  - Introduced `BaseWatermarkConfig` supporting both `TextWatermarkConfig` (aliased as `WatermarkConfig`) and `ImageWatermarkConfig`.
+
 ## 2.2.34-beta.1
 
 - Automatically select the optimal Android PlatformView composition mode based on device Widevine security level:
