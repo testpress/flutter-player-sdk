@@ -9,12 +9,14 @@ class DeviceCapability {
   String? _widevineLevel;
   Future<String?>? _future;
 
+  String? get widevineLevel => _widevineLevel;
+
   Future<String?> getWidevineLevel() {
     if (defaultTargetPlatform != TargetPlatform.android) {
       return Future.value(null);
     }
-    if (_widevineLevel != null) return Future.value(_widevineLevel);
-    _future ??= _nativeSdkApi.getWidevineSecurityLevel().then((level) {
+    if (_future != null) return _future!;
+    _future = _nativeSdkApi.getWidevineSecurityLevel().then((level) {
       _widevineLevel = level;
       return level;
     });

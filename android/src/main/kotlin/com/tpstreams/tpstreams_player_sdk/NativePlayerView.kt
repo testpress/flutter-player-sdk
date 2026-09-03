@@ -174,8 +174,7 @@ class NativePlayerView(
         }
 
         val themedContext = android.view.ContextThemeWrapper(activity, androidx.appcompat.R.style.Theme_AppCompat_NoActionBar)
-        val isL1Device = TpstreamsPlayerSdkPlugin.getWidevineSecurityLevel() == "L1"
-        val useTextureMode = !isL1Device
+        val useTextureMode = creationParams?.get("useTextureMode") as? Boolean ?: false
         val attrs = if (useTextureMode) TPStreamsPlayerView.attributeSetForTextureView(themedContext) else null
         playerView = TPStreamsPlayerView(themedContext, attrs)
         playerView?.layoutParams = FrameLayout.LayoutParams(
