@@ -9,6 +9,7 @@ import 'package:tpstreams_player_sdk/generated/player_preferences.g.dart';
 
 import 'generated/native_player_listeners.g.dart';
 import 'generated/native_player_api.g.dart';
+import 'src/device_capability.dart';
 
 
 class TPStreamPlayer extends StatefulWidget {
@@ -82,6 +83,15 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   int? _platformViewId;
   bool _isPlayerCreated = false;
   late NativePlayerApi _nativeApi;
+  late Future<String?> _widevineFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      _widevineFuture = DeviceCapability.instance.getWidevineLevel();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +125,28 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   }
 
   Widget _buildAndroidView() {
+    final cachedLevel = DeviceCapability.instance.widevineLevel;
+    if (cachedLevel != null) {
+      return _buildAndroidPlatformView(isL3: cachedLevel == 'L3');
+    }
+
+    return FutureBuilder<String?>(
+      future: _widevineFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SizedBox.expand(
+            child: ColoredBox(color: Colors.black),
+          );
+        }
+
+        return _buildAndroidPlatformView(isL3: snapshot.data == 'L3');
+      },
+    );
+  }
+
+  Widget _buildAndroidPlatformView({required bool isL3}) {
+    final params = _getCreationParams(useTextureMode: isL3);
+
     return PlatformViewLink(
       viewType: 'tpstreams_player_sdk/player_view',
       surfaceFactory: (context, controller) {
@@ -124,15 +156,29 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
           hitTestBehavior: PlatformViewHitTestBehavior.opaque,
         );
       },
-      onCreatePlatformView: (params) {
-        return PlatformViewsService.initExpensiveAndroidView(
-          id: params.id,
-          viewType: 'tpstreams_player_sdk/player_view',
-          layoutDirection: TextDirection.ltr,
-          creationParams: _creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-        )..addOnPlatformViewCreatedListener(
-            _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
+      onCreatePlatformView: (viewParams) {
+        if (isL3) {
+          return PlatformViewsService.initSurfaceAndroidView(
+            id: viewParams.id,
+            viewType: 'tpstreams_player_sdk/player_view',
+            layoutDirection: TextDirection.ltr,
+            creationParams: params,
+            creationParamsCodec: const StandardMessageCodec(),
+          )
+            ..addOnPlatformViewCreatedListener(
+                _onAndroidPlatformViewCreated(viewParams.onPlatformViewCreated))
+            ..create();
+        } else {
+          return PlatformViewsService.initExpensiveAndroidView(
+            id: viewParams.id,
+            viewType: 'tpstreams_player_sdk/player_view',
+            layoutDirection: TextDirection.ltr,
+            creationParams: params,
+            creationParamsCodec: const StandardMessageCodec(),
+          )
+            ..addOnPlatformViewCreatedListener(
+                _onAndroidPlatformViewCreated(viewParams.onPlatformViewCreated));
+        }
       },
     );
   }
@@ -140,13 +186,13 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   Widget _buildIOSView() {
     return UiKitView(
       viewType: 'tpstreams_player_sdk/player_view',
-      creationParams: _creationParams,
+      creationParams: _getCreationParams(),
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: setUpNativePlayerInitializationListener,
     );
   }
 
-  Map<String, dynamic> get _creationParams => {
+  Map<String, dynamic> _getCreationParams({bool useTextureMode = false}) => {
     "assetId": widget.assetId,
     "accessToken": widget.accessToken,
     "isOfflinePlayback": widget._isOfflinePlayback,
@@ -154,6 +200,7 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
     "startInFullscreen": widget.startInFullscreen,
     "offlineLicenseExpireDays": widget.offlineLicenseExpireDays,
     "autoPlay": widget.autoPlay,
+    "useTextureMode": useTextureMode,
     if (widget.metadata != null) "metadata": widget.metadata,
     if (widget.resolution != null) "resolution": widget.resolution,
     if (widget.userId != null) "userId": widget.userId,

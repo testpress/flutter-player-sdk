@@ -10,6 +10,8 @@ export 'download_manager.dart';
 export 'generated/native_download_manager_api.g.dart' show DownloadAsset, DownloadState;
 export 'watermark_config.dart';
 
+import 'src/device_capability.dart';
+
 class TPStreamsSDK {
   static String? _orgCode;
   static PROVIDER? _provider;
@@ -29,6 +31,7 @@ class TPStreamsSDK {
     _provider = provider;
 
     WidgetsFlutterBinding.ensureInitialized();
+    DeviceCapability.instance.getWidevineLevel();
     _nativeSdkApi.initialize(provider, orgCode, authToken, allowFallbackToL3);
   }
 

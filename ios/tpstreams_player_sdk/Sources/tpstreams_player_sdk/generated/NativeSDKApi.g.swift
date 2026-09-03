@@ -112,6 +112,7 @@ class NativeSDKApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol NativeSDKApi {
   func initialize(provider: PROVIDER, orgCode: String, authToken: String?, allowFallbackToL3: Bool) throws
+  func getWidevineSecurityLevel() throws -> String?
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -137,6 +138,19 @@ class NativeSDKApiSetup {
       }
     } else {
       initializeChannel.setMessageHandler(nil)
+    }
+    let getWidevineSecurityLevelChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.tpstreams_player_sdk.NativeSDKApi.getWidevineSecurityLevel\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getWidevineSecurityLevelChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getWidevineSecurityLevel()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getWidevineSecurityLevelChannel.setMessageHandler(nil)
     }
   }
 }

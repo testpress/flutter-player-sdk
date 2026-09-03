@@ -81,6 +81,7 @@ private open class NativeSDKApiPigeonCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface NativeSDKApi {
   fun initialize(provider: PROVIDER, orgCode: String, authToken: String?, allowFallbackToL3: Boolean)
+  fun getWidevineSecurityLevel(): String?
 
   companion object {
     /** The codec used by NativeSDKApi. */
@@ -103,6 +104,21 @@ interface NativeSDKApi {
             val wrapped: List<Any?> = try {
               api.initialize(providerArg, orgCodeArg, authTokenArg, allowFallbackToL3Arg)
               listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.tpstreams_player_sdk.NativeSDKApi.getWidevineSecurityLevel$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getWidevineSecurityLevel())
             } catch (exception: Throwable) {
               wrapError(exception)
             }

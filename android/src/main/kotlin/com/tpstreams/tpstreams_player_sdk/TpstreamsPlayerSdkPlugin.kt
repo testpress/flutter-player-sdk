@@ -36,6 +36,30 @@ class TpstreamsPlayerSdkPlugin: FlutterPlugin, ActivityAware, NativeSDKApi {
     TPStreamsSDK.init(orgCode, sdkProvider, authToken, allowFallbackToL3)
   }
 
+  override fun getWidevineSecurityLevel(): String? {
+    return Companion.getWidevineSecurityLevel()
+  }
+
+  companion object {
+    fun getWidevineSecurityLevel(): String? {
+      return try {
+        val widevineUuid = androidx.media3.common.C.WIDEVINE_UUID
+        if (!android.media.MediaDrm.isCryptoSchemeSupported(widevineUuid)) {
+          null
+        } else {
+          val mediaDrm = android.media.MediaDrm(widevineUuid)
+          val level = mediaDrm.getPropertyString("securityLevel")
+          mediaDrm.close()
+          level
+        }
+      } catch (e: Exception) {
+        null
+      }
+    }
+  }
+
+
+
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
     tearDownDownloadManager()
   }

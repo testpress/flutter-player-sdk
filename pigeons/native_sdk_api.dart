@@ -18,4 +18,5 @@ enum PROVIDER {
 @HostApi()
 abstract class NativeSDKApi {
   void initialize(PROVIDER provider, String orgCode, String? authToken, bool allowFallbackToL3);
+  String? getWidevineSecurityLevel();
 }
