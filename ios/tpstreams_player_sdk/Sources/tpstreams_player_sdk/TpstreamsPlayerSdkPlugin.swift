@@ -17,4 +17,8 @@ public class TpstreamsPlayerSdkPlugin: NSObject, FlutterPlugin, NativeSDKApi {
     let sdkProvider = provider == .testpress ? Provider.testpress : Provider.tpstreams
     TPStreamsSDK.initialize(for: sdkProvider, withOrgCode: orgCode, usingAuthToken: authToken)
   }
+
+  func getWidevineSecurityLevel() throws -> String? {
+    return nil
+  }
 }

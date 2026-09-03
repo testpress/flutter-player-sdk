@@ -10,6 +10,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.offline.Download
 import com.tpstreams.player.download.DownloadClient
 import com.tpstreams.player.TPStreamsPlayer
+import com.tpstreams.player.TPStreamsPlayerControlView
 import com.tpstreams.player.TPStreamsPlayerView
 import com.tpstreams.player.BaseWatermarkConfig as NativeBaseWatermarkConfig
 import com.tpstreams.player.TextWatermarkConfig as NativeTextWatermarkConfig
@@ -173,11 +174,27 @@ class NativePlayerView(
         }
 
         val themedContext = android.view.ContextThemeWrapper(activity, androidx.appcompat.R.style.Theme_AppCompat_NoActionBar)
-        playerView = TPStreamsPlayerView(themedContext)
+        val isL1Device = TpstreamsPlayerSdkPlugin.getWidevineSecurityLevel() == "L1"
+        val useTextureMode = !isL1Device
+        val attrs = if (useTextureMode) TPStreamsPlayerView.attributeSetForTextureView(themedContext) else null
+        playerView = TPStreamsPlayerView(themedContext, attrs)
         playerView?.layoutParams = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
+
+        // In texture mode (initSurfaceAndroidView), the native view is rendered into an offscreen
+        // GPU texture. Alpha-based fade animations are invisible in this pipeline, so we disable
+        // them and force a software layer on the control view so the controls composite correctly.
+        if (useTextureMode) {
+            playerView?.post {
+                playerView?.findViewById<TPStreamsPlayerControlView>(androidx.media3.ui.R.id.exo_controller)?.apply {
+                    setAnimationEnabled(false)
+                    setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                }
+            }
+        }
+
 
         if (!enableFullscreen) {
             playerView?.post {

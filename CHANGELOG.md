@@ -1,3 +1,9 @@
+## 2.2.34-beta.1
+
+- Automatically select the optimal Android PlatformView composition mode based on device Widevine security level:
+  - Widevine L3 devices automatically use Texture Layer Composition (`initSurfaceAndroidView`) and `TextureView` for smooth 60/120 FPS scrolling and reduced CPU usage.
+  - Widevine L1 devices use Hybrid Composition (`initExpensiveAndroidView`) with `SurfaceView` for hardware-secure DRM playback.
+
 ## 2.2.33
 
 - Added `random` watermark animation type support (`WatermarkAnimationType.random`) across Android and iOS.

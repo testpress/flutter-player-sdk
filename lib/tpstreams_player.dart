@@ -9,6 +9,7 @@ import 'package:tpstreams_player_sdk/generated/player_preferences.g.dart';
 
 import 'generated/native_player_listeners.g.dart';
 import 'generated/native_player_api.g.dart';
+import 'src/device_capability.dart';
 
 
 class TPStreamPlayer extends StatefulWidget {
@@ -115,24 +116,42 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   }
 
   Widget _buildAndroidView() {
-    return PlatformViewLink(
-      viewType: 'tpstreams_player_sdk/player_view',
-      surfaceFactory: (context, controller) {
-        return AndroidViewSurface(
-          controller: controller as AndroidViewController,
-          gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-          hitTestBehavior: PlatformViewHitTestBehavior.opaque,
-        );
-      },
-      onCreatePlatformView: (params) {
-        return PlatformViewsService.initExpensiveAndroidView(
-          id: params.id,
+    return FutureBuilder<String?>(
+      future: DeviceCapability.instance.getWidevineLevel(),
+      builder: (context, snapshot) {
+        final isL3 = snapshot.data == 'L3';
+        return PlatformViewLink(
           viewType: 'tpstreams_player_sdk/player_view',
-          layoutDirection: TextDirection.ltr,
-          creationParams: _creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
-        )..addOnPlatformViewCreatedListener(
-            _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
+          surfaceFactory: (context, controller) {
+            return AndroidViewSurface(
+              controller: controller as AndroidViewController,
+              gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+              hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+            );
+          },
+          onCreatePlatformView: (params) {
+            if (isL3) {
+              return PlatformViewsService.initSurfaceAndroidView(
+                id: params.id,
+                viewType: 'tpstreams_player_sdk/player_view',
+                layoutDirection: TextDirection.ltr,
+                creationParams: _creationParams,
+                creationParamsCodec: const StandardMessageCodec(),
+              )..addOnPlatformViewCreatedListener(
+                  _onAndroidPlatformViewCreated(params.onPlatformViewCreated))
+              ..create();
+            } else {
+              return PlatformViewsService.initExpensiveAndroidView(
+                id: params.id,
+                viewType: 'tpstreams_player_sdk/player_view',
+                layoutDirection: TextDirection.ltr,
+                creationParams: _creationParams,
+                creationParamsCodec: const StandardMessageCodec(),
+              )..addOnPlatformViewCreatedListener(
+                  _onAndroidPlatformViewCreated(params.onPlatformViewCreated));
+            }
+          },
+        );
       },
     );
   }
