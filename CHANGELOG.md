@@ -1,3 +1,9 @@
+## 2.2.35
+
+- Upgraded `TPStreamsAndroidPlayer` to 1.2.13 on Android:
+  - Hide diagnostic breakdown checklist and line divider on error overlay when device is offline.
+  - Skip downstream DNS, Server, and CDN network probes when system network connection is offline.
+
 ## 2.2.34
 
 - Added image watermark support (`ImageWatermarkConfig`) for rendering image/logo watermark overlays on video playback across Android and iOS (#60).
