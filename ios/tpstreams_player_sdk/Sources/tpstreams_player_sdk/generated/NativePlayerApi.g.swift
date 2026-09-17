@@ -46,24 +46,24 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   return value as! T?
 }
 
-enum WatermarkAnimationType: Int {
+enum FlutterWatermarkAnimationType: Int {
   case pingPong = 0
   case random = 1
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
-struct WatermarkAnimation {
-  var type: WatermarkAnimationType
+struct FlutterWatermarkAnimation {
+  var type: FlutterWatermarkAnimationType
   /// Duration in milliseconds. Minimum 100ms.
   var duration: Int64
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> WatermarkAnimation? {
-    let type = pigeonVar_list[0] as! WatermarkAnimationType
+  static func fromList(_ pigeonVar_list: [Any?]) -> FlutterWatermarkAnimation? {
+    let type = pigeonVar_list[0] as! FlutterWatermarkAnimationType
     let duration = pigeonVar_list[1] as! Int64
 
-    return WatermarkAnimation(
+    return FlutterWatermarkAnimation(
       type: type,
       duration: duration
     )
@@ -77,27 +77,27 @@ struct WatermarkAnimation {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
-struct TextWatermarkConfig {
+struct FlutterTextWatermarkConfig {
   var text: String
   var x: Int64
   var y: Int64
   var color: Int64
   var textSize: Double
   var opacity: Double
-  var animation: WatermarkAnimation? = nil
+  var animation: FlutterWatermarkAnimation? = nil
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> TextWatermarkConfig? {
+  static func fromList(_ pigeonVar_list: [Any?]) -> FlutterTextWatermarkConfig? {
     let text = pigeonVar_list[0] as! String
     let x = pigeonVar_list[1] as! Int64
     let y = pigeonVar_list[2] as! Int64
     let color = pigeonVar_list[3] as! Int64
     let textSize = pigeonVar_list[4] as! Double
     let opacity = pigeonVar_list[5] as! Double
-    let animation: WatermarkAnimation? = nilOrValue(pigeonVar_list[6])
+    let animation: FlutterWatermarkAnimation? = nilOrValue(pigeonVar_list[6])
 
-    return TextWatermarkConfig(
+    return FlutterTextWatermarkConfig(
       text: text,
       x: x,
       y: y,
@@ -121,7 +121,7 @@ struct TextWatermarkConfig {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
-struct ImageWatermarkConfig {
+struct FlutterImageWatermarkConfig {
   var imageUrl: String
   var width: Int64
   var height: Int64
@@ -131,7 +131,7 @@ struct ImageWatermarkConfig {
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> ImageWatermarkConfig? {
+  static func fromList(_ pigeonVar_list: [Any?]) -> FlutterImageWatermarkConfig? {
     let imageUrl = pigeonVar_list[0] as! String
     let width = pigeonVar_list[1] as! Int64
     let height = pigeonVar_list[2] as! Int64
@@ -139,7 +139,7 @@ struct ImageWatermarkConfig {
     let y = pigeonVar_list[4] as! Int64
     let opacity = pigeonVar_list[5] as! Double
 
-    return ImageWatermarkConfig(
+    return FlutterImageWatermarkConfig(
       imageUrl: imageUrl,
       width: width,
       height: height,
@@ -161,17 +161,17 @@ struct ImageWatermarkConfig {
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
-struct BaseWatermarkConfig {
-  var text: TextWatermarkConfig? = nil
-  var image: ImageWatermarkConfig? = nil
+struct FlutterBaseWatermarkConfig {
+  var text: FlutterTextWatermarkConfig? = nil
+  var image: FlutterImageWatermarkConfig? = nil
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> BaseWatermarkConfig? {
-    let text: TextWatermarkConfig? = nilOrValue(pigeonVar_list[0])
-    let image: ImageWatermarkConfig? = nilOrValue(pigeonVar_list[1])
+  static func fromList(_ pigeonVar_list: [Any?]) -> FlutterBaseWatermarkConfig? {
+    let text: FlutterTextWatermarkConfig? = nilOrValue(pigeonVar_list[0])
+    let image: FlutterImageWatermarkConfig? = nilOrValue(pigeonVar_list[1])
 
-    return BaseWatermarkConfig(
+    return FlutterBaseWatermarkConfig(
       text: text,
       image: image
     )
@@ -190,17 +190,17 @@ private class NativePlayerApiPigeonCodecReader: FlutterStandardReader {
     case 129:
       let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
       if let enumResultAsInt = enumResultAsInt {
-        return WatermarkAnimationType(rawValue: enumResultAsInt)
+        return FlutterWatermarkAnimationType(rawValue: enumResultAsInt)
       }
       return nil
     case 130:
-      return WatermarkAnimation.fromList(self.readValue() as! [Any?])
+      return FlutterWatermarkAnimation.fromList(self.readValue() as! [Any?])
     case 131:
-      return TextWatermarkConfig.fromList(self.readValue() as! [Any?])
+      return FlutterTextWatermarkConfig.fromList(self.readValue() as! [Any?])
     case 132:
-      return ImageWatermarkConfig.fromList(self.readValue() as! [Any?])
+      return FlutterImageWatermarkConfig.fromList(self.readValue() as! [Any?])
     case 133:
-      return BaseWatermarkConfig.fromList(self.readValue() as! [Any?])
+      return FlutterBaseWatermarkConfig.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -209,19 +209,19 @@ private class NativePlayerApiPigeonCodecReader: FlutterStandardReader {
 
 private class NativePlayerApiPigeonCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
-    if let value = value as? WatermarkAnimationType {
+    if let value = value as? FlutterWatermarkAnimationType {
       super.writeByte(129)
       super.writeValue(value.rawValue)
-    } else if let value = value as? WatermarkAnimation {
+    } else if let value = value as? FlutterWatermarkAnimation {
       super.writeByte(130)
       super.writeValue(value.toList())
-    } else if let value = value as? TextWatermarkConfig {
+    } else if let value = value as? FlutterTextWatermarkConfig {
       super.writeByte(131)
       super.writeValue(value.toList())
-    } else if let value = value as? ImageWatermarkConfig {
+    } else if let value = value as? FlutterImageWatermarkConfig {
       super.writeByte(132)
       super.writeValue(value.toList())
-    } else if let value = value as? BaseWatermarkConfig {
+    } else if let value = value as? FlutterBaseWatermarkConfig {
       super.writeByte(133)
       super.writeValue(value.toList())
     } else {
@@ -260,7 +260,7 @@ protocol NativePlayerApi {
   func exitFullScreen() throws
   func enableAutoFullscreenOnRotate() throws
   func disableAutoFullscreenOnRotate() throws
-  func setWatermarks(watermarks: [BaseWatermarkConfig]) throws
+  func setWatermarks(watermarks: [FlutterBaseWatermarkConfig]) throws
   func clearWatermarks() throws
 }
 
@@ -466,7 +466,7 @@ class NativePlayerApiSetup {
     if let api = api {
       setWatermarksChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let watermarksArg = args[0] as! [BaseWatermarkConfig]
+        let watermarksArg = args[0] as! [FlutterBaseWatermarkConfig]
         do {
           try api.setWatermarks(watermarks: watermarksArg)
           reply(wrapResult(nil))

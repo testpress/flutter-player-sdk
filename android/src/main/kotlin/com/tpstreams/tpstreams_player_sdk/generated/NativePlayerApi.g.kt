@@ -34,29 +34,29 @@ private fun wrapError(exception: Throwable): List<Any?> {
   }
 }
 
-enum class WatermarkAnimationType(val raw: Int) {
+enum class FlutterWatermarkAnimationType(val raw: Int) {
   PING_PONG(0),
   RANDOM(1);
 
   companion object {
-    fun ofRaw(raw: Int): WatermarkAnimationType? {
+    fun ofRaw(raw: Int): FlutterWatermarkAnimationType? {
       return values().firstOrNull { it.raw == raw }
     }
   }
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class WatermarkAnimation (
-  val type: WatermarkAnimationType,
+data class FlutterWatermarkAnimation (
+  val type: FlutterWatermarkAnimationType,
   /** Duration in milliseconds. Minimum 100ms. */
   val duration: Long
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): WatermarkAnimation {
-      val type = pigeonVar_list[0] as WatermarkAnimationType
+    fun fromList(pigeonVar_list: List<Any?>): FlutterWatermarkAnimation {
+      val type = pigeonVar_list[0] as FlutterWatermarkAnimationType
       val duration = pigeonVar_list[1] as Long
-      return WatermarkAnimation(type, duration)
+      return FlutterWatermarkAnimation(type, duration)
     }
   }
   fun toList(): List<Any?> {
@@ -68,26 +68,26 @@ data class WatermarkAnimation (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class TextWatermarkConfig (
+data class FlutterTextWatermarkConfig (
   val text: String,
   val x: Long,
   val y: Long,
   val color: Long,
   val textSize: Double,
   val opacity: Double,
-  val animation: WatermarkAnimation? = null
+  val animation: FlutterWatermarkAnimation? = null
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): TextWatermarkConfig {
+    fun fromList(pigeonVar_list: List<Any?>): FlutterTextWatermarkConfig {
       val text = pigeonVar_list[0] as String
       val x = pigeonVar_list[1] as Long
       val y = pigeonVar_list[2] as Long
       val color = pigeonVar_list[3] as Long
       val textSize = pigeonVar_list[4] as Double
       val opacity = pigeonVar_list[5] as Double
-      val animation = pigeonVar_list[6] as WatermarkAnimation?
-      return TextWatermarkConfig(text, x, y, color, textSize, opacity, animation)
+      val animation = pigeonVar_list[6] as FlutterWatermarkAnimation?
+      return FlutterTextWatermarkConfig(text, x, y, color, textSize, opacity, animation)
     }
   }
   fun toList(): List<Any?> {
@@ -104,7 +104,7 @@ data class TextWatermarkConfig (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class ImageWatermarkConfig (
+data class FlutterImageWatermarkConfig (
   val imageUrl: String,
   val width: Long,
   val height: Long,
@@ -114,14 +114,14 @@ data class ImageWatermarkConfig (
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): ImageWatermarkConfig {
+    fun fromList(pigeonVar_list: List<Any?>): FlutterImageWatermarkConfig {
       val imageUrl = pigeonVar_list[0] as String
       val width = pigeonVar_list[1] as Long
       val height = pigeonVar_list[2] as Long
       val x = pigeonVar_list[3] as Long
       val y = pigeonVar_list[4] as Long
       val opacity = pigeonVar_list[5] as Double
-      return ImageWatermarkConfig(imageUrl, width, height, x, y, opacity)
+      return FlutterImageWatermarkConfig(imageUrl, width, height, x, y, opacity)
     }
   }
   fun toList(): List<Any?> {
@@ -137,16 +137,16 @@ data class ImageWatermarkConfig (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
-data class BaseWatermarkConfig (
-  val text: TextWatermarkConfig? = null,
-  val image: ImageWatermarkConfig? = null
+data class FlutterBaseWatermarkConfig (
+  val text: FlutterTextWatermarkConfig? = null,
+  val image: FlutterImageWatermarkConfig? = null
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): BaseWatermarkConfig {
-      val text = pigeonVar_list[0] as TextWatermarkConfig?
-      val image = pigeonVar_list[1] as ImageWatermarkConfig?
-      return BaseWatermarkConfig(text, image)
+    fun fromList(pigeonVar_list: List<Any?>): FlutterBaseWatermarkConfig {
+      val text = pigeonVar_list[0] as FlutterTextWatermarkConfig?
+      val image = pigeonVar_list[1] as FlutterImageWatermarkConfig?
+      return FlutterBaseWatermarkConfig(text, image)
     }
   }
   fun toList(): List<Any?> {
@@ -161,27 +161,27 @@ private open class NativePlayerApiPigeonCodec : StandardMessageCodec() {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          WatermarkAnimationType.ofRaw(it.toInt())
+          FlutterWatermarkAnimationType.ofRaw(it.toInt())
         }
       }
       130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          WatermarkAnimation.fromList(it)
+          FlutterWatermarkAnimation.fromList(it)
         }
       }
       131.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          TextWatermarkConfig.fromList(it)
+          FlutterTextWatermarkConfig.fromList(it)
         }
       }
       132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ImageWatermarkConfig.fromList(it)
+          FlutterImageWatermarkConfig.fromList(it)
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          BaseWatermarkConfig.fromList(it)
+          FlutterBaseWatermarkConfig.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -189,23 +189,23 @@ private open class NativePlayerApiPigeonCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is WatermarkAnimationType -> {
+      is FlutterWatermarkAnimationType -> {
         stream.write(129)
         writeValue(stream, value.raw)
       }
-      is WatermarkAnimation -> {
+      is FlutterWatermarkAnimation -> {
         stream.write(130)
         writeValue(stream, value.toList())
       }
-      is TextWatermarkConfig -> {
+      is FlutterTextWatermarkConfig -> {
         stream.write(131)
         writeValue(stream, value.toList())
       }
-      is ImageWatermarkConfig -> {
+      is FlutterImageWatermarkConfig -> {
         stream.write(132)
         writeValue(stream, value.toList())
       }
-      is BaseWatermarkConfig -> {
+      is FlutterBaseWatermarkConfig -> {
         stream.write(133)
         writeValue(stream, value.toList())
       }
@@ -230,7 +230,7 @@ interface NativePlayerApi {
   fun exitFullScreen()
   fun enableAutoFullscreenOnRotate()
   fun disableAutoFullscreenOnRotate()
-  fun setWatermarks(watermarks: List<BaseWatermarkConfig>)
+  fun setWatermarks(watermarks: List<FlutterBaseWatermarkConfig>)
   fun clearWatermarks()
 
   companion object {
@@ -479,7 +479,7 @@ interface NativePlayerApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val watermarksArg = args[0] as List<BaseWatermarkConfig>
+            val watermarksArg = args[0] as List<FlutterBaseWatermarkConfig>
             val wrapped: List<Any?> = try {
               api.setWatermarks(watermarksArg)
               listOf(null)

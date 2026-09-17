@@ -15,18 +15,18 @@ PlatformException _createConnectionError(String channelName) {
   );
 }
 
-enum WatermarkAnimationType {
+enum FlutterWatermarkAnimationType {
   pingPong,
   random,
 }
 
-class WatermarkAnimation {
-  WatermarkAnimation({
+class FlutterWatermarkAnimation {
+  FlutterWatermarkAnimation({
     required this.type,
     this.duration = 10000,
   });
 
-  WatermarkAnimationType type;
+  FlutterWatermarkAnimationType type;
 
   /// Duration in milliseconds. Minimum 100ms.
   int duration;
@@ -38,17 +38,17 @@ class WatermarkAnimation {
     ];
   }
 
-  static WatermarkAnimation decode(Object result) {
+  static FlutterWatermarkAnimation decode(Object result) {
     result as List<Object?>;
-    return WatermarkAnimation(
-      type: result[0]! as WatermarkAnimationType,
+    return FlutterWatermarkAnimation(
+      type: result[0]! as FlutterWatermarkAnimationType,
       duration: result[1]! as int,
     );
   }
 }
 
-class TextWatermarkConfig {
-  TextWatermarkConfig({
+class FlutterTextWatermarkConfig {
+  FlutterTextWatermarkConfig({
     required this.text,
     this.x = 0,
     this.y = 0,
@@ -70,7 +70,7 @@ class TextWatermarkConfig {
 
   double opacity;
 
-  WatermarkAnimation? animation;
+  FlutterWatermarkAnimation? animation;
 
   Object encode() {
     return <Object?>[
@@ -84,22 +84,22 @@ class TextWatermarkConfig {
     ];
   }
 
-  static TextWatermarkConfig decode(Object result) {
+  static FlutterTextWatermarkConfig decode(Object result) {
     result as List<Object?>;
-    return TextWatermarkConfig(
+    return FlutterTextWatermarkConfig(
       text: result[0]! as String,
       x: result[1]! as int,
       y: result[2]! as int,
       color: result[3]! as int,
       textSize: result[4]! as double,
       opacity: result[5]! as double,
-      animation: result[6] as WatermarkAnimation?,
+      animation: result[6] as FlutterWatermarkAnimation?,
     );
   }
 }
 
-class ImageWatermarkConfig {
-  ImageWatermarkConfig({
+class FlutterImageWatermarkConfig {
+  FlutterImageWatermarkConfig({
     required this.imageUrl,
     this.width = 48,
     this.height = 48,
@@ -131,9 +131,9 @@ class ImageWatermarkConfig {
     ];
   }
 
-  static ImageWatermarkConfig decode(Object result) {
+  static FlutterImageWatermarkConfig decode(Object result) {
     result as List<Object?>;
-    return ImageWatermarkConfig(
+    return FlutterImageWatermarkConfig(
       imageUrl: result[0]! as String,
       width: result[1]! as int,
       height: result[2]! as int,
@@ -144,15 +144,15 @@ class ImageWatermarkConfig {
   }
 }
 
-class BaseWatermarkConfig {
-  BaseWatermarkConfig({
+class FlutterBaseWatermarkConfig {
+  FlutterBaseWatermarkConfig({
     this.text,
     this.image,
   });
 
-  TextWatermarkConfig? text;
+  FlutterTextWatermarkConfig? text;
 
-  ImageWatermarkConfig? image;
+  FlutterImageWatermarkConfig? image;
 
   Object encode() {
     return <Object?>[
@@ -161,11 +161,11 @@ class BaseWatermarkConfig {
     ];
   }
 
-  static BaseWatermarkConfig decode(Object result) {
+  static FlutterBaseWatermarkConfig decode(Object result) {
     result as List<Object?>;
-    return BaseWatermarkConfig(
-      text: result[0] as TextWatermarkConfig?,
-      image: result[1] as ImageWatermarkConfig?,
+    return FlutterBaseWatermarkConfig(
+      text: result[0] as FlutterTextWatermarkConfig?,
+      image: result[1] as FlutterImageWatermarkConfig?,
     );
   }
 }
@@ -178,19 +178,19 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is WatermarkAnimationType) {
+    }    else if (value is FlutterWatermarkAnimationType) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    }    else if (value is WatermarkAnimation) {
+    }    else if (value is FlutterWatermarkAnimation) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is TextWatermarkConfig) {
+    }    else if (value is FlutterTextWatermarkConfig) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    }    else if (value is ImageWatermarkConfig) {
+    }    else if (value is FlutterImageWatermarkConfig) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    }    else if (value is BaseWatermarkConfig) {
+    }    else if (value is FlutterBaseWatermarkConfig) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
     } else {
@@ -203,15 +203,15 @@ class _PigeonCodec extends StandardMessageCodec {
     switch (type) {
       case 129: 
         final int? value = readValue(buffer) as int?;
-        return value == null ? null : WatermarkAnimationType.values[value];
+        return value == null ? null : FlutterWatermarkAnimationType.values[value];
       case 130: 
-        return WatermarkAnimation.decode(readValue(buffer)!);
+        return FlutterWatermarkAnimation.decode(readValue(buffer)!);
       case 131: 
-        return TextWatermarkConfig.decode(readValue(buffer)!);
+        return FlutterTextWatermarkConfig.decode(readValue(buffer)!);
       case 132: 
-        return ImageWatermarkConfig.decode(readValue(buffer)!);
+        return FlutterImageWatermarkConfig.decode(readValue(buffer)!);
       case 133: 
-        return BaseWatermarkConfig.decode(readValue(buffer)!);
+        return FlutterBaseWatermarkConfig.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -549,7 +549,7 @@ class NativePlayerApi {
     }
   }
 
-  Future<void> setWatermarks(List<BaseWatermarkConfig> watermarks) async {
+  Future<void> setWatermarks(List<FlutterBaseWatermarkConfig> watermarks) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.tpstreams_player_sdk.NativePlayerApi.setWatermarks$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,

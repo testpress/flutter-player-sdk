@@ -305,7 +305,7 @@ class NativePlayerView(
         playerView?.setAutoFullscreenOnRotateEnabled(false)
     }
 
-    override fun setWatermarks(configs: List<BaseWatermarkConfig>) {
+    override fun setWatermarks(configs: List<FlutterBaseWatermarkConfig>) {
         val view = playerView ?: throw IllegalStateException("Player not initialized")
         view.setWatermarks(configs.mapNotNull { it.toNative() })
     }
@@ -314,10 +314,10 @@ class NativePlayerView(
         playerView?.clearWatermarks() ?: throw IllegalStateException("Player not initialized")
     }
 
-    private fun BaseWatermarkConfig.toNative(): NativeBaseWatermarkConfig? =
+    private fun FlutterBaseWatermarkConfig.toNative(): NativeBaseWatermarkConfig? =
         text?.toNative() ?: image?.toNative()
 
-    private fun TextWatermarkConfig.toNative(): NativeTextWatermarkConfig =
+    private fun FlutterTextWatermarkConfig.toNative(): NativeTextWatermarkConfig =
         NativeTextWatermarkConfig(
             text = text,
             x = x.toInt(),
@@ -328,7 +328,7 @@ class NativePlayerView(
             animation = animation?.toNative(),
         )
 
-    private fun ImageWatermarkConfig.toNative(): NativeImageWatermarkConfig =
+    private fun FlutterImageWatermarkConfig.toNative(): NativeImageWatermarkConfig =
         NativeImageWatermarkConfig(
             imageUrl = imageUrl,
             width = width.toInt(),
@@ -338,11 +338,11 @@ class NativePlayerView(
             opacity = opacity.toFloat(),
         )
 
-    private fun WatermarkAnimation.toNative(): NativeWatermarkAnimation =
+    private fun FlutterWatermarkAnimation.toNative(): NativeWatermarkAnimation =
         NativeWatermarkAnimation(
             type = when (type) {
-                WatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
-                WatermarkAnimationType.RANDOM -> NativeWatermarkAnimationType.RANDOM
+                FlutterWatermarkAnimationType.PING_PONG -> NativeWatermarkAnimationType.PING_PONG
+                FlutterWatermarkAnimationType.RANDOM -> NativeWatermarkAnimationType.RANDOM
             },
             duration = duration,
         )
