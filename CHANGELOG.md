@@ -1,3 +1,7 @@
+## 2.2.36
+
+- Fixed Swift compiler type shadowing error for watermark configurations on iOS by prefixing internal Pigeon bridge models with `Flutter`.
+
 ## 2.2.35
 
 - Upgraded `TPStreamsAndroidPlayer` to 1.2.13 on Android:
