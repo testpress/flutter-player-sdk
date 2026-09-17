@@ -271,7 +271,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
     }
 
-    func setWatermarks(watermarks: [BaseWatermarkConfig]) throws {
+    func setWatermarks(watermarks: [FlutterBaseWatermarkConfig]) throws {
         guard let playerViewController else {
             throw PigeonError(code: "player-not-initialized", message: "Player not initialized", details: nil)
         }
@@ -402,20 +402,20 @@ class NativePlayerApiWrapper: NativePlayerApi {
     func exitFullScreen() { target?.exitFullScreen() }
     func enableAutoFullscreenOnRotate() throws { try requirePlayer().enableAutoFullscreenOnRotate() }
     func disableAutoFullscreenOnRotate() throws { try requirePlayer().disableAutoFullscreenOnRotate() }
-    func setWatermarks(watermarks: [BaseWatermarkConfig]) throws { try requirePlayer().setWatermarks(watermarks: watermarks) }
+    func setWatermarks(watermarks: [FlutterBaseWatermarkConfig]) throws { try requirePlayer().setWatermarks(watermarks: watermarks) }
     func clearWatermarks() throws { try requirePlayer().clearWatermarks() }
 }
 
 // MARK: - Watermark Converters
-private extension BaseWatermarkConfig {
-    func toNative() -> TPStreamsSDK.BaseWatermarkConfig? {
+private extension FlutterBaseWatermarkConfig {
+    func toNative() -> BaseWatermarkConfig? {
         text?.toNative() ?? image?.toNative()
     }
 }
 
-private extension TextWatermarkConfig {
-    func toNative() -> TPStreamsSDK.TextWatermarkConfig {
-        TPStreamsSDK.TextWatermarkConfig(
+private extension FlutterTextWatermarkConfig {
+    func toNative() -> TextWatermarkConfig {
+        TextWatermarkConfig(
             text: text,
             x: x,
             y: y,
@@ -427,9 +427,9 @@ private extension TextWatermarkConfig {
     }
 }
 
-private extension ImageWatermarkConfig {
-    func toNative() -> TPStreamsSDK.ImageWatermarkConfig {
-        TPStreamsSDK.ImageWatermarkConfig(
+private extension FlutterImageWatermarkConfig {
+    func toNative() -> ImageWatermarkConfig {
+        ImageWatermarkConfig(
             imageUrl: imageUrl,
             width: Double(width),
             height: Double(height),
@@ -440,9 +440,9 @@ private extension ImageWatermarkConfig {
     }
 }
 
-private extension WatermarkAnimation {
-    func toNative() -> TPStreamsSDK.WatermarkAnimation {
-        TPStreamsSDK.WatermarkAnimation(
+private extension FlutterWatermarkAnimation {
+    func toNative() -> WatermarkAnimation {
+        WatermarkAnimation(
             type: type == .pingPong ? .pingPong : .random,
             duration: duration
         )

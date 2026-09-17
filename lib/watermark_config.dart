@@ -1,7 +1,10 @@
 import 'generated/native_player_api.g.dart' as pigeon;
 
 export 'generated/native_player_api.g.dart'
-    show WatermarkAnimation, WatermarkAnimationType;
+    show FlutterWatermarkAnimation, FlutterWatermarkAnimationType;
+
+typedef WatermarkAnimation = pigeon.FlutterWatermarkAnimation;
+typedef WatermarkAnimationType = pigeon.FlutterWatermarkAnimationType;
 
 abstract class BaseWatermarkConfig {
   final int x;
@@ -14,14 +17,14 @@ abstract class BaseWatermarkConfig {
     this.opacity = 1.0,
   });
 
-  pigeon.BaseWatermarkConfig toPigeon();
+  pigeon.FlutterBaseWatermarkConfig toPigeon();
 }
 
 class TextWatermarkConfig extends BaseWatermarkConfig {
   final String text;
   final int color;
   final double textSize;
-  final pigeon.WatermarkAnimation? animation;
+  final pigeon.FlutterWatermarkAnimation? animation;
 
   TextWatermarkConfig({
     required this.text,
@@ -34,8 +37,8 @@ class TextWatermarkConfig extends BaseWatermarkConfig {
   });
 
   @override
-  pigeon.BaseWatermarkConfig toPigeon() => pigeon.BaseWatermarkConfig(
-        text: pigeon.TextWatermarkConfig(
+  pigeon.FlutterBaseWatermarkConfig toPigeon() => pigeon.FlutterBaseWatermarkConfig(
+        text: pigeon.FlutterTextWatermarkConfig(
           text: text,
           x: x,
           y: y,
@@ -64,8 +67,8 @@ class ImageWatermarkConfig extends BaseWatermarkConfig {
   });
 
   @override
-  pigeon.BaseWatermarkConfig toPigeon() => pigeon.BaseWatermarkConfig(
-        image: pigeon.ImageWatermarkConfig(
+  pigeon.FlutterBaseWatermarkConfig toPigeon() => pigeon.FlutterBaseWatermarkConfig(
+        image: pigeon.FlutterImageWatermarkConfig(
           imageUrl: imageUrl,
           width: width,
           height: height,

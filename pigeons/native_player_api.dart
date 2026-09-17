@@ -15,25 +15,25 @@ import 'package:pigeon/pigeon.dart';
   ),
 ))
 
-enum WatermarkAnimationType {
+enum FlutterWatermarkAnimationType {
   pingPong,
   random,
 }
 
-class WatermarkAnimation {
-  WatermarkAnimation({
+class FlutterWatermarkAnimation {
+  FlutterWatermarkAnimation({
     required this.type,
     this.duration = 10000,
   });
 
-  final WatermarkAnimationType type;
+  final FlutterWatermarkAnimationType type;
 
   /// Duration in milliseconds. Minimum 100ms.
   final int duration;
 }
 
-class TextWatermarkConfig {
-  TextWatermarkConfig({
+class FlutterTextWatermarkConfig {
+  FlutterTextWatermarkConfig({
     required this.text,
     this.x = 0,
     this.y = 0,
@@ -49,11 +49,11 @@ class TextWatermarkConfig {
   final int color;
   final double textSize;
   final double opacity;
-  final WatermarkAnimation? animation;
+  final FlutterWatermarkAnimation? animation;
 }
 
-class ImageWatermarkConfig {
-  ImageWatermarkConfig({
+class FlutterImageWatermarkConfig {
+  FlutterImageWatermarkConfig({
     required this.imageUrl,
     this.width = 48,
     this.height = 48,
@@ -70,14 +70,14 @@ class ImageWatermarkConfig {
   final double opacity;
 }
 
-class BaseWatermarkConfig {
-  BaseWatermarkConfig({
+class FlutterBaseWatermarkConfig {
+  FlutterBaseWatermarkConfig({
     this.text,
     this.image,
   });
 
-  final TextWatermarkConfig? text;
-  final ImageWatermarkConfig? image;
+  final FlutterTextWatermarkConfig? text;
+  final FlutterImageWatermarkConfig? image;
 }
 
 @HostApi()
@@ -96,6 +96,6 @@ abstract class NativePlayerApi {
   void exitFullScreen();
   void enableAutoFullscreenOnRotate();
   void disableAutoFullscreenOnRotate();
-  void setWatermarks(List<BaseWatermarkConfig> watermarks);
+  void setWatermarks(List<FlutterBaseWatermarkConfig> watermarks);
   void clearWatermarks();
 }

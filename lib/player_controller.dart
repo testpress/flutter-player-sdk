@@ -4,8 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tpstreams_player_sdk/errors.dart';
 
-import 'generated/native_player_api.g.dart'
-    hide BaseWatermarkConfig, TextWatermarkConfig, ImageWatermarkConfig;
+import 'generated/native_player_api.g.dart';
 import 'generated/native_player_listeners.g.dart';
 import 'watermark_config.dart';
 
