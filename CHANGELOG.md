@@ -1,3 +1,10 @@
+## 2.2.37
+
+- Upgraded `TPStreamsAndroidPlayer` to 1.2.16 on Android:
+  - Improved fullscreen transitions, eliminated system bar flicker, and preserved playback state across screen orientation changes.
+  - Added support for multiple independent player listeners (`addListener` / `removeListener`).
+  - Bundled consumer ProGuard/R8 rules and isolated internal diagnostics.
+
 ## 2.2.36
 
 - Fixed Swift compiler type shadowing error for watermark configurations on iOS by prefixing internal Pigeon bridge models with `Flutter`.
