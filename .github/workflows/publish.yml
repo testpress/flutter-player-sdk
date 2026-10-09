@@ -1,15 +1,33 @@
 name: Publish to pub.dev
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'pubspec.yaml'
+      - 'CHANGELOG.md'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   publish:
     name: Publish package
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -26,3 +44,12 @@ jobs:
 
       - name: Publish package
         run: dart pub publish --force
+
+      - name: Create and push Git tag
+        run: |
+          if ! git rev-parse --verify --quiet "refs/tags/$VERSION"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$VERSION" -m "Release $VERSION"
+            git push origin "refs/tags/$VERSION"
+          fi

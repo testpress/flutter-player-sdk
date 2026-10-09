@@ -1,0 +1,46 @@
+name: Create GitHub Release
+
+on:
+  workflow_run:
+    workflows: ["Publish to pub.dev"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (leave blank to read from pubspec.yaml)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Extract release notes
+        run: |
+          awk -v ver="## $VERSION" '$0 ~ ver {flag=1; next} /^## / {flag=0} flag' CHANGELOG.md > release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body_path: release_notes.md
