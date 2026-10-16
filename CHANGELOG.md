@@ -1,3 +1,12 @@
+## 2.2.38
+
+- Upgraded `TPStreamsAndroidPlayer` to 1.2.19 on Android:
+  - Added YouTube-style double-tap forward and backward seeking with animated ripple and sequential triangle wave indicators.
+  - Added multi-touch pinch-to-zoom and pan support up to 8x with animated zoom percentage indicator badge.
+  - Prevented player release timeouts by stopping playback and clearing media before releasing player resources.
+  - Resolved `ForegroundServiceDidNotStartInTimeException` during background download initialization.
+- Added internal development setup and automated release workflows with Git tagging and GitHub Releases.
+
 ## 2.2.37
 
 - Upgraded `TPStreamsAndroidPlayer` to 1.2.16 on Android:
