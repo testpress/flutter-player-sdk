@@ -75,6 +75,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   final int platformViewId;
   late final NativePlayerApi _nativeApi;
   Timer? _positionTimer;
+  bool _isDisposed = false;
 
   static const _positionUpdateInterval = Duration(milliseconds: 500);
 
@@ -239,33 +240,47 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   }
 
   void _updateDurationIfNeeded() {
-    if (!value.isLoading && value.duration == Duration.zero) {
-      getDuration().then((duration) {
-        if (duration.inSeconds > 0) {
-          value = value.copyWith(duration: duration);
-        }
-      }).catchError((e) {
-        if (e is PlatformException && e.code == 'player-disposed') return;
-        throw e;
-      });
+    if (_isDisposed || value.isLoading || value.duration != Duration.zero) {
+      return;
+    }
+    _updateDuration();
+  }
+
+  Future<void> _updateDuration() async {
+    try {
+      final duration = await getDuration();
+      if (!_isDisposed && duration.inSeconds > 0) {
+        value = value.copyWith(duration: duration);
+      }
+    } on Object catch (error, stackTrace) {
+      if (_isDisposed || _isPlayerGoneError(error)) return;
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
   void startUpdatePositionTimer() {
     _positionTimer?.cancel();
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
-      getCurrentTime().then((currentTime) {
-        value = value.copyWith(position: currentTime);
-      }).catchError((e) {
-        if (e is PlatformException &&
-            (e.code == 'player-disposed' ||
-                (e.code == 'IllegalStateException' &&
-                    e.message?.contains('Player not initialized') == true))) {
-          return;
-        }
-        throw e;
-      });
+      _updatePosition();
     });
+  }
+
+  Future<void> _updatePosition() async {
+    if (_isDisposed) return;
+
+    try {
+      final currentTime = await getCurrentTime();
+      if (!_isDisposed) {
+        value = value.copyWith(position: currentTime);
+      }
+    } on Object catch (error, stackTrace) {
+      if (_isDisposed || _isPlayerGoneError(error)) return;
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  bool _isPlayerGoneError(Object error) {
+    return error is PlatformException && error.code == 'player-disposed';
   }
 
   void stopUpdatePositionTimer() {
@@ -275,8 +290,9 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void dispose() {
-    _nativeApi.dispose();
+    _isDisposed = true;
     stopUpdatePositionTimer();
+    _nativeApi.dispose();
     super.dispose();
   }
 }

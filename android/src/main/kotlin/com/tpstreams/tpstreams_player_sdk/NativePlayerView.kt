@@ -276,10 +276,16 @@ class NativePlayerView(
     }
 
     override fun getDuration(): Long {
+        if (isDisposed) {
+            throw FlutterError("player-disposed", "Player view has been disposed", null)
+        }
         return player?.duration ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getCurrentTime(): Long {
+        if (isDisposed) {
+            throw FlutterError("player-disposed", "Player view has been disposed", null)
+        }
         return player?.currentPosition ?: throw IllegalStateException("Player not initialized")
     }
 
