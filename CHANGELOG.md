@@ -1,3 +1,7 @@
+## 2.2.39
+
+- Fixed an Android crash during player teardown caused by in-flight position or duration polling after the native player was released. Added lifecycle guards, idempotent disposal, and normalized disposal errors.
+
 ## 2.2.38
 
 - Upgraded `TPStreamsAndroidPlayer` to 1.2.19 on Android:
