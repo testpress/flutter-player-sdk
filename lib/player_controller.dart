@@ -75,6 +75,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   final int platformViewId;
   late final NativePlayerApi _nativeApi;
   Timer? _positionTimer;
+  // One-way lifecycle guard for the Flutter controller and its async callbacks.
+  bool _isDisposed = false;
 
   static const _positionUpdateInterval = Duration(milliseconds: 500);
 
@@ -175,6 +177,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlaybackStateChanged(String state) {
+    if (_isDisposed) return;
+
     final bool isEnded = state == 'ended';
     final bool isReady = state == 'ready';
     final bool isBuffering = state == 'buffering';
@@ -195,6 +199,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onIsPlayingChanged(bool isPlaying) {
+    if (_isDisposed) return;
+
     value = value.copyWith(
       isPlaying: isPlaying,
       error: isPlaying ? null : value.error,
@@ -204,6 +210,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlayerError(String error) {
+    if (_isDisposed) return;
+
     value = value.copyWith(
       isLoading: false,
       error: TPStreamsError(null, error),
@@ -212,6 +220,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onFullScreenChanged(bool isFullScreen) {
+    if (_isDisposed) return;
+
     value = value.copyWith(isFullScreen: isFullScreen);
   }
 
@@ -239,28 +249,39 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   }
 
   void _updateDurationIfNeeded() {
-    if (!value.isLoading && value.duration == Duration.zero) {
-      getDuration().then((duration) {
-        if (duration.inSeconds > 0) {
-          value = value.copyWith(duration: duration);
-        }
-      }).catchError((e) {
-        if (e is PlatformException && e.code == 'player-disposed') return;
-        throw e;
-      });
+    if (_isDisposed || value.isLoading || value.duration != Duration.zero) {
+      return;
     }
+    getDuration().then<void>((duration) {
+      if (!_isDisposed && duration.inSeconds > 0) {
+        value = value.copyWith(duration: duration);
+      }
+    }).catchError((Object error, StackTrace stackTrace) {
+      if (_isDisposed || _isPlayerGoneError(error)) return;
+      Error.throwWithStackTrace(error, stackTrace);
+    });
   }
 
   void startUpdatePositionTimer() {
+    if (_isDisposed) return;
+
     _positionTimer?.cancel();
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
-      getCurrentTime().then((currentTime) {
-        value = value.copyWith(position: currentTime);
-      }).catchError((e) {
-        if (e is PlatformException && e.code == 'player-disposed') return;
-        throw e;
+      if (_isDisposed) return;
+
+      getCurrentTime().then<void>((currentTime) {
+        if (!_isDisposed) {
+          value = value.copyWith(position: currentTime);
+        }
+      }).catchError((Object error, StackTrace stackTrace) {
+        if (_isDisposed || _isPlayerGoneError(error)) return;
+        Error.throwWithStackTrace(error, stackTrace);
       });
     });
+  }
+
+  bool _isPlayerGoneError(Object error) {
+    return error is PlatformException && error.code == 'player-disposed';
   }
 
   void stopUpdatePositionTimer() {
@@ -270,8 +291,11 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void dispose() {
-    _nativeApi.dispose();
+    if (_isDisposed) return;
+
+    _isDisposed = true;
     stopUpdatePositionTimer();
+    _nativeApi.dispose();
     super.dispose();
   }
 }

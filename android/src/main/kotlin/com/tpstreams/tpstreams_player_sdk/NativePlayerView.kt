@@ -36,6 +36,8 @@ class NativePlayerView(
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
+    // One-way lifecycle guard for the native player and platform view.
+    @Volatile
     private var isDisposed = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
     private val legacyDownloadStoreReader: LegacyDownloadStoreReader by lazy {
@@ -276,10 +278,16 @@ class NativePlayerView(
     }
 
     override fun getDuration(): Long {
+        if (isDisposed) {
+            throw FlutterError("player-disposed", "Player view has been disposed", null)
+        }
         return player?.duration ?: throw IllegalStateException("Player not initialized")
     }
 
     override fun getCurrentTime(): Long {
+        if (isDisposed) {
+            throw FlutterError("player-disposed", "Player view has been disposed", null)
+        }
         return player?.currentPosition ?: throw IllegalStateException("Player not initialized")
     }
 
