@@ -176,6 +176,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlaybackStateChanged(String state) {
+    if (_isDisposed) return;
+
     final bool isEnded = state == 'ended';
     final bool isReady = state == 'ready';
     final bool isBuffering = state == 'buffering';
@@ -196,6 +198,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onIsPlayingChanged(bool isPlaying) {
+    if (_isDisposed) return;
+
     value = value.copyWith(
       isPlaying: isPlaying,
       error: isPlaying ? null : value.error,
@@ -205,6 +209,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onPlayerError(String error) {
+    if (_isDisposed) return;
+
     value = value.copyWith(
       isLoading: false,
       error: TPStreamsError(null, error),
@@ -213,6 +219,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void onFullScreenChanged(bool isFullScreen) {
+    if (_isDisposed) return;
+
     value = value.copyWith(isFullScreen: isFullScreen);
   }
 
@@ -259,6 +267,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   }
 
   void startUpdatePositionTimer() {
+    if (_isDisposed) return;
+
     _positionTimer?.cancel();
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
       _updatePosition();
@@ -290,6 +300,8 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void dispose() {
+    if (_isDisposed) return;
+
     _isDisposed = true;
     stopUpdatePositionTimer();
     _nativeApi.dispose();
