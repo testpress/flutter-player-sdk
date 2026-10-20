@@ -75,6 +75,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
   final int platformViewId;
   late final NativePlayerApi _nativeApi;
   Timer? _positionTimer;
+  // One-way lifecycle guard for the Flutter controller and its async callbacks.
   bool _isDisposed = false;
 
   static const _positionUpdateInterval = Duration(milliseconds: 500);
@@ -251,19 +252,14 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
     if (_isDisposed || value.isLoading || value.duration != Duration.zero) {
       return;
     }
-    _updateDuration();
-  }
-
-  Future<void> _updateDuration() async {
-    try {
-      final duration = await getDuration();
+    getDuration().then<void>((duration) {
       if (!_isDisposed && duration.inSeconds > 0) {
         value = value.copyWith(duration: duration);
       }
-    } on Object catch (error, stackTrace) {
+    }).catchError((Object error, StackTrace stackTrace) {
       if (_isDisposed || _isPlayerGoneError(error)) return;
       Error.throwWithStackTrace(error, stackTrace);
-    }
+    });
   }
 
   void startUpdatePositionTimer() {
@@ -271,22 +267,17 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
     _positionTimer?.cancel();
     _positionTimer = Timer.periodic(_positionUpdateInterval, (_) {
-      _updatePosition();
+      if (_isDisposed) return;
+
+      getCurrentTime().then<void>((currentTime) {
+        if (!_isDisposed) {
+          value = value.copyWith(position: currentTime);
+        }
+      }).catchError((Object error, StackTrace stackTrace) {
+        if (_isDisposed || _isPlayerGoneError(error)) return;
+        Error.throwWithStackTrace(error, stackTrace);
+      });
     });
-  }
-
-  Future<void> _updatePosition() async {
-    if (_isDisposed) return;
-
-    try {
-      final currentTime = await getCurrentTime();
-      if (!_isDisposed) {
-        value = value.copyWith(position: currentTime);
-      }
-    } on Object catch (error, stackTrace) {
-      if (_isDisposed || _isPlayerGoneError(error)) return;
-      Error.throwWithStackTrace(error, stackTrace);
-    }
   }
 
   bool _isPlayerGoneError(Object error) {

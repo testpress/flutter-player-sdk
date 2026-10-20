@@ -36,6 +36,7 @@ class NativePlayerView(
     private var player: TPStreamsPlayer? = null
     private var pendingTokenCallback: ((String) -> Unit)? = null
     private var isFullscreen = false
+    // One-way lifecycle guard for the native player and platform view.
     @Volatile
     private var isDisposed = false
     private val downloadClient: DownloadClient by lazy { DownloadClient.getInstance(context) }
