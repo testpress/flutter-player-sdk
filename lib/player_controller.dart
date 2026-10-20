@@ -257,7 +257,12 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
       getCurrentTime().then((currentTime) {
         value = value.copyWith(position: currentTime);
       }).catchError((e) {
-        if (e is PlatformException && e.code == 'player-disposed') return;
+        if (e is PlatformException &&
+            (e.code == 'player-disposed' ||
+                (e.code == 'IllegalStateException' &&
+                    e.message?.contains('Player not initialized') == true))) {
+          return;
+        }
         throw e;
       });
     });
