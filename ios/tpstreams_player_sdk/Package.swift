@@ -12,7 +12,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../FlutterFramework"),
-        .package(url: "https://github.com/testpress/iOSPlayerSDK.git", from: "1.2.42")
+        .package(url: "https://github.com/testpress/iOSPlayerSDK.git", from: "1.2.45")
     ],
     targets: [
         .target(
