@@ -1,3 +1,12 @@
+## 2.2.40
+
+- Upgraded `TPStreamsAndroidPlayer` to 1.2.20 on Android:
+  - Added native TPStreams playback analytics tracking, including visitor and session identity, playback duration tracking, periodic heartbeats, and lifecycle reporting.
+  - Serialized analytics uploads to prevent duplicate or regressing duration updates while ensuring the final release event is preserved.
+- Upgraded `TPStreamsSDK` to 1.2.45 on iOS:
+  - Added TPStreams playback analytics tracking, including playback events, stream metadata, and periodic progress updates.
+  - Fix AES-encrypted videos failing to play on some iPad devices.
+
 ## 2.2.39
 
 - Fixed an Android crash during player teardown caused by in-flight position or duration polling after the native player was released. Added lifecycle guards, idempotent disposal, and normalized disposal errors.
