@@ -1,3 +1,7 @@
+## 2.2.41
+
+- Wired the automatic fullscreen-on-rotation toggle to the native iOS player.
+
 ## 2.2.40
 
 - Upgraded `TPStreamsAndroidPlayer` to 1.2.20 on Android:
