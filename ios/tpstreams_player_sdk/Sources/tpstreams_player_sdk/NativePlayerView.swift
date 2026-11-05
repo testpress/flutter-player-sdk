@@ -262,13 +262,11 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
 
     func enableAutoFullscreenOnRotate() throws {
-        // No-op: iOS SDK handles auto fullscreen internally
-        NSLog("enableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
+        playerViewController?.autoFullScreenOnRotate = true
     }
 
     func disableAutoFullscreenOnRotate() throws {
-        // No-op: iOS SDK handles auto fullscreen internally
-        NSLog("disableAutoFullscreenOnRotate is currently not supported on iOS and will be ignored.")
+        playerViewController?.autoFullScreenOnRotate = false
     }
 
     func setWatermarks(watermarks: [FlutterBaseWatermarkConfig]) throws {
