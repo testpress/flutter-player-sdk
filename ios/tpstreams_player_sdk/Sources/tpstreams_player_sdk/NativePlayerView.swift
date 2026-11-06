@@ -4,6 +4,10 @@ import TPStreamsSDK
 import AVKit
 
 class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
+    private static let defaultOfflineLicenseExpireDays = 15
+    private static let secondsPerDay: Double = 24.0 * 60.0 * 60.0
+    private static let offlineLicenseRenewalTimeout: TimeInterval = 30.0
+
     var viewId: Int64
     var player: TPAVPlayer! {
         didSet {
@@ -26,6 +30,9 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private var observedItem: AVPlayerItem?
     private var isInitialized = false
     private let messenger: FlutterBinaryMessenger
+    private var pendingOfflineLicenseRenewal: ((String?, Double?) -> Void)?
+    private var offlineLicenseRenewalTimeoutWorkItem: DispatchWorkItem?
+    private var offlineLicenseDurationSeconds: Double = Double(Self.defaultOfflineLicenseExpireDays) * Self.secondsPerDay
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()
@@ -42,9 +49,35 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         if let args = args as? [String: Any], let assetId = args["assetId"] as? String {
             let isOfflinePlayback = args["isOfflinePlayback"] as? Bool ?? false
             let autoPlay = args["autoPlay"] as? Bool ?? true
-            
+            offlineLicenseDurationSeconds = Self.offlineLicenseDurationSeconds(from: args)
+
             if isOfflinePlayback {
                 player = TPAVPlayer(offlineAssetId: assetId)
+                player.onRequestOfflineLicenseRenewal = { [weak self] assetId, completion in
+                    guard let self = self else {
+                        completion(nil, nil)
+                        return
+                    }
+
+                    self.failPendingOfflineLicenseRenewal()
+                    self.pendingOfflineLicenseRenewal = completion
+                    let timeout = DispatchWorkItem { [weak self] in
+                        self?.failPendingOfflineLicenseRenewal()
+                    }
+                    self.offlineLicenseRenewalTimeoutWorkItem = timeout
+                    DispatchQueue.main.asyncAfter(
+                        deadline: .now() + Self.offlineLicenseRenewalTimeout,
+                        execute: timeout
+                    )
+                    self.playerListener.handleAccessTokenExpiration(
+                        videoId: assetId,
+                        completion: { [weak self] result in
+                            if case .failure = result {
+                                self?.failPendingOfflineLicenseRenewal()
+                            }
+                        }
+                    )
+                }
             } else {
                 let accessToken = args["accessToken"] as? String
                 let resolution = args["resolution"] as? Int
@@ -87,6 +120,8 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
         let playerPreferences = args["playerPreferences"] as? [Any]
         
         if showDownloadOption || metadata != nil || startInFullscreen || playerPreferences != nil || userId != nil {
+            configBuilder.setLicenseDurationSeconds(offlineLicenseDurationSeconds)
+
             if showDownloadOption {
                 configBuilder.showDownloadOption()
             }
@@ -228,6 +263,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func dispose() throws {
+        failPendingOfflineLicenseRenewal()
         NativePlayerApiSetup.setUp(binaryMessenger: messenger, api: nil, messageChannelSuffix: "\(viewId)")
         playerViewController?.delegate = nil
         
@@ -238,7 +274,23 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     }
     
     func resolveAccessToken(newAccessToken: String) {
-        // TODO: Implement onAccessTokenExpired event from the DownloadDelegate
+        // The iOS SDK requests a renewed offline license through
+        // `onRequestOfflineLicenseRenewal`. The existing Flutter callback
+        // supplies the renewed credential through this method.
+        guard !newAccessToken.isEmpty else {
+            failPendingOfflineLicenseRenewal()
+            return
+        }
+
+        guard let completion = pendingOfflineLicenseRenewal else {
+            NSLog("No pending offline license renewal request")
+            return
+        }
+
+        offlineLicenseRenewalTimeoutWorkItem?.cancel()
+        offlineLicenseRenewalTimeoutWorkItem = nil
+        pendingOfflineLicenseRenewal = nil
+        completion(newAccessToken, offlineLicenseDurationSeconds)
     }
 
     func setMaxResolution(resolution: Int64) {
@@ -298,9 +350,27 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     deinit {
         // Only runs if dispose() was never called (e.g. view removed without Flutter teardown).
         // If dispose() already ran, player is nil and these are harmless no-ops.
+        failPendingOfflineLicenseRenewal()
         player?.pause()
         player?.replaceCurrentItem(with: nil)
         removeObservers()
+    }
+
+    private func failPendingOfflineLicenseRenewal() {
+        offlineLicenseRenewalTimeoutWorkItem?.cancel()
+        offlineLicenseRenewalTimeoutWorkItem = nil
+
+        guard let completion = pendingOfflineLicenseRenewal else { return }
+        pendingOfflineLicenseRenewal = nil
+        completion(nil, nil)
+    }
+
+    private static func offlineLicenseDurationSeconds(from args: [String: Any]) -> Double {
+        guard let days = args["offlineLicenseExpireDays"] as? Int,
+              days > 0 else {
+            return Double(Self.defaultOfflineLicenseExpireDays) * Self.secondsPerDay
+        }
+        return Double(days) * Self.secondsPerDay
     }
     
     func removeObservers() {
