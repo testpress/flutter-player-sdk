@@ -86,6 +86,7 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   VoidCallback? onReplay;
 
+  /// The native renewal request times out after 30 seconds.
   Future<String> Function(String videoId)? onAccessTokenExpired;
 
   TPStreamsPlayerController(this.platformViewId) : super(const TPStreamsPlayerValue(isLoading: true)) {
@@ -245,9 +246,26 @@ class TPStreamsPlayerController extends ValueNotifier<TPStreamsPlayerValue> impl
 
   @override
   void handleAccessTokenExpiration(String videoId) async {
-    if (onAccessTokenExpired != null) {
-      final newToken = await onAccessTokenExpired!(videoId);
-      _nativeApi.resolveAccessToken(newToken);
+    try {
+      final callback = onAccessTokenExpired;
+      if (callback == null) {
+        await _resolveAccessTokenSafely('');
+        return;
+      }
+
+      final newToken = await callback(videoId);
+      await _resolveAccessTokenSafely(newToken);
+    } catch (_) {
+      await _resolveAccessTokenSafely('');
+    }
+  }
+
+  Future<void> _resolveAccessTokenSafely(String token) async {
+    if (_isDisposed) return;
+    try {
+      await _nativeApi.resolveAccessToken(token);
+    } catch (_) {
+      // The native renewal request may already have timed out or been disposed.
     }
   }
 
