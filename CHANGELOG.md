@@ -1,3 +1,8 @@
+## 2.2.42
+
+- Added iOS offline-license renewal bridging through Flutter’s `onAccessTokenExpired` callback.
+- Added renewal success, failure, timeout, and diagnostic logging.
+
 ## 2.2.41
 
 - Wired the automatic fullscreen-on-rotation toggle to the native iOS player.
