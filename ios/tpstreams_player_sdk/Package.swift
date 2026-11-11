@@ -5,14 +5,14 @@ import PackageDescription
 let package = Package(
     name: "tpstreams_player_sdk",
     platforms: [
-        .iOS("13.0")
+        .iOS(.v15)
     ],
     products: [
         .library(name: "tpstreams-player-sdk", targets: ["tpstreams_player_sdk"])
     ],
     dependencies: [
         .package(path: "../FlutterFramework"),
-        .package(url: "https://github.com/testpress/iOSPlayerSDK.git", from: "1.2.45")
+        .package(url: "https://github.com/testpress/iOSPlayerSDK.git", from: "1.2.47")
     ],
     targets: [
         .target(

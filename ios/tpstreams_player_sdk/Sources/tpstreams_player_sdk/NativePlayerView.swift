@@ -32,7 +32,7 @@ class NativePlayerView: NSObject, FlutterPlatformView, NativePlayerApi {
     private let messenger: FlutterBinaryMessenger
     private var pendingOfflineLicenseRenewal: ((String?, Double?) -> Void)?
     private var offlineLicenseRenewalTimeoutWorkItem: DispatchWorkItem?
-    private var offlineLicenseDurationSeconds: Double = Double(Self.defaultOfflineLicenseExpireDays) * Self.secondsPerDay
+    private var offlineLicenseDurationSeconds: Double = Double(NativePlayerView.defaultOfflineLicenseExpireDays) * NativePlayerView.secondsPerDay
 
     func view() -> UIView {
         return playerViewController?.view ?? UIView()

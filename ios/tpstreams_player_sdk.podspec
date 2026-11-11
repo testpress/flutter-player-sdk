@@ -15,8 +15,8 @@ A new Flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'tpstreams_player_sdk/Sources/tpstreams_player_sdk/**/*'
   s.dependency 'Flutter'
-  s.dependency 'TPStreamsSDK', '1.2.45'
-  s.platform = :ios, '12.0'
+  s.dependency 'TPStreamsSDK', '1.2.47'
+  s.platform = :ios, '15.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
