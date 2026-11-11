@@ -27,6 +27,11 @@ class TPStreamPlayer extends StatefulWidget {
   final int? resolution;
   final String? userId;
 
+  /// Application orientation policy to restore when this player is disposed.
+  /// Flutter does not expose the previous policy. Defaults to portrait;
+  /// pass an empty list to restore the operating system default.
+  final List<DeviceOrientation> orientationsAfterDispose;
+
   TPStreamPlayer({
     super.key,
     required this.assetId,
@@ -40,6 +45,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.autoPlay = true,
     this.resolution,
     this.userId,
+    this.orientationsAfterDispose = const [DeviceOrientation.portraitUp],
     TPStreamsPlayerPreferences? preferences,
   }) : _isOfflinePlayback = false,
        preferences = preferences ?? TPStreamsPlayerPreferences(
@@ -57,6 +63,7 @@ class TPStreamPlayer extends StatefulWidget {
     this.onPlayerCreated,
     this.autoPlay = true,
     this.userId,
+    this.orientationsAfterDispose = const [DeviceOrientation.portraitUp],
     Map<String, String>? metadata,
   }) : assetId = assetId,
        accessToken = null,
@@ -85,9 +92,22 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
   late NativePlayerApi _nativeApi;
   late Future<String?> _widevineFuture;
 
+  bool get _managesOrientation =>
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
   @override
   void initState() {
     super.initState();
+    // Allow interface rotation before native auto-fullscreen observes it.
+    // Keep all three orientations allowed even after fullscreen exits.
+    if (_managesOrientation) {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
     if (defaultTargetPlatform == TargetPlatform.android) {
       _widevineFuture = DeviceCapability.instance.getWidevineLevel();
     }
@@ -246,6 +266,9 @@ class _TPStreamPlayerState extends State<TPStreamPlayer> implements NativePlayer
       }
     }
 
+    if (_managesOrientation) {
+      SystemChrome.setPreferredOrientations(widget.orientationsAfterDispose);
+    }
     super.dispose();
   }
 }
