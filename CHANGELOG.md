@@ -1,3 +1,9 @@
+## 2.2.43
+
+- Upgraded `TPStreamsSDK` to 1.2.47 on iOS:
+  - Fixed fullscreen landscape orientation when host app restricts orientation to portrait by presenting a dedicated `TPStreamFullScreenViewController`.
+- Updated minimum iOS deployment target to iOS 15.0 across CocoaPods and Swift Package Manager.
+
 ## 2.2.42
 
 - Added iOS offline-license renewal bridging through Flutter’s `onAccessTokenExpired` callback.
